@@ -27,11 +27,11 @@ import EmployerDashboard from "../pages/employer/Dashboard/EmployerDashboard";
 import EmployerProfile from "../pages/employer/Dashboard/Profile/Profile";
 import EmployerJobs from "../pages/employer/Dashboard/Jobs/MyJobs";
 import Users from "../pages/admin/Users/Users";
-import Employer from "../pages/admin/Employer/Employer";
+import EmployerList from "../pages/admin/Employer/EmployerList";
 
 // import NotFound from "../pages/";
 import Unauthorized from "../pages/auth/Unauthorized";
-import ResetPassword from "../pages/admin/Users/ResetPassword";
+import ResetPassword from "../pages/admin/ResetPassword/ResetPassword";
 import SimpleEnquiry from "../pages/admin/enquiry/SimpleEnquiry";
 import GeneralEnquiry from "../pages/admin/enquiry/GeneralEnquiry";
 import ViewSimpleEnquiry from "../pages/admin/enquiry/ViewSimpleEnquiry";
@@ -57,57 +57,60 @@ const AppRoutes = () => {
           <Route path="/forgot-password" element={<ForgotPassword />} />
         </Route>
 
-
         {/* =========================
             ADMIN ROUTES
         ========================= */}
 
-       <Route element={<ProtectedRoute allowedRole="admin" />}>
+        <Route element={<ProtectedRoute allowedRole="admin" />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Navigate to="/admin/dashboard" replace />} />
 
-  <Route path="/admin" element={<AdminLayout />}>
-    <Route index element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="dashboard" element={<AdminDashboard />} />
 
-    <Route path="dashboard" element={<AdminDashboard />} />
+            <Route path="users" element={<AdminUsers />} />
 
-    <Route path="users" element={<AdminUsers />} />
+            <Route path="simple-enquiry" element={<SimpleEnquiry />} />
+            <Route
+              path="simple-enquiry/view/:id"
+              element={<ViewSimpleEnquiry />}
+            />
 
-    <Route path="simple-enquiry" element={<SimpleEnquiry />} />
-<Route path="simple-enquiry/view/:id" element={<ViewSimpleEnquiry />} />
+            <Route path="general-enquiry" element={<GeneralEnquiry />} />
+            <Route
+              path="general-enquiry/view/:id"
+              element={<ViewGerneralEnquiry />}
+            />
 
+            <Route path="feedback-list" element={<FeedbackList />} />
+            <Route
+              path="feedback-list/view/:id"
+              element={<ViewFeedbackList />}
+            />
 
-    <Route path="general-enquiry" element={<GeneralEnquiry />} />
-    <Route path="general-enquiry/view/:id" element={<ViewGerneralEnquiry />} />
+            <Route path="complaint-list" element={<ComplaintList />} />
+            <Route
+              path="complaint-list/view/:id"
+              element={<ViewComplaintList />}
+            />
 
-<Route path="feedback-list" element={<FeedbackList />} />
-<Route path="feedback-list/view/:id" element={<ViewFeedbackList />} />
+            <Route path="employer" element={<EmployerList />} />
 
-<Route path="complaint-list" element={<ComplaintList />} />
-    <Route path="complaint-list/view/:id" element={<ViewComplaintList />} />
-            
-            
-              <Route path="employer" element={<Employer />} />
-             
-          
-    <Route path="settings" element={<AdminSettings />} />
+            <Route path="settings" element={<AdminSettings />} />
 
-    <Route path="userList" element={<Users />} />
+            <Route path="userList" element={<Users />} />
 
-    <Route path="reset-password" element={<ResetPassword />} />
+            <Route path="reset-password" element={<ResetPassword />} />
 
-    {/* JOBSEEKER MANAGEMENT */}
-    <Route path="jobseekers" element={<JobSeekers />} />
+            {/* JOBSEEKER MANAGEMENT */}
+            <Route path="jobseekers" element={<JobSeekers />} />
 
-    <Route path="jobseekers/add" element={<AddJobSeeker />} />
+            <Route path="jobseekers/add" element={<AddJobSeeker />} />
 
-    <Route path="jobseekers/:id" element={<JobSeekerDetails />} />
+            <Route path="jobseekers/:id" element={<JobSeekerDetails />} />
 
-    <Route
-      path="jobseekers/:id/edit"
-      element={<JobSeekerDetails />}
-    />
-  </Route>
-
-</Route>
+            <Route path="jobseekers/:id/edit" element={<JobSeekerDetails />} />
+          </Route>
+        </Route>
 
         {/* =========================
             JOB SEEKER ROUTES

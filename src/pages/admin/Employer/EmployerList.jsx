@@ -379,7 +379,7 @@ const StatusDialog = ({ user, onCancel, onConfirm }) => {
 
 const HEADINGS = ["Sr.No", "Full Name", "Email", "Mobile", "Job Category", "Status", "Address", "Actions"];
 
-const JobSeekerList = () => {
+const EmployerList = () => {
   const navigate = useNavigate();
 
   const [users, setUsers] = useState(getUsers);
@@ -540,7 +540,7 @@ const JobSeekerList = () => {
         {/* TITLE + QUICK STATS */}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="m-0 text-[22px] font-extrabold tracking-tight text-[#2c6b8a] sm:text-[26px]">Jobseeker List</h1>
+            <h1 className="m-0 text-[22px] font-extrabold tracking-tight text-[#2c6b8a] sm:text-[26px]">Employer List</h1>
           </div>
           <div className="flex flex-wrap gap-2.5">
             <StatChip label="Total" value={counts.total} total={counts.total} tone="brand" active={statusFilter === "All"} onClick={() => { setStatusFilter("All"); setPage(1); }} />
@@ -812,4 +812,4 @@ const JobSeekerList = () => {
   );
 };
 
-export default JobSeekerList;
+export default EmployerList;

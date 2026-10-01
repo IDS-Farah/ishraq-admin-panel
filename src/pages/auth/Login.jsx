@@ -159,7 +159,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
-  const [roleKey, setRoleKey] = useState("jobseeker");
+  const [roleKey, setRoleKey] = useState("admin");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
