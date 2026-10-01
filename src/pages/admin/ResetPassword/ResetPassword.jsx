@@ -253,7 +253,7 @@ const ResetPassword = () => {
   const listId = "reset-user-listbox";
 
   return (
-    <div className="rp-page min-h-full bg-[#f7f9fb] text-[#1e2b36]">
+    <div className="rp-page  bg-[#f7f9fb] text-[#1e2b36]">
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
         .rp-page { font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif; }
@@ -266,7 +266,7 @@ const ResetPassword = () => {
 
       <div className="mx-auto  rounded-[12px] border border-[#e2e8ee] bg-white shadow-sm">
         {/* HEADER */}
-        <div className="flex items-center gap-3.5 border-b border-[#e2e8ee] px-5 py-4 sm:px-6 sm:py-5">
+        <div className="flex items-center gap-3.5 border-b border-[#e2e8ee] px-2 py-2 sm:px-4 sm:py-4">
           <div className="relative grid h-12 w-12 shrink-0 place-items-center">
             <span className="rp-halo absolute inset-0 rounded-2xl bg-[#e8f1f6]" />
             <span className="relative grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-[#2c6b8a] to-[#5ba6bd] text-white shadow-md">
@@ -302,7 +302,7 @@ const ResetPassword = () => {
           </div>
         )}
 
-        <form onSubmit={onSubmit} className="space-y-6 px-5 py-5 sm:px-6 sm:py-6">
+        <form onSubmit={onSubmit} className="space-y-6 px-5 py-4 sm:px-4 sm:py-4">
           {/* STEP 1 */}
           <section>
             <div className="mb-3 flex items-center gap-2">
@@ -523,7 +523,7 @@ const ResetPassword = () => {
           )}
 
           {/* ACTIONS */}
-          <div className="flex flex-col-reverse gap-2.5 border-t border-[#e2e8ee] pt-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col-reverse gap-2.5 border-t border-[#e2e8ee] pt-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="flex items-center gap-1.5 text-[12.5px] text-[#6b7a88]">
               <ShieldCheck size={14} className="text-[#2c6b8a]" />
               The user's current password stops working immediately.
