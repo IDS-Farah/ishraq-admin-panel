@@ -1,87 +1,29 @@
-import { Link, Outlet } from "react-router-dom"; 
-import { useAuth } from "../../context/AuthContext"; 
-
-import {
-  Calendar,
-  Flag,
-  Home,
-  Layers,
-  LayoutDashboard,
-  LifeBuoy,
-  Settings,
-  StickyNote,
-} from "lucide-react";
-
-import { EmployerSidebar, SidebarItem } from "./EmployerSidebar"
+import React from "react";
+import { Outlet } from "react-router-dom";
+import EmployerSidebar from "./EmployerSidebar";
 import EmployerHeader from "./EmployerHeader";
- 
-const EmployerLayout = () => { 
-  const { logout, user } = useAuth(); 
- 
+
+const EmployerLayout = () => {
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen min-w-0 overflow-hidden bg-gray-50">
 
-      {/* Sidebar */}
-      <EmployerSidebar>
+      {/* SIDEBAR */}
+      <EmployerSidebar />
 
-        <SidebarItem
-          icon={<Home size={20} />}
-          text="Home"
-          alert
-        />
+      {/* RIGHT SIDE */}
+      <div className="flex min-w-0 flex-1 flex-col">
 
-        <SidebarItem
-          icon={<LayoutDashboard size={20} />}
-          text="Dashboard"
-          active
-        />
-
-        <SidebarItem
-          icon={<StickyNote size={20} />}
-          text="Projects"
-          alert
-        />
-
-        <SidebarItem
-          icon={<Calendar size={20} />}
-          text="Calendar"
-        />
-
-        <SidebarItem
-          icon={<Layers size={20} />}
-          text="Tasks"
-        />
-
-        <SidebarItem
-          icon={<Flag size={20} />}
-          text="Reporting"
-        />
-
-        <hr className="my-3 border-primary-100" />
-
-        <SidebarItem
-          icon={<Settings size={20} />}
-          text="Settings"
-        />
-
-        <SidebarItem
-          icon={<LifeBuoy size={20} />}
-          text="Help"
-        />
-
-      </EmployerSidebar>
-
-      <div className=" flex-1 flex flex-col min-w-0">
         {/* HEADER */}
-          <EmployerHeader />
-        {/* Main Content */}
-        <main className="flex-1 overflow-auto p-6">
+        <EmployerHeader />
+
+        {/* PAGE CONTENT */}
+        <main className="min-w-0 flex-1 overflow-auto p-3 sm:p-4 lg:p-4">
           <Outlet />
         </main>
-      </div>
 
+      </div>
     </div>
   );
-}; 
- 
+};
+
 export default EmployerLayout;
