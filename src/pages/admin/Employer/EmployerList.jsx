@@ -255,55 +255,7 @@ const StatusSwitch = ({ user, onClick }) => {
   );
 };
 
-function useCountUp(value, duration = 600) {
-  const [v, setV] = useState(0);
-  const prev = useRef(0);
-  useEffect(() => {
-    const reduce = window.matchMedia?.(
-      "(prefers-reduced-motion: reduce)",
-    ).matches;
-    if (reduce) {
-      setV(value);
-      prev.current = value;
-      return undefined;
-    }
-    const from = prev.current;
-    const t0 = performance.now();
-    let raf;
-    const tick = (t) => {
-      const p = Math.min(1, (t - t0) / duration);
-      setV(from + (value - from) * (1 - Math.pow(1 - p, 3)));
-      if (p < 1) raf = requestAnimationFrame(tick);
-      else prev.current = value;
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [value, duration]);
-  return Math.round(v);
-}
 
-/* Redesigned stat card: colour dot + label, big number, share-of-total bar.
-   The selected card gets a tinted background and a coloured border. */
-const STAT_TONES = {
-  brand: {
-    dot: "bg-[#2c6b8a]",
-    bar: "bg-[#2c6b8a]",
-    on: "border-[#2c6b8a] bg-[#e8f1f6]",
-    focus: "focus-visible:ring-[#2c6b8a]",
-  },
-  green: {
-    dot: "bg-[#1f9d63]",
-    bar: "bg-[#1f9d63]",
-    on: "border-[#1f9d63] bg-emerald-50",
-    focus: "focus-visible:ring-[#1f9d63]",
-  },
-  red: {
-    dot: "bg-[#d64545]",
-    bar: "bg-[#d64545]",
-    on: "border-[#d64545] bg-rose-50",
-    focus: "focus-visible:ring-[#d64545]",
-  },
-};
 
 
 /* ------------------------------------------------------------------ */
@@ -549,14 +501,7 @@ const EmployerList = () => {
     return rows;
   }, [users, search, statusFilter, categoryFilter, sortDir]);
 
-  const counts = useMemo(
-    () => ({
-      total: users.length,
-      active: users.filter((u) => u.status === "Active").length,
-      inactive: users.filter((u) => u.status !== "Active").length,
-    }),
-    [users],
-  );
+
 
   /* PAGINATION */
 
