@@ -15,3 +15,30 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+
+.common-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #5e9fb3 transparent;
+}
+
+.common-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.common-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.common-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #5e9fb3;
+  border: 1px solid transparent;
+  background-clip: content-box;
+  border-radius: 999px;
+}
+
+.common-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #3f7f95;
+  background-clip: padding-box;
+}

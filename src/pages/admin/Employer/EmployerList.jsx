@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   UserRoundCheck,
   UserRoundX,
+  Building2,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
@@ -64,6 +65,7 @@ const SEED_USERS = [
   {
     id: 1,
     status: "Active",
+    organizationName: "Ayesha Health Services",
     fullName: "Ayesha Khan",
     email: "ayesha.khan@gmail.com",
     mobile: "+91 98765 43210",
@@ -74,6 +76,7 @@ const SEED_USERS = [
   {
     id: 2,
     status: "Active",
+    organizationName: "Imran Labs",
     fullName: "Imran Shaikh",
     email: "imran.shaikh@gmail.com",
     mobile: "+91 98230 12345",
@@ -84,16 +87,19 @@ const SEED_USERS = [
   {
     id: 3,
     status: "Inactive",
+    organizationName: "Sana Pathan Enterprises",
     fullName: "Sana Pathan",
     email: "",
     mobile: "+91 99223 34455",
     jobCategory: "Pharmacist",
     address: "Jalna Road, Aurangabad",
+
     document: { name: "sana-resume.pdf", url: "" },
   },
   {
     id: 4,
     status: "Active",
+    organizationName: "Rohit Deshmukh Clinic",
     fullName: "Rohit Deshmukh",
     email: "rohit.deshmukh@gmail.com",
     mobile: "+91 90110 22334",
@@ -104,6 +110,7 @@ const SEED_USERS = [
   {
     id: 5,
     status: "Active",
+    organizationName: "Neha Jadhav",
     fullName: "Neha Jadhav",
     email: "neha.jadhav@outlook.com",
     mobile: "+91 97650 88123",
@@ -114,6 +121,7 @@ const SEED_USERS = [
   {
     id: 6,
     status: "Inactive",
+    organizationName: "Farhan Sayyed",
     fullName: "Farhan Sayyed",
     email: "farhan.s@gmail.com",
     mobile: "+91 88888 41290",
@@ -124,6 +132,7 @@ const SEED_USERS = [
   {
     id: 7,
     status: "Active",
+    organizationName: "",
     fullName: "Pooja Wagh",
     email: "pooja.wagh@gmail.com",
     mobile: "+91 93720 55671",
@@ -134,6 +143,7 @@ const SEED_USERS = [
   {
     id: 8,
     status: "Active",
+    organizationName: "",
     fullName: "Zaid Ansari",
     email: "",
     mobile: "+91 70200 91822",
@@ -143,7 +153,7 @@ const SEED_USERS = [
   },
 ];
 
-const STORAGE_KEY = "ishraq_jobseekers";
+const STORAGE_KEY = "ishraq_Employers";
 
 const getUsers = () => {
   const saved = localStorage.getItem(STORAGE_KEY);
@@ -186,7 +196,7 @@ const Avatar = ({ user, size = "h-8 w-8", text = "text-[11px]" }) => (
 /* ---------------------------- BADGES ----------------------------- */
 
 const BADGE_BASE =
-  "inline-flex h-7 items-center justify-center gap-1.5 rounded-md px-2.5 text-[12px] font-bold leading-none ring-1 ring-inset whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md";
+  "inline-flex h-7 items-center justify-center gap-1.5 rounded-md px-2.5 text-[15px]  ring-1 ring-inset whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md";
 
 const StatusBadge = ({ status, title, fixed = true }) => {
   const active = status === "Active";
@@ -470,8 +480,8 @@ const StatusDialog = ({ user, onCancel, onConfirm }) => {
             className="text-[18px] font-bold text-[#1e2b36]"
           >
             {activating
-              ? "Activate this jobseeker?"
-              : "Deactivate this jobseeker?"}
+              ? "Activate this Employer?"
+              : "Deactivate this Employer?"}
           </h2>
 
           <p
@@ -561,12 +571,11 @@ const StatusDialog = ({ user, onCancel, onConfirm }) => {
 
 const HEADINGS = [
   "Sr.No",
-  "Full Name",
-  "Email",
-  "Mobile",
-  "Job Category",
+  "Organization Name",
+  "Contact Person",
   "Status",
-  "Address",
+  "Mobile",
+  "Organization Type",
   "Actions",
 ];
 
@@ -579,11 +588,7 @@ const EmployerList = () => {
   const [categoryFilter, setCategoryFilter] = useState("All");
   const [sortDir, setSortDir] = useState(null);
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-
-  const [confirmUser, setConfirmUser] = useState(null);
-  const [flashId, setFlashId] = useState(null);
-  const [toast, setToast] = useState(null);
+  const [pageSize] = useState(10);
 
   const saveUsers = (updated) => {
     setUsers(updated);
@@ -646,11 +651,13 @@ const EmployerList = () => {
   );
 
   /* PAGINATION */
-
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
   const start = (currentPage - 1) * pageSize;
   const pageRows = filtered.slice(start, start + pageSize);
+  const [confirmUser, setConfirmUser] = useState(null);
+  const [flashId, setFlashId] = useState(null);
+  const [toast, setToast] = useState(null);
 
   const pageNumbers = useMemo(() => {
     const win = 5;
@@ -666,10 +673,10 @@ const EmployerList = () => {
   const exportToExcel = () => {
     const excelData = filtered.map((u, i) => ({
       "Sr.No": i + 1,
-      "Full Name": u.fullName,
+      "Organization Name": u.fullName,
       Email: u.email || "",
       Mobile: u.mobile || "",
-      "Job Category": u.jobCategory || "",
+      "Organization Type": u.jobCategory || "",
       Status: u.status,
       Address: u.address || "",
       Document: u.document?.name || "",
@@ -678,14 +685,14 @@ const EmployerList = () => {
     const worksheet = XLSX.utils.json_to_sheet(excelData);
     const workbook = XLSX.utils.book_new();
 
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Jobseekers");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Employers");
 
-    XLSX.writeFile(workbook, "ishraq-jobseekers.xlsx");
+    XLSX.writeFile(workbook, "ishraq-Employers.xlsx");
 
     setToast({
       id: Date.now(),
       tone: "ok",
-      msg: `Exported ${filtered.length} jobseekers`,
+      msg: `Exported ${filtered.length} Employers`,
     });
   };
 
@@ -739,7 +746,7 @@ const EmployerList = () => {
   };
 
   const selectCls =
-    "h-9 w-full cursor-pointer appearance-none rounded-lg border border-[#c9d5dd] bg-white px-3 pr-9 text-[13px] font-medium text-[#34445a] outline-none transition hover:border-[#2c6b8a] focus:border-[#2c6b8a] focus:ring-2 focus:ring-[#2c6b8a]/30";
+    "h-9 w-full cursor-pointer appearance-none rounded-lg border border-[#c9d5dd] bg-white px-3 pr-9 text-[15px] font-medium text-[#34445a] outline-none transition hover:border-[#2c6b8a] focus:border-[#2c6b8a] focus:ring-2 focus:ring-[#2c6b8a]/30";
 
   const pageBtn =
     "grid h-8 min-w-8 cursor-pointer place-items-center rounded-lg px-2.5 text-[12.5px] font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2c6b8a]";
@@ -836,7 +843,6 @@ const EmployerList = () => {
             <h1 className="m-0 text-[22px] font-extrabold tracking-tight text-[#2c6b8a] sm:text-[26px]">
               Employer List
             </h1>
-         
           </div>
 
           <div className="flex w-full flex-wrap items-center gap-2.5 xl:w-auto">
@@ -850,14 +856,14 @@ const EmployerList = () => {
 
               <input
                 type="search"
-                aria-label="Search jobseekers"
+                aria-label="Search Employers"
                 placeholder="Search by email, name or mobile"
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
                   setPage(1);
                 }}
-                className="h-9 w-full rounded-lg border border-[#c9d5dd] bg-white pl-9 pr-3 text-[13px] text-[#1e2b36] outline-none transition placeholder:text-[#9aa5b1] hover:border-[#2c6b8a] focus:border-[#2c6b8a] focus:ring-2 focus:ring-[#2c6b8a]/30"
+                className="h-9 w-full rounded-lg border border-[#c9d5dd] bg-white pl-9 pr-3 text-[15px] text-[#1e2b36] outline-none transition placeholder:text-[#9aa5b1] hover:border-[#2c6b8a] focus:border-[#2c6b8a] focus:ring-2 focus:ring-[#2c6b8a]/30"
               />
             </div>
 
@@ -918,7 +924,7 @@ const EmployerList = () => {
               onClick={resetFilters}
               disabled={!isFiltered}
               title="Reset filters"
-              className="group inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 text-[13px] font-medium text-[#d64545] transition hover:bg-[#fbe9e9] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d64545] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+              className="group inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 text-[15px] font-medium text-[#d64545] transition hover:bg-[#fbe9e9] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d64545] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
             >
               <RotateCcw
                 size={14}
@@ -935,7 +941,7 @@ const EmployerList = () => {
               disabled={!filtered.length}
               title="Export to Excel"
               aria-label="Export to Excel"
-              className="group inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#16834f] to-[#2fb877] px-3 text-[13px] font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#16834f] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="group inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#16834f] to-[#2fb877] px-3 text-[15px] font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#16834f] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <ExcelIcon
                 size={15}
@@ -950,8 +956,8 @@ const EmployerList = () => {
 
         {/* TABLE */}
 
-        <div className="mt-6 h-[56vh] overflow-x-auto overflow-y-auto rounded-lg border border-[#cbe1f4] scrollbar-thin">
-          <table className="w-full min-w-[1050px] border-collapse text-[13px]">
+        <div className="mt-6 h-[56vh] overflow-x-auto overflow-y-auto rounded-lg border border-[#cbe1f4] common-scrollbar">
+          <table className="w-full min-w-[1050px] border-collapse text-[15px]">
             <thead className="sticky top-0 z-10">
               <tr>
                 {HEADINGS.map((heading) => (
@@ -959,15 +965,15 @@ const EmployerList = () => {
                     key={heading}
                     scope="col"
                     aria-sort={
-                      heading === "Full Name" && sortDir
+                      heading === "Organization Name" && sortDir
                         ? sortDir === "asc"
                           ? "ascending"
                           : "descending"
                         : undefined
                     }
-                    className="whitespace-nowrap bg-gradient-to-r from-[#2c6b8a] to-[#3b86a6] px-3.5 py-3 text-left text-[13px] font-bold text-white"
+                    className="whitespace-nowrap bg-gradient-to-r from-[#2c6b8a] to-[#3b86a6] px-3.5 py-3 text-left text-[15px] font-bold text-white"
                   >
-                    {heading === "Full Name" ? (
+                    {heading === "Organization Name" ? (
                       <button
                         type="button"
                         onClick={() =>
@@ -1018,13 +1024,13 @@ const EmployerList = () => {
                       <UsersIcon size={22} />
                     </div>
 
-                    <p className="mt-3 text-[14px] font-semibold text-[#1e2b36]">
+                    <p className="mt-3 text-[15px] text-[#1e2b36]">
                       {isFiltered
-                        ? "No jobseekers match these filters"
-                        : "No jobseekers yet"}
+                        ? "No Employers match these filters"
+                        : "No Employers yet"}
                     </p>
 
-                    <p className="mt-0.5 text-[13px] text-[#6b7a88]">
+                    <p className="mt-0.5 text-[15px] text-[#6b7a88]">
                       {isFiltered
                         ? "Try a different search or clear the filters."
                         : "New registrations will appear here."}
@@ -1034,7 +1040,7 @@ const EmployerList = () => {
                       <button
                         type="button"
                         onClick={resetFilters}
-                        className="mt-3 cursor-pointer rounded-lg bg-[#2c6b8a] px-3.5 py-2 text-[13px] font-semibold text-white transition hover:bg-[#245a75] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2c6b8a] focus-visible:ring-offset-2"
+                        className="mt-3 cursor-pointer rounded-lg bg-[#2c6b8a] px-3.5 py-2 text-[15px] font-semibold text-white transition hover:bg-[#245a75] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2c6b8a] focus-visible:ring-offset-2"
                       >
                         Reset filters
                       </button>
@@ -1057,63 +1063,38 @@ const EmployerList = () => {
                     >
                       {/* SR NO */}
 
-                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[13px] font-medium tabular-nums text-[#53677f]">
+                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] tabular-nums text-slate-900">
                         {start + index + 1}
                       </td>
 
-                      {/* FULL NAME */}
+                      {/* Organization Name */}
 
-                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[13px]">
+                      <td className="whitespace-nowrap border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]  text-slate-900">
+                        <span className="inline-flex items-center gap-1">
+                          <Building2
+                            size={13}
+                            className="shrink-0 text-slate-900"
+                          />
+                          {user.organizationName || "-"}
+                        </span>
+                      </td>
+
+                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]">
                         <div className="flex items-center gap-2.5">
                           <Avatar user={user} />
 
                           <span
-                            className={`font-semibold transition-colors ${
-                              inactive ? "text-[#6b7a88]" : "text-[#1e2b36]"
+                            className={` transition-colors ${
+                              inactive ? "text-[#6b7a88]" : "text-slate-900"
                             }`}
                           >
                             {user.fullName}
                           </span>
                         </div>
                       </td>
-
-                      {/* EMAIL */}
-
-                      <td className="break-all border-t border-[#e2e8ee] px-3.5 py-2.5 text-[13px] font-medium text-[#34445a]">
-                        {user.email ? (
-                          <span className="inline-flex items-center gap-1.5">
-                            <Mail
-                              size={13}
-                              className="shrink-0 text-[#9aa5b1]"
-                            />
-                            {user.email}
-                          </span>
-                        ) : (
-                          <span className="text-[#9aa5b1]">-</span>
-                        )}
-                      </td>
-
-                      {/* MOBILE */}
-
-                      <td className="whitespace-nowrap border-t border-[#e2e8ee] px-3.5 py-2.5 text-[13px] font-medium text-[#34445a]">
-                        <span className="inline-flex items-center gap-1.5">
-                          <Phone
-                            size={13}
-                            className="shrink-0 text-[#9aa5b1]"
-                          />
-                          {user.mobile || "-"}
-                        </span>
-                      </td>
-
-                      {/* JOB CATEGORY */}
-
-                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[13px]">
-                        <CategoryBadge category={user.jobCategory} />
-                      </td>
-
                       {/* STATUS */}
 
-                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[13px]">
+                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]">
                         <StatusBadge
                           status={user.status}
                           title={
@@ -1124,30 +1105,35 @@ const EmployerList = () => {
                         />
                       </td>
 
-                      {/* ADDRESS */}
 
-                      <td className="max-w-[240px] border-t border-[#e2e8ee] px-3.5 py-2.5 text-[13px] font-medium text-[#6b7a88]">
-                        <span className="inline-flex items-start gap-1.5">
-                          <MapPin
+                      {/* MOBILE */}
+
+                      <td className="whitespace-nowrap border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]  text-slate-900">
+                        <span className="inline-flex items-center gap-1">
+                          <Phone
                             size={13}
-                            className="mt-0.5 shrink-0 text-[#9aa5b1]"
+                            className="shrink-0 text-slate-900"
                           />
-                          <span className="line-clamp-2">
-                            {user.address || "-"}
-                          </span>
+                          {user.mobile || "-"}
                         </span>
+                      </td>
+
+                      {/* Organization Type */}
+
+                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]">
+                        <CategoryBadge category={user.jobCategory} />
                       </td>
 
                       {/* ACTIONS */}
 
-                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[13px]">
+                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]">
                         <div className="flex items-center gap-2">
                           <button
                             type="button"
                             onClick={() =>
-                              navigate(`/admin/jobseekers/${user.id}`)
+                              navigate(`/admin/Employers/${user.id}`)
                             }
-                            title="View jobseeker"
+                            title="View Employer"
                             aria-label={`View ${user.fullName}`}
                             className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-gradient-to-br from-[#168fa1] to-[#35b8c4] text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a9aa8] focus-visible:ring-offset-2"
                           >
@@ -1194,7 +1180,6 @@ const EmployerList = () => {
               <select
                 value={pageSize}
                 onChange={(e) => {
-                  setPageSize(Number(e.target.value));
                   setPage(1);
                 }}
                 className="h-8 cursor-pointer rounded-lg border border-[#dce3eb] bg-white px-2 text-[12.5px] text-[#34445a] transition hover:border-[#2c6b8a] focus:border-[#2c6b8a] focus:outline-none focus:ring-2 focus:ring-[#2c6b8a]/30"
@@ -1266,7 +1251,7 @@ const EmployerList = () => {
           key={toast.id}
           role="status"
           aria-live="polite"
-          className="js-toast fixed bottom-5 right-5 z-[60] flex items-center gap-2.5 rounded-xl bg-[#1e2b36] px-4 py-2.5 text-[13px] font-medium text-white shadow-xl"
+          className="js-toast fixed bottom-5 right-5 z-[60] flex items-center gap-2.5 rounded-xl bg-[#1e2b36] px-4 py-2.5 text-[15px] font-medium text-white shadow-xl"
         >
           <span
             className={`grid h-5 w-5 place-items-center rounded-full ${
