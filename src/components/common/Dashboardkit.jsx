@@ -110,18 +110,9 @@ export const GradientStatCard = ({ item, index, selected, onSelect }) => {
             {fmt(n)}
           </span>
           <div className="mt-1.5 flex items-center gap-1.5 text-[10px]">
-            <span className="flex items-center gap-0.5 rounded-full bg-white/20 px-1.5 py-0.5 font-bold">
-              {item.good ? (
-                <ArrowUpRight size={10} />
-              ) : (
-                <ArrowDownRight size={10} />
-              )}
-              {item.delta}
-            </span>
-            <span className="truncate text-white/75">{item.note}</span>
+       
           </div>
         </div>
-        <WhiteSpark data={item.spark} />
       </div>
     </Tag>
   );

@@ -842,7 +842,7 @@ const JobSeekerList = () => {
           <div className="flex w-full flex-wrap items-center gap-2.5 xl:w-auto">
             {/* SEARCH */}
 
-            <div className="relative min-w-[220px] flex-1 xl:flex-none">
+            <div className="relative min-w-[320px] flex-1 xl:flex-none">
               <SearchIcon
                 size={15}
                 className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9aa5b1]"
@@ -946,10 +946,11 @@ const JobSeekerList = () => {
             </button>
           </div>
         </div>
+        <hr />
 
         {/* TABLE */}
 
-        <div className="mt-3 h-[58vh] overflow-x-auto overflow-y-auto rounded-lg border border-[#e2e8ee] scrollbar-thin">
+        <div className="mt-6 h-[56vh] overflow-x-auto overflow-y-auto rounded-lg border border-[#cbe1f4] scrollbar-thin">
           <table className="w-full min-w-[1050px] border-collapse text-[13px]">
             <thead className="sticky top-0 z-10">
               <tr>

@@ -41,7 +41,7 @@ import {
   BarRow,
   ChartTooltip,
   KitStyles,
-} from "./Dashboardkit";
+} from "../../../components/common/Dashboardkit";
 
 /* ---------------- Sample data (replace with your API) ---------------- */
 const RANGES = {
@@ -449,7 +449,7 @@ const EmployerDashboard = () => {
       <KitStyles />
 
       <DashboardHeader
-        title="Isharq employer"
+        title="Isharq Employer"
         subtitle={`Hiring overview · ${r.sub}`}
         pills={[
           { value: apps, label: "Interested" },
@@ -470,7 +470,7 @@ const EmployerDashboard = () => {
         }
       />
 
-      <StatCardGrid items={kpis} metric={metric} onSelect={setMetric} />
+      <StatCardGrid items={kpis} />
 
       {/* Row 1 */}
       <div className="mb-3 grid grid-cols-1 gap-3 xl:grid-cols-3">
@@ -804,7 +804,7 @@ const EmployerDashboard = () => {
       </div>
 
       {/* Row 3 */}
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-2">
         <Panel
           title="Interest per job"
           subtitle="People interested in each posting"
@@ -829,63 +829,6 @@ const EmployerDashboard = () => {
               ))}
           </ul>
         </Panel>
-
-        <Panel
-          title="Recent applicants"
-          subtitle="Review and shortlist"
-          icon={FileText}
-        >
-          <ul className="space-y-1.5">
-            {cands.map((c) => (
-              <li
-                key={c.id}
-                className="row-in flex items-center gap-2 rounded-xl bg-slate-50 px-2.5 py-1.5"
-              >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#2f6b8a] to-[#5ba6bd] text-[11px] font-bold text-white">
-                  {c.name[0]}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[11px] font-semibold text-slate-800">
-                    {c.name}{" "}
-                    <span className="font-medium text-emerald-600">
-                      · {c.match}%
-                    </span>
-                  </p>
-                  <p className="truncate text-[10px] text-slate-400">
-                    {c.job} · {c.when}
-                  </p>
-                </div>
-                {c.status === "Applied" ? (
-                  <>
-                    <button
-                      type="button"
-                      aria-label={`Shortlist ${c.name}`}
-                      onClick={() => decide(c, "Shortlisted")}
-                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-                    >
-                      <Check size={13} />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label={`Reject ${c.name}`}
-                      onClick={() => decide(c, "Rejected")}
-                      className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
-                    >
-                      <X size={13} />
-                    </button>
-                  </>
-                ) : (
-                  <span
-                    className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${CAND_STYLE[c.status]}`}
-                  >
-                    {c.status}
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
-        </Panel>
-
         <Panel
           className="lg:col-span-2 xl:col-span-1"
           title="Upcoming interviews"

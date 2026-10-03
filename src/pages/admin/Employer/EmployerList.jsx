@@ -5,8 +5,6 @@ import {
   FileSpreadsheet as ExcelIcon,
   ChevronDown,
   ChevronUp,
-  FileText as FileIcon,
-  Image as ImageIcon,
   X as CloseIcon,
   Check as CheckIcon,
   RotateCcw,
@@ -17,11 +15,13 @@ import {
   MapPin,
   ShieldAlert,
   ShieldCheck,
+  UserRoundCheck,
+  UserRoundX,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
 /* ------------------------------------------------------------------ */
-/*  CONFIG + DEMO DATA                                                 */
+/* CONFIG + DEMO DATA                                                  */
 /* ------------------------------------------------------------------ */
 
 const JOB_CATEGORIES = [
@@ -35,13 +35,13 @@ const JOB_CATEGORIES = [
 ];
 
 const CATEGORY_STYLE = {
-  Nurse: "bg-sky-50 text-sky-700 ring-sky-200",
-  Doctor: "bg-indigo-50 text-indigo-700 ring-indigo-200",
-  Pharmacist: "bg-violet-50 text-violet-700 ring-violet-200",
-  "Lab Technician": "bg-teal-50 text-teal-700 ring-teal-200",
-  Caregiver: "bg-amber-50 text-amber-700 ring-amber-200",
-  "Admin / Office Staff": "bg-slate-100 text-slate-600 ring-slate-200",
-  Other: "bg-slate-100 text-slate-600 ring-slate-200",
+  Nurse: "bg-sky-600 text-white ring-sky-700",
+  Doctor: "bg-indigo-600 text-white ring-indigo-700",
+  Pharmacist: "bg-violet-600 text-white ring-violet-700",
+  "Lab Technician": "bg-teal-600 text-white ring-teal-700",
+  Caregiver: "bg-amber-500 text-white ring-amber-600",
+  "Admin / Office Staff": "bg-slate-600 text-white ring-slate-700",
+  Other: "bg-gray-600 text-white ring-gray-700",
 };
 
 const AVATAR_GRADIENTS = [
@@ -147,6 +147,7 @@ const STORAGE_KEY = "ishraq_jobseekers";
 
 const getUsers = () => {
   const saved = localStorage.getItem(STORAGE_KEY);
+
   if (saved) {
     try {
       return JSON.parse(saved);
@@ -154,12 +155,13 @@ const getUsers = () => {
       return SEED_USERS;
     }
   }
+
   localStorage.setItem(STORAGE_KEY, JSON.stringify(SEED_USERS));
   return SEED_USERS;
 };
 
 /* ------------------------------------------------------------------ */
-/*  SMALL PIECES                                                       */
+/* SMALL COMPONENTS                                                    */
 /* ------------------------------------------------------------------ */
 
 const initials = (name = "") =>
@@ -167,7 +169,7 @@ const initials = (name = "") =>
     .split(" ")
     .filter(Boolean)
     .slice(0, 2)
-    .map((w) => w[0])
+    .map((word) => word[0])
     .join("")
     .toUpperCase();
 
@@ -181,28 +183,31 @@ const Avatar = ({ user, size = "h-8 w-8", text = "text-[11px]" }) => (
   </span>
 );
 
-/* Both badges share the same height, radius, text size and ring so they match.
-   Each column uses one fixed width so every badge in it is identical in size. */
+/* ---------------------------- BADGES ----------------------------- */
+
 const BADGE_BASE =
-  "inline-flex h-6 items-center justify-center gap-1.5 rounded-md px-2 text-[12px] font-semibold leading-none ring-1 ring-inset whitespace-nowrap";
+  "inline-flex h-7 items-center justify-center gap-1.5 rounded-md px-2.5 text-[12px] font-bold leading-none ring-1 ring-inset whitespace-nowrap transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md";
 
 const StatusBadge = ({ status, title, fixed = true }) => {
   const active = status === "Active";
+
   return (
     <span
       title={title}
-      className={`${BADGE_BASE} ${fixed ? "w-[84px]" : "min-w-[72px]"} ${
+      className={`${BADGE_BASE} ${fixed ? "w-[88px]" : "min-w-[76px]"} ${
         active
-          ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-          : "bg-rose-50 text-rose-600 ring-rose-200"
+          ? "bg-emerald-600 text-white ring-emerald-700 shadow-sm shadow-emerald-600/20"
+          : "bg-rose-600 text-white ring-rose-700 shadow-sm shadow-rose-600/20"
       }`}
     >
-      <span className="relative flex h-1.5 w-1.5">
+      <span className="relative flex h-2 w-2">
         {active && (
-          <span className="js-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400" />
+          <span className="js-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-70" />
         )}
         <span
-          className={`relative inline-flex h-1.5 w-1.5 rounded-full ${active ? "bg-emerald-500" : "bg-rose-500"}`}
+          className={`relative inline-flex h-2 w-2 rounded-full ${
+            active ? "bg-white" : "bg-white"
+          }`}
         />
       </span>
       {status}
@@ -213,17 +218,23 @@ const StatusBadge = ({ status, title, fixed = true }) => {
 const CategoryBadge = ({ category }) => (
   <span
     title={category}
-    className={`${BADGE_BASE} w-[140px] ${CATEGORY_STYLE[category] || CATEGORY_STYLE.Other}`}
+    className={`${BADGE_BASE} w-[140px] ${
+      CATEGORY_STYLE[category] || CATEGORY_STYLE.Other
+    }`}
   >
     <span className="truncate">{category}</span>
   </span>
 );
 
+/* -------------------------- STATUS SWITCH ------------------------- */
+
 const StatusSwitch = ({ user, onClick }) => {
   const active = user.status === "Active";
+
   const label = active
     ? `Deactivate ${user.fullName}`
     : `Activate ${user.fullName}`;
+
   return (
     <button
       type="button"
@@ -236,30 +247,126 @@ const StatusSwitch = ({ user, onClick }) => {
       onClick={onClick}
       className={`relative h-6 w-[42px] shrink-0 cursor-pointer rounded-full p-0.5 shadow-inner transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2c6b8a] focus-visible:ring-offset-2 ${
         active
-          ? "bg-gradient-to-r from-[#1f9d63] to-[#3ccf8e]"
-          : "bg-gradient-to-r from-[#e0626a] to-[#d64545]"
+          ? "bg-gradient-to-r from-[#16834f] to-[#2fc77e]"
+          : "bg-gradient-to-r from-[#c8323f] to-[#ed626b]"
       }`}
     >
       <span
-        className={`grid h-5 w-5 place-items-center rounded-full bg-white shadow transition-transform duration-300 ease-[cubic-bezier(.3,1.4,.5,1)] ${
+        className={`grid h-5 w-5 place-items-center rounded-full bg-white shadow-md transition-transform duration-300 ease-[cubic-bezier(.3,1.4,.5,1)] ${
           active ? "translate-x-[18px]" : "translate-x-0"
         }`}
       >
         {active ? (
-          <CheckIcon size={11} strokeWidth={3.4} className="text-[#1f9d63]" />
+          <UserRoundCheck
+            size={13}
+            strokeWidth={2.7}
+            className="text-emerald-700"
+          />
         ) : (
-          <CloseIcon size={10} strokeWidth={3.4} className="text-[#d64545]" />
+          <UserRoundX size={13} strokeWidth={2.7} className="text-rose-700" />
         )}
       </span>
     </button>
   );
 };
 
+/* --------------------------- COUNT UP ---------------------------- */
 
+function useCountUp(value, duration = 600) {
+  const [v, setV] = useState(0);
+  const prev = useRef(0);
 
+  useEffect(() => {
+    const reduce = window.matchMedia?.(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    if (reduce) {
+      setV(value);
+      prev.current = value;
+      return undefined;
+    }
+
+    const from = prev.current;
+    const t0 = performance.now();
+    let raf;
+
+    const tick = (t) => {
+      const p = Math.min(1, (t - t0) / duration);
+      setV(from + (value - from) * (1 - Math.pow(1 - p, 3)));
+
+      if (p < 1) raf = requestAnimationFrame(tick);
+      else prev.current = value;
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value, duration]);
+
+  return Math.round(v);
+}
+
+/* ---------------------------- STAT CARDS ------------------------- */
+
+const STAT_TONES = {
+  brand: {
+    dot: "bg-[#2c6b8a]",
+    bar: "bg-[#2c6b8a]",
+    on: "border-[#2c6b8a] bg-[#e8f1f6]",
+    focus: "focus-visible:ring-[#2c6b8a]",
+  },
+  green: {
+    dot: "bg-[#16834f]",
+    bar: "bg-[#16834f]",
+    on: "border-[#16834f] bg-emerald-50",
+    focus: "focus-visible:ring-[#16834f]",
+  },
+  red: {
+    dot: "bg-[#c8323f]",
+    bar: "bg-[#c8323f]",
+    on: "border-[#c8323f] bg-rose-50",
+    focus: "focus-visible:ring-[#c8323f]",
+  },
+};
+
+const StatChip = ({ label, value, total, tone, active, onClick }) => {
+  const n = useCountUp(value);
+  const t = STAT_TONES[tone];
+  const pct = total ? Math.round((value / total) * 100) : 0;
+
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      className={`flex w-[150px] cursor-pointer flex-col gap-1.5 rounded-xl border px-3.5 py-2.5 text-left transition duration-200 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 ${t.focus} ${
+        active ? t.on : "border-[#e2e8ee] bg-white hover:border-[#c9d5dd]"
+      }`}
+    >
+      <span className="flex items-center justify-between text-[12px] font-semibold text-[#53677f]">
+        <span className="flex items-center gap-1.5">
+          <span className={`h-2 w-2 rounded-full ${t.dot}`} />
+          {label}
+        </span>
+        <span className="tabular-nums">{pct}%</span>
+      </span>
+
+      <span className="text-[22px] font-extrabold leading-none tabular-nums text-[#1e2b36]">
+        {n}
+      </span>
+
+      <span className="h-1 w-full overflow-hidden rounded-full bg-[#e2e8ee]">
+        <span
+          className={`block h-full rounded-full ${t.bar} transition-[width] duration-500 ease-out`}
+          style={{ width: `${pct}%` }}
+        />
+      </span>
+    </button>
+  );
+};
 
 /* ------------------------------------------------------------------ */
-/*  CONFIRM POPUP                                                      */
+/* CONFIRMATION DIALOG                                                 */
 /* ------------------------------------------------------------------ */
 
 const StatusDialog = ({ user, onCancel, onConfirm }) => {
@@ -270,15 +377,23 @@ const StatusDialog = ({ user, onCancel, onConfirm }) => {
 
   useEffect(() => {
     confirmRef.current?.focus();
+
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+
     const onKey = (e) => {
       if (e.key === "Escape") onCancel();
+
       if (e.key === "Tab" && panelRef.current) {
-        const f = panelRef.current.querySelectorAll("button:not([disabled])");
-        if (!f.length) return;
-        const first = f[0];
-        const last = f[f.length - 1];
+        const focusable = panelRef.current.querySelectorAll(
+          "button:not([disabled])",
+        );
+
+        if (!focusable.length) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
         if (e.shiftKey && document.activeElement === first) {
           e.preventDefault();
           last.focus();
@@ -288,7 +403,9 @@ const StatusDialog = ({ user, onCancel, onConfirm }) => {
         }
       }
     };
+
     document.addEventListener("keydown", onKey);
+
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prevOverflow;
@@ -298,14 +415,14 @@ const StatusDialog = ({ user, onCancel, onConfirm }) => {
   const theme = activating
     ? {
         ring: "bg-emerald-100",
-        core: "from-[#1f9d63] to-[#3ccf8e]",
-        btn: "from-[#1f9d63] to-[#2fb877] hover:brightness-105 focus-visible:ring-emerald-500",
+        core: "from-[#16834f] to-[#2fc77e]",
+        btn: "from-[#16834f] to-[#2fb877] hover:brightness-105 focus-visible:ring-emerald-500",
         Icon: ShieldCheck,
       }
     : {
         ring: "bg-rose-100",
-        core: "from-[#d64545] to-[#f0757b]",
-        btn: "from-[#d64545] to-[#e5646a] hover:brightness-105 focus-visible:ring-rose-500",
+        core: "from-[#c8323f] to-[#ed626b]",
+        btn: "from-[#c8323f] to-[#e5646a] hover:brightness-105 focus-visible:ring-rose-500",
         Icon: ShieldAlert,
       };
 
@@ -316,6 +433,7 @@ const StatusDialog = ({ user, onCancel, onConfirm }) => {
         onClick={onCancel}
         aria-hidden="true"
       />
+
       <div
         ref={panelRef}
         role="dialog"
@@ -325,6 +443,7 @@ const StatusDialog = ({ user, onCancel, onConfirm }) => {
         className="js-pop relative w-full max-w-[400px] overflow-hidden rounded-2xl bg-white shadow-2xl"
       >
         <div className={`h-1.5 w-full bg-gradient-to-r ${theme.core}`} />
+
         <button
           type="button"
           onClick={onCancel}
@@ -354,6 +473,7 @@ const StatusDialog = ({ user, onCancel, onConfirm }) => {
               ? "Activate this jobseeker?"
               : "Deactivate this jobseeker?"}
           </h2>
+
           <p
             id="status-dialog-desc"
             className="mx-auto mt-1.5 max-w-[320px] text-[13.5px] leading-relaxed text-[#6b7a88]"
@@ -365,18 +485,22 @@ const StatusDialog = ({ user, onCancel, onConfirm }) => {
 
           <div className="mt-4 flex items-center gap-3 rounded-xl border border-[#e2e8ee] bg-[#f9fbfc] p-3 text-left">
             <Avatar user={user} size="h-11 w-11" text="text-[14px]" />
+
             <div className="min-w-0 flex-1">
               <p className="truncate text-[14px] font-semibold text-[#1e2b36]">
                 {user.fullName}
               </p>
+
               <p className="flex items-center gap-1 truncate text-[12px] text-[#6b7a88]">
                 {user.email ? <Mail size={11} /> : <Phone size={11} />}
                 {user.email || user.mobile}
               </p>
+
               <p className="truncate text-[12px] text-[#6b7a88]">
                 {user.jobCategory}
               </p>
             </div>
+
             <div className="flex shrink-0 items-center">
               <StatusBadge status={user.status} />
             </div>
@@ -387,20 +511,21 @@ const StatusDialog = ({ user, onCancel, onConfirm }) => {
               <p className="mb-1.5 text-[12px] font-semibold text-[#34445a]">
                 Reason (optional)
               </p>
+
               <div className="flex flex-wrap gap-1.5">
-                {INACTIVE_REASONS.map((r) => (
+                {INACTIVE_REASONS.map((item) => (
                   <button
-                    key={r}
+                    key={item}
                     type="button"
-                    aria-pressed={reason === r}
-                    onClick={() => setReason(reason === r ? null : r)}
+                    aria-pressed={reason === item}
+                    onClick={() => setReason(reason === item ? null : item)}
                     className={`cursor-pointer rounded-full px-2.5 py-1 text-[12px] font-medium ring-1 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2c6b8a] ${
-                      reason === r
+                      reason === item
                         ? "bg-[#2c6b8a] text-white ring-[#2c6b8a]"
                         : "bg-white text-[#34445a] ring-[#dce3eb] hover:bg-slate-50"
                     }`}
                   >
-                    {r}
+                    {item}
                   </button>
                 ))}
               </div>
@@ -416,6 +541,7 @@ const StatusDialog = ({ user, onCancel, onConfirm }) => {
           >
             Cancel
           </button>
+
           <button
             ref={confirmRef}
             type="button"
@@ -429,9 +555,8 @@ const StatusDialog = ({ user, onCancel, onConfirm }) => {
     </div>
   );
 };
-
 /* ------------------------------------------------------------------ */
-/*  PAGE                                                               */
+/* PAGE                                                                */
 /* ------------------------------------------------------------------ */
 
 const HEADINGS = [
@@ -452,7 +577,7 @@ const EmployerList = () => {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
-  const [sortDir, setSortDir] = useState(null); // null | "asc" | "desc"
+  const [sortDir, setSortDir] = useState(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
@@ -479,29 +604,46 @@ const EmployerList = () => {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
+
     const rows = users.filter((u) => {
       if (
         q &&
         !`${u.email || ""} ${u.fullName} ${u.mobile || ""}`
           .toLowerCase()
           .includes(q)
-      )
+      ) {
         return false;
-      if (statusFilter !== "All" && u.status !== statusFilter) return false;
-      if (categoryFilter !== "All" && u.jobCategory !== categoryFilter)
+      }
+
+      if (statusFilter !== "All" && u.status !== statusFilter) {
         return false;
+      }
+
+      if (categoryFilter !== "All" && u.jobCategory !== categoryFilter) {
+        return false;
+      }
+
       return true;
     });
+
     if (sortDir) {
       rows.sort(
         (a, b) =>
           a.fullName.localeCompare(b.fullName) * (sortDir === "asc" ? 1 : -1),
       );
     }
+
     return rows;
   }, [users, search, statusFilter, categoryFilter, sortDir]);
 
-
+  const counts = useMemo(
+    () => ({
+      total: users.length,
+      active: users.filter((u) => u.status === "Active").length,
+      inactive: users.filter((u) => u.status !== "Active").length,
+    }),
+    [users],
+  );
 
   /* PAGINATION */
 
@@ -515,6 +657,7 @@ const EmployerList = () => {
     let from = Math.max(1, currentPage - Math.floor(win / 2));
     const to = Math.min(totalPages, from + win - 1);
     from = Math.max(1, to - win + 1);
+
     return Array.from({ length: to - from + 1 }, (_, i) => from + i);
   }, [currentPage, totalPages]);
 
@@ -531,10 +674,14 @@ const EmployerList = () => {
       Address: u.address || "",
       Document: u.document?.name || "",
     }));
+
     const worksheet = XLSX.utils.json_to_sheet(excelData);
     const workbook = XLSX.utils.book_new();
+
     XLSX.utils.book_append_sheet(workbook, worksheet, "Jobseekers");
+
     XLSX.writeFile(workbook, "ishraq-jobseekers.xlsx");
+
     setToast({
       id: Date.now(),
       tone: "ok",
@@ -546,7 +693,10 @@ const EmployerList = () => {
 
   const confirmToggle = (reason) => {
     const target = confirmUser;
+    if (!target) return;
+
     const activating = target.status !== "Active";
+
     saveUsers(
       users.map((u) =>
         u.id === target.id
@@ -558,8 +708,10 @@ const EmployerList = () => {
           : u,
       ),
     );
+
     setConfirmUser(null);
     setFlashId(target.id);
+
     setToast({
       id: Date.now(),
       tone: activating ? "ok" : "warn",
@@ -569,17 +721,22 @@ const EmployerList = () => {
 
   useEffect(() => {
     if (flashId == null) return undefined;
-    const t = setTimeout(() => setFlashId(null), 1500);
-    return () => clearTimeout(t);
+
+    const timer = setTimeout(() => setFlashId(null), 1500);
+    return () => clearTimeout(timer);
   }, [flashId]);
 
   useEffect(() => {
     if (!toast) return undefined;
-    const t = setTimeout(() => setToast(null), 2800);
-    return () => clearTimeout(t);
+
+    const timer = setTimeout(() => setToast(null), 2800);
+    return () => clearTimeout(timer);
   }, [toast]);
 
-
+  const quickFilter = (value) => {
+    setStatusFilter((current) => (current === value ? "All" : value));
+    setPage(1);
+  };
 
   const selectCls =
     "h-9 w-full cursor-pointer appearance-none rounded-lg border border-[#c9d5dd] bg-white px-3 pr-9 text-[13px] font-medium text-[#34445a] outline-none transition hover:border-[#2c6b8a] focus:border-[#2c6b8a] focus:ring-2 focus:ring-[#2c6b8a]/30";
@@ -590,42 +747,107 @@ const EmployerList = () => {
   return (
     <div className="js-page min-h-full bg-[#f7f9fb] p-0 text-[#1e2b36]">
       <style>{`
-         @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
-         .js-page { font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif; }
-         @keyframes js-row-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-         @keyframes js-fade { from { opacity: 0; } to { opacity: 1; } }
-         @keyframes js-pop { 0% { opacity: 0; transform: translateY(12px) scale(.94); } 100% { opacity: 1; transform: none; } }
-         @keyframes js-halo { 0%, 100% { transform: scale(1); opacity: .9; } 50% { transform: scale(1.18); opacity: .35; } }
-         @keyframes js-ping { 75%, 100% { transform: scale(2.4); opacity: 0; } }
-         @keyframes js-flash { 0% { background-color: rgba(44,107,138,.22); } 100% { background-color: transparent; } }
-         @keyframes js-toast { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
-         .js-row { animation: js-row-in .35s ease both; }
-         .js-row.js-flash > td { animation: js-flash 1.4s ease-out both; }
-         .js-fade { animation: js-fade .2s ease both; }
-         .js-pop { animation: js-pop .28s cubic-bezier(.2,.9,.3,1.2) both; }
-         .js-halo { animation: js-halo 2.2s ease-in-out infinite; }
-         .js-ping { animation: js-ping 1.6s cubic-bezier(0,0,.2,1) infinite; }
-         .js-toast { animation: js-toast .25s ease both; }
-         @media (prefers-reduced-motion: reduce) {
-           .js-row, .js-row.js-flash > td, .js-fade, .js-pop, .js-halo, .js-ping, .js-toast { animation: none !important; }
-         }
-       `}</style>
+        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+        .js-page {
+          font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+        }
+
+        @keyframes js-row-in {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: none; }
+        }
+
+        @keyframes js-fade {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes js-pop {
+          0% { opacity: 0; transform: translateY(12px) scale(.94); }
+          100% { opacity: 1; transform: none; }
+        }
+
+        @keyframes js-halo {
+          0%, 100% { transform: scale(1); opacity: .9; }
+          50% { transform: scale(1.18); opacity: .35; }
+        }
+
+        @keyframes js-ping {
+          75%, 100% { transform: scale(2.4); opacity: 0; }
+        }
+
+        @keyframes js-flash {
+          0% { background-color: rgba(44,107,138,.22); }
+          100% { background-color: transparent; }
+        }
+
+        @keyframes js-toast {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: none; }
+        }
+
+        .js-row {
+          animation: js-row-in .35s ease both;
+        }
+
+        .js-row.js-flash > td {
+          animation: js-flash 1.4s ease-out both;
+        }
+
+        .js-fade {
+          animation: js-fade .2s ease both;
+        }
+
+        .js-pop {
+          animation: js-pop .28s cubic-bezier(.2,.9,.3,1.2) both;
+        }
+
+        .js-halo {
+          animation: js-halo 2.2s ease-in-out infinite;
+        }
+
+        .js-ping {
+          animation: js-ping 1.6s cubic-bezier(0,0,.2,1) infinite;
+        }
+
+        .js-toast {
+          animation: js-toast .25s ease both;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          .js-row,
+          .js-row.js-flash > td,
+          .js-fade,
+          .js-pop,
+          .js-halo,
+          .js-ping,
+          .js-toast {
+            animation: none !important;
+          }
+        }
+      `}</style>
 
       <div className="mx-auto max-w-[1400px] rounded-[12px] border border-[#e2e8ee] bg-white p-3.5 shadow-sm sm:px-[22px] sm:pb-4 sm:pt-5">
-        {/* TITLE + filter */}
-        <div className="mb-4 flex  items-center justify-between gap-3">
+        {/* TITLE + FILTERS */}
+
+        <div className="mb-4 flex flex-col items-start justify-between gap-3 xl:flex-row xl:items-center">
           <div>
             <h1 className="m-0 text-[22px] font-extrabold tracking-tight text-[#2c6b8a] sm:text-[26px]">
-            Employer List
+              Employer List
             </h1>
+         
           </div>
-          {/* SEARCH + FILTERS */}
-          <div className=" flex flex-wrap items-center gap-2.5 ">
-            <div className="relative min-w-[220px] ">
+
+          <div className="flex w-full flex-wrap items-center gap-2.5 xl:w-auto">
+            {/* SEARCH */}
+
+            <div className="relative min-w-[320px] flex-1 xl:flex-none">
               <SearchIcon
                 size={15}
                 className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9aa5b1]"
               />
+
               <input
                 type="search"
                 aria-label="Search jobseekers"
@@ -639,7 +861,9 @@ const EmployerList = () => {
               />
             </div>
 
-            <div className="relative w-full sm:w-[160px]">
+            {/* STATUS FILTER */}
+
+            <div className="relative w-full sm:w-[150px]">
               <select
                 aria-label="Filter by status"
                 value={statusFilter}
@@ -653,15 +877,18 @@ const EmployerList = () => {
                 <option value="Active">Status: Active</option>
                 <option value="Inactive">Status: Inactive</option>
               </select>
+
               <ChevronDown
                 size={14}
                 className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#2c6b8a]"
               />
             </div>
 
-            <div className="relative w-full sm:w-[200px]">
+            {/* CATEGORY FILTER */}
+
+            <div className="relative w-full sm:w-[190px]">
               <select
-                aria-label="Filter by profession"
+                aria-label="Filter by Organization Type"
                 value={categoryFilter}
                 onChange={(e) => {
                   setCategoryFilter(e.target.value);
@@ -669,18 +896,22 @@ const EmployerList = () => {
                 }}
                 className={selectCls}
               >
-                <option value="All">Profession: All</option>
-                {JOB_CATEGORIES.map((c) => (
-                  <option key={c} value={c}>
-                    Profession: {c}
+                <option value="All">Organization Type: All</option>
+
+                {JOB_CATEGORIES.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
                   </option>
                 ))}
               </select>
+
               <ChevronDown
                 size={14}
                 className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#2c6b8a]"
               />
             </div>
+
+            {/* RESET */}
 
             <button
               type="button"
@@ -696,13 +927,15 @@ const EmployerList = () => {
               Reset
             </button>
 
+            {/* EXPORT */}
+
             <button
               type="button"
               onClick={exportToExcel}
               disabled={!filtered.length}
               title="Export to Excel"
               aria-label="Export to Excel"
-              className="group inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#1f9d63] to-[#2fb877] px-3 text-[13px] font-semibold text-white shadow-sm transition hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1f9d63] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              className="group inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#16834f] to-[#2fb877] px-3 text-[13px] font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#16834f] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <ExcelIcon
                 size={15}
@@ -713,36 +946,43 @@ const EmployerList = () => {
             </button>
           </div>
         </div>
+        <hr />
 
         {/* TABLE */}
-        <div className="overflow-x-auto h-[58vh] mt-6 overflow-y-auto scrollbar-thin rounded-lg border border-[#e2e8ee]">
-          <table className="w-full  border-collapse text-sm">
-            <thead>
+
+        <div className="mt-6 h-[56vh] overflow-x-auto overflow-y-auto rounded-lg border border-[#cbe1f4] scrollbar-thin">
+          <table className="w-full min-w-[1050px] border-collapse text-[13px]">
+            <thead className="sticky top-0 z-10">
               <tr>
-                {HEADINGS.map((h) => (
+                {HEADINGS.map((heading) => (
                   <th
-                    key={h}
+                    key={heading}
                     scope="col"
                     aria-sort={
-                      h === "Full Name" && sortDir
+                      heading === "Full Name" && sortDir
                         ? sortDir === "asc"
                           ? "ascending"
                           : "descending"
                         : undefined
                     }
-                    className="whitespace-nowrap bg-gradient-to-r from-[#2c6b8a] to-[#3b86a6] px-3.5 py-3 text-left text-[13.5px] font-semibold text-white"
+                    className="whitespace-nowrap bg-gradient-to-r from-[#2c6b8a] to-[#3b86a6] px-3.5 py-3 text-left text-[13px] font-bold text-white"
                   >
-                    {h === "Full Name" ? (
+                    {heading === "Full Name" ? (
                       <button
                         type="button"
                         onClick={() =>
-                          setSortDir((d) =>
-                            d === null ? "asc" : d === "asc" ? "desc" : null,
+                          setSortDir((direction) =>
+                            direction === null
+                              ? "asc"
+                              : direction === "asc"
+                                ? "desc"
+                                : null,
                           )
                         }
-                        className="inline-flex cursor-pointer items-center gap-1 rounded font-semibold hover:text-white/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                        className="inline-flex cursor-pointer items-center gap-1 rounded font-bold hover:text-white/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
                       >
-                        {h}
+                        {heading}
+
                         <span className="flex flex-col leading-none">
                           <ChevronUp
                             size={10}
@@ -750,6 +990,7 @@ const EmployerList = () => {
                               sortDir === "asc" ? "opacity-100" : "opacity-40"
                             }
                           />
+
                           <ChevronDown
                             size={10}
                             className={
@@ -759,7 +1000,7 @@ const EmployerList = () => {
                         </span>
                       </button>
                     ) : (
-                      h
+                      heading
                     )}
                   </th>
                 ))}
@@ -776,16 +1017,19 @@ const EmployerList = () => {
                     <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#e8f1f6] text-[#2c6b8a]">
                       <UsersIcon size={22} />
                     </div>
+
                     <p className="mt-3 text-[14px] font-semibold text-[#1e2b36]">
                       {isFiltered
                         ? "No jobseekers match these filters"
                         : "No jobseekers yet"}
                     </p>
+
                     <p className="mt-0.5 text-[13px] text-[#6b7a88]">
                       {isFiltered
                         ? "Try a different search or clear the filters."
                         : "New registrations will appear here."}
                     </p>
+
                     {isFiltered && (
                       <button
                         type="button"
@@ -800,30 +1044,42 @@ const EmployerList = () => {
               ) : (
                 pageRows.map((user, index) => {
                   const inactive = user.status !== "Active";
+
                   return (
                     <tr
                       key={user.id}
                       style={{
                         animationDelay: `${Math.min(index, 12) * 35}ms`,
                       }}
-                      className={`js-row group transition-colors even:bg-[#f9fbfc] hover:bg-[#e8f1f6] ${flashId === user.id ? "js-flash" : ""}`}
+                      className={`js-row group transition-colors even:bg-[#f9fbfc] hover:bg-[#e8f1f6] ${
+                        flashId === user.id ? "js-flash" : ""
+                      }`}
                     >
-                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 tabular-nums text-[#6b7a88]">
+                      {/* SR NO */}
+
+                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[13px] font-medium tabular-nums text-[#53677f]">
                         {start + index + 1}
                       </td>
 
-                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5">
+                      {/* FULL NAME */}
+
+                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[13px]">
                         <div className="flex items-center gap-2.5">
                           <Avatar user={user} />
+
                           <span
-                            className={`font-semibold transition-colors ${inactive ? "text-[#6b7a88]" : "text-[#1e2b36]"}`}
+                            className={`font-semibold transition-colors ${
+                              inactive ? "text-[#6b7a88]" : "text-[#1e2b36]"
+                            }`}
                           >
                             {user.fullName}
                           </span>
                         </div>
                       </td>
 
-                      <td className="break-all border-t border-[#e2e8ee] px-3.5 py-2.5">
+                      {/* EMAIL */}
+
+                      <td className="break-all border-t border-[#e2e8ee] px-3.5 py-2.5 text-[13px] font-medium text-[#34445a]">
                         {user.email ? (
                           <span className="inline-flex items-center gap-1.5">
                             <Mail
@@ -837,21 +1093,27 @@ const EmployerList = () => {
                         )}
                       </td>
 
-                      <td className="whitespace-nowrap border-t border-[#e2e8ee] px-3.5 py-2.5">
+                      {/* MOBILE */}
+
+                      <td className="whitespace-nowrap border-t border-[#e2e8ee] px-3.5 py-2.5 text-[13px] font-medium text-[#34445a]">
                         <span className="inline-flex items-center gap-1.5">
                           <Phone
                             size={13}
                             className="shrink-0 text-[#9aa5b1]"
                           />
-                          {user.mobile}
+                          {user.mobile || "-"}
                         </span>
                       </td>
 
-                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5">
+                      {/* JOB CATEGORY */}
+
+                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[13px]">
                         <CategoryBadge category={user.jobCategory} />
                       </td>
 
-                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5">
+                      {/* STATUS */}
+
+                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[13px]">
                         <StatusBadge
                           status={user.status}
                           title={
@@ -862,28 +1124,36 @@ const EmployerList = () => {
                         />
                       </td>
 
-                      <td className="max-w-[240px] border-t border-[#e2e8ee] px-3.5 py-2.5 text-[#6b7a88]">
+                      {/* ADDRESS */}
+
+                      <td className="max-w-[240px] border-t border-[#e2e8ee] px-3.5 py-2.5 text-[13px] font-medium text-[#6b7a88]">
                         <span className="inline-flex items-start gap-1.5">
                           <MapPin
                             size={13}
                             className="mt-0.5 shrink-0 text-[#9aa5b1]"
                           />
-                          {user.address}
+                          <span className="line-clamp-2">
+                            {user.address || "-"}
+                          </span>
                         </span>
                       </td>
-                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5">
+
+                      {/* ACTIONS */}
+
+                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[13px]">
                         <div className="flex items-center gap-2">
                           <button
                             type="button"
                             onClick={() =>
                               navigate(`/admin/jobseekers/${user.id}`)
                             }
-                            title="View"
+                            title="View jobseeker"
                             aria-label={`View ${user.fullName}`}
-                            className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-gradient-to-br from-[#1a9aa8] to-[#35b8c4] text-white shadow-sm transition hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a9aa8] focus-visible:ring-offset-2"
+                            className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-gradient-to-br from-[#168fa1] to-[#35b8c4] text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a9aa8] focus-visible:ring-offset-2"
                           >
-                            <EyeIcon size={14} strokeWidth={2} />
+                            <EyeIcon size={14} strokeWidth={2.2} />
                           </button>
+
                           <StatusSwitch
                             user={user}
                             onClick={() => setConfirmUser(user)}
@@ -899,6 +1169,7 @@ const EmployerList = () => {
         </div>
 
         {/* PAGINATION */}
+
         <div className="mt-3.5 flex flex-col gap-3 border-t border-[#e2e8ee] pt-3.5 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-wrap items-center gap-3.5 text-[12.5px] text-[#60738a]">
             <span>
@@ -919,6 +1190,7 @@ const EmployerList = () => {
 
             <label className="flex items-center gap-1.5">
               <span>Show:</span>
+
               <select
                 value={pageSize}
                 onChange={(e) => {
@@ -936,7 +1208,10 @@ const EmployerList = () => {
             </label>
           </div>
 
-          <nav aria-label="Pagination" className="flex items-center gap-1">
+          <nav
+            aria-label="Pagination"
+            className="flex flex-wrap items-center gap-1"
+          >
             <button
               type="button"
               onClick={() => setPage(currentPage - 1)}
@@ -974,6 +1249,8 @@ const EmployerList = () => {
         </div>
       </div>
 
+      {/* STATUS CONFIRMATION */}
+
       {confirmUser && (
         <StatusDialog
           user={confirmUser}
@@ -981,6 +1258,8 @@ const EmployerList = () => {
           onConfirm={confirmToggle}
         />
       )}
+
+      {/* TOAST */}
 
       {toast && (
         <div
@@ -990,10 +1269,13 @@ const EmployerList = () => {
           className="js-toast fixed bottom-5 right-5 z-[60] flex items-center gap-2.5 rounded-xl bg-[#1e2b36] px-4 py-2.5 text-[13px] font-medium text-white shadow-xl"
         >
           <span
-            className={`grid h-5 w-5 place-items-center rounded-full ${toast.tone === "ok" ? "bg-emerald-500" : "bg-amber-500"}`}
+            className={`grid h-5 w-5 place-items-center rounded-full ${
+              toast.tone === "ok" ? "bg-emerald-500" : "bg-amber-500"
+            }`}
           >
             <CheckIcon size={12} strokeWidth={3.4} />
           </span>
+
           {toast.msg}
         </div>
       )}
