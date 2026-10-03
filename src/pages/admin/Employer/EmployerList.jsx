@@ -753,88 +753,6 @@ const EmployerList = () => {
 
   return (
     <div className="js-page min-h-full bg-[#f7f9fb] p-0 text-[#1e2b36]">
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
-
-        .js-page {
-          font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif;
-        }
-
-        @keyframes js-row-in {
-          from { opacity: 0; transform: translateY(8px); }
-          to { opacity: 1; transform: none; }
-        }
-
-        @keyframes js-fade {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-
-        @keyframes js-pop {
-          0% { opacity: 0; transform: translateY(12px) scale(.94); }
-          100% { opacity: 1; transform: none; }
-        }
-
-        @keyframes js-halo {
-          0%, 100% { transform: scale(1); opacity: .9; }
-          50% { transform: scale(1.18); opacity: .35; }
-        }
-
-        @keyframes js-ping {
-          75%, 100% { transform: scale(2.4); opacity: 0; }
-        }
-
-        @keyframes js-flash {
-          0% { background-color: rgba(44,107,138,.22); }
-          100% { background-color: transparent; }
-        }
-
-        @keyframes js-toast {
-          from { opacity: 0; transform: translateY(12px); }
-          to { opacity: 1; transform: none; }
-        }
-
-        .js-row {
-          animation: js-row-in .35s ease both;
-        }
-
-        .js-row.js-flash > td {
-          animation: js-flash 1.4s ease-out both;
-        }
-
-        .js-fade {
-          animation: js-fade .2s ease both;
-        }
-
-        .js-pop {
-          animation: js-pop .28s cubic-bezier(.2,.9,.3,1.2) both;
-        }
-
-        .js-halo {
-          animation: js-halo 2.2s ease-in-out infinite;
-        }
-
-        .js-ping {
-          animation: js-ping 1.6s cubic-bezier(0,0,.2,1) infinite;
-        }
-
-        .js-toast {
-          animation: js-toast .25s ease both;
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-          .js-row,
-          .js-row.js-flash > td,
-          .js-fade,
-          .js-pop,
-          .js-halo,
-          .js-ping,
-          .js-toast {
-            animation: none !important;
-          }
-        }
-      `}</style>
-
       <div className="mx-auto max-w-[1400px] rounded-[12px] border border-[#e2e8ee] bg-white p-3.5 shadow-sm sm:px-[22px] sm:pb-4 sm:pt-5">
         {/* TITLE + FILTERS */}
 
@@ -1104,7 +1022,6 @@ const EmployerList = () => {
                           }
                         />
                       </td>
-
 
                       {/* MOBILE */}
 

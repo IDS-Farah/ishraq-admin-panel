@@ -7,16 +7,44 @@ import {
   ChevronUp,
   X as CloseIcon,
   Check as CheckIcon,
+  RotateCcw,
   Search as SearchIcon,
   Users as UsersIcon,
   Mail,
   Phone,
+  MapPin,
   ShieldAlert,
   ShieldCheck,
   UserRoundCheck,
   UserRoundX,
+  Building2,
+  Star,
 } from "lucide-react";
 import * as XLSX from "xlsx";
+
+/* ------------------------------------------------------------------ */
+/* CONFIG + DEMO DATA                                                  */
+/* ------------------------------------------------------------------ */
+
+const JOB_CATEGORIES = [
+  "Nurse",
+  "Doctor",
+  "Pharmacist",
+  "Lab Technician",
+  "Caregiver",
+  "Admin / Office Staff",
+  "Other",
+];
+
+const CATEGORY_STYLE = {
+  Nurse: "bg-sky-600 text-white ring-sky-700",
+  Doctor: "bg-indigo-600 text-white ring-indigo-700",
+  Pharmacist: "bg-violet-600 text-white ring-violet-700",
+  "Lab Technician": "bg-teal-600 text-white ring-teal-700",
+  Caregiver: "bg-amber-500 text-white ring-amber-600",
+  "Admin / Office Staff": "bg-slate-600 text-white ring-slate-700",
+  Other: "bg-gray-600 text-white ring-gray-700",
+};
 
 const AVATAR_GRADIENTS = [
   "from-[#2c6b8a] to-[#5ba6bd]",
@@ -37,52 +65,31 @@ const INACTIVE_REASONS = [
 const SEED_USERS = [
   {
     id: 1,
-    srNo: 1,
     name: "Ayesha Khan",
-    mobile: "+91 98765 43210",
+    contactNo: "+91 98765 43210",
     email: "ayesha.khan@gmail.com",
-    youAre: "Employer",
-    subject: "Hiring nurses for a multispecialty clinic",
+    youAre: "Jobseeker",
+    overallExperience: 5,
   },
   {
     id: 2,
-    srNo: 2,
     name: "Imran Shaikh",
-    mobile: "+91 98230 12345",
+    contactNo: "+91 98230 12345",
     email: "imran.shaikh@gmail.com",
-    youAre: "Jobseeker",
-    subject: "Looking for lab technician opportunities",
+    youAre: "Employer",
+    overallExperience: 4,
   },
   {
     id: 3,
-    srNo: 3,
     name: "Sana Pathan",
-    mobile: "+91 99223 34455",
+    contactNo: "+91 99223 34455",
     email: "sana.pathan@gmail.com",
-    youAre: "Jobseeker",
-    subject: "Interested in pharmacist positions",
-  },
-  {
-    id: 4,
-    srNo: 4,
-    name: "Rohit Deshmukh",
-    mobile: "+91 90110 22334",
-    email: "rohit.deshmukh@gmail.com",
-    youAre: "Employer",
-    subject: "Seeking qualified doctors for our clinic",
-  },
-  {
-    id: 5,
-    srNo: 5,
-    name: "Neha Jadhav",
-    mobile: "+91 97650 88123",
-    email: "neha.jadhav@outlook.com",
-    youAre: "Other",
-    subject: "Question about the hiring process",
+    youAre: "Visitor",
+    overallExperience: 3,
   },
 ];
 
-const STORAGE_KEY = "ishraq_general_enquiry";
+const STORAGE_KEY = "ishraq_feedback";
 
 const getUsers = () => {
   const saved = localStorage.getItem(STORAGE_KEY);
@@ -151,6 +158,156 @@ const StatusBadge = ({ status, title, fixed = true }) => {
       </span>
       {status}
     </span>
+  );
+};
+
+const CategoryBadge = ({ category }) => (
+  <span
+    title={category}
+    className={`${BADGE_BASE} w-[140px] ${
+      CATEGORY_STYLE[category] || CATEGORY_STYLE.Other
+    }`}
+  >
+    <span className="truncate">{category}</span>
+  </span>
+);
+
+/* -------------------------- STATUS SWITCH ------------------------- */
+
+const StatusSwitch = ({ user, onClick }) => {
+  const active = user.status === "Active";
+
+  const label = active
+    ? `Deactivate ${user.fullName}`
+    : `Activate ${user.fullName}`;
+
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={active}
+      aria-label={label}
+      title={
+        active ? "Active. Click to deactivate" : "Inactive. Click to activate"
+      }
+      onClick={onClick}
+      className={`relative h-6 w-[42px] shrink-0 cursor-pointer rounded-full p-0.5 shadow-inner transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2c6b8a] focus-visible:ring-offset-2 ${
+        active
+          ? "bg-gradient-to-r from-[#16834f] to-[#2fc77e]"
+          : "bg-gradient-to-r from-[#c8323f] to-[#ed626b]"
+      }`}
+    >
+      <span
+        className={`grid h-5 w-5 place-items-center rounded-full bg-white shadow-md transition-transform duration-300 ease-[cubic-bezier(.3,1.4,.5,1)] ${
+          active ? "translate-x-[18px]" : "translate-x-0"
+        }`}
+      >
+        {active ? (
+          <UserRoundCheck
+            size={13}
+            strokeWidth={2.7}
+            className="text-emerald-700"
+          />
+        ) : (
+          <UserRoundX size={13} strokeWidth={2.7} className="text-rose-700" />
+        )}
+      </span>
+    </button>
+  );
+};
+
+/* --------------------------- COUNT UP ---------------------------- */
+
+function useCountUp(value, duration = 600) {
+  const [v, setV] = useState(0);
+  const prev = useRef(0);
+
+  useEffect(() => {
+    const reduce = window.matchMedia?.(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+
+    if (reduce) {
+      setV(value);
+      prev.current = value;
+      return undefined;
+    }
+
+    const from = prev.current;
+    const t0 = performance.now();
+    let raf;
+
+    const tick = (t) => {
+      const p = Math.min(1, (t - t0) / duration);
+      setV(from + (value - from) * (1 - Math.pow(1 - p, 3)));
+
+      if (p < 1) raf = requestAnimationFrame(tick);
+      else prev.current = value;
+    };
+
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value, duration]);
+
+  return Math.round(v);
+}
+
+/* ---------------------------- STAT CARDS ------------------------- */
+
+const STAT_TONES = {
+  brand: {
+    dot: "bg-[#2c6b8a]",
+    bar: "bg-[#2c6b8a]",
+    on: "border-[#2c6b8a] bg-[#e8f1f6]",
+    focus: "focus-visible:ring-[#2c6b8a]",
+  },
+  green: {
+    dot: "bg-[#16834f]",
+    bar: "bg-[#16834f]",
+    on: "border-[#16834f] bg-emerald-50",
+    focus: "focus-visible:ring-[#16834f]",
+  },
+  red: {
+    dot: "bg-[#c8323f]",
+    bar: "bg-[#c8323f]",
+    on: "border-[#c8323f] bg-rose-50",
+    focus: "focus-visible:ring-[#c8323f]",
+  },
+};
+
+const StatChip = ({ label, value, total, tone, active, onClick }) => {
+  const n = useCountUp(value);
+  const t = STAT_TONES[tone];
+  const pct = total ? Math.round((value / total) * 100) : 0;
+
+  return (
+    <button
+      type="button"
+      aria-pressed={active}
+      onClick={onClick}
+      className={`flex w-[150px] cursor-pointer flex-col gap-1.5 rounded-xl border px-3.5 py-2.5 text-left transition duration-200 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 ${t.focus} ${
+        active ? t.on : "border-[#e2e8ee] bg-white hover:border-[#c9d5dd]"
+      }`}
+    >
+      <span className="flex items-center justify-between text-[12px] font-semibold text-[#53677f]">
+        <span className="flex items-center gap-1.5">
+          <span className={`h-2 w-2 rounded-full ${t.dot}`} />
+          {label}
+        </span>
+        <span className="tabular-nums">{pct}%</span>
+      </span>
+
+      <span className="text-[22px] font-extrabold leading-none tabular-nums text-[#1e2b36]">
+        {n}
+      </span>
+
+      <span className="h-1 w-full overflow-hidden rounded-full bg-[#e2e8ee]">
+        <span
+          className={`block h-full rounded-full ${t.bar} transition-[width] duration-500 ease-out`}
+          style={{ width: `${pct}%` }}
+        />
+      </span>
+    </button>
   );
 };
 
@@ -351,14 +508,13 @@ const StatusDialog = ({ user, onCancel, onConfirm }) => {
 const HEADINGS = [
   "Sr.No",
   "Name",
-  "Mobile",
-  "Email",
+  "Contact Number / Email",
   "You Are",
-  "Subject",
-  "Actions",
+  "Overall Experience",
+  "Action",
 ];
 
-const GeneralEnquiryList = () => {
+const FeedbackList = () => {
   const navigate = useNavigate();
 
   const [users, setUsers] = useState(getUsers);
@@ -420,6 +576,15 @@ const GeneralEnquiryList = () => {
     return rows;
   }, [users, search, statusFilter, categoryFilter, sortDir]);
 
+  const counts = useMemo(
+    () => ({
+      total: users.length,
+      active: users.filter((u) => u.status === "Active").length,
+      inactive: users.filter((u) => u.status !== "Active").length,
+    }),
+    [users],
+  );
+
   /* PAGINATION */
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const currentPage = Math.min(page, totalPages);
@@ -439,6 +604,32 @@ const GeneralEnquiryList = () => {
   }, [currentPage, totalPages]);
 
   /* EXPORT */
+
+  const exportToExcel = () => {
+    const excelData = filtered.map((u, i) => ({
+      "Sr.No": i + 1,
+      "Organization Name": u.fullName,
+      Email: u.email || "",
+      Mobile: u.mobile || "",
+      "Organization Type": u.jobCategory || "",
+      Status: u.status,
+      Address: u.address || "",
+      Document: u.document?.name || "",
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Employers");
+
+    XLSX.writeFile(workbook, "ishraq-Employers.xlsx");
+
+    setToast({
+      id: Date.now(),
+      tone: "ok",
+      msg: `Exported ${filtered.length} Employers`,
+    });
+  };
 
   /* STATUS CHANGE */
 
@@ -484,6 +675,14 @@ const GeneralEnquiryList = () => {
     return () => clearTimeout(timer);
   }, [toast]);
 
+  const quickFilter = (value) => {
+    setStatusFilter((current) => (current === value ? "All" : value));
+    setPage(1);
+  };
+
+  const selectCls =
+    "h-9 w-full cursor-pointer appearance-none rounded-lg border border-[#c9d5dd] bg-white px-3 pr-9 text-[15px] font-medium text-[#34445a] outline-none transition hover:border-[#2c6b8a] focus:border-[#2c6b8a] focus:ring-2 focus:ring-[#2c6b8a]/30";
+
   const pageBtn =
     "grid h-8 min-w-8 cursor-pointer place-items-center rounded-lg px-2.5 text-[12.5px] font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2c6b8a]";
 
@@ -495,7 +694,7 @@ const GeneralEnquiryList = () => {
         <div className="mb-4 flex flex-col items-start justify-between gap-3 xl:flex-row xl:items-center">
           <div>
             <h1 className="m-0 text-[22px] font-extrabold tracking-tight text-[#2c6b8a] sm:text-[26px]">
-              General Enquiry
+              Feedback List
             </h1>
           </div>
 
@@ -619,6 +818,8 @@ const GeneralEnquiryList = () => {
                 </tr>
               ) : (
                 pageRows.map((user, index) => {
+                  const inactive = user.status !== "Active";
+
                   return (
                     <tr
                       key={user.id}
@@ -637,20 +838,42 @@ const GeneralEnquiryList = () => {
                         {user.name || "-"}
                       </td>
 
-                      <td className="whitespace-nowrap border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
-                        {user.mobile || "-"}
-                      </td>
-
                       <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
-                        {user.email || "-"}
+                        <div>{user.contactNo || "-"}</div>
+                        {user.email && (
+                          <div className="text-sm text-slate-500">
+                            {user.email}
+                          </div>
+                        )}
                       </td>
 
                       <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
                         {user.youAre || "-"}
                       </td>
 
-                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
-                        {user.subject || "-"}
+                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5">
+                        <div
+                          className="flex items-center gap-1"
+                          role="img"
+                          aria-label={`${user.overallExperience} out of 5 stars`}
+                        >
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              size={16}
+                              fill={
+                                star <= user.overallExperience
+                                  ? "#f59e0b"
+                                  : "none"
+                              }
+                              className={
+                                star <= user.overallExperience
+                                  ? "text-amber-500"
+                                  : "text-slate-300"
+                              }
+                            />
+                          ))}
+                        </div>
                       </td>
 
                       <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]">
@@ -658,10 +881,10 @@ const GeneralEnquiryList = () => {
                           <button
                             type="button"
                             onClick={() =>
-                              navigate(`/admin/Contacts/${user.id}`)
+                              navigate(`/admin/Feedback/${user.id}`)
                             }
-                            title="View contact"
-                            aria-label={`View ${user.name || "contact"}`}
+                            title="View feedback"
+                            aria-label={`View feedback from ${user.name || "user"}`}
                             className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-gradient-to-br from-[#168fa1] to-[#35b8c4] text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a9aa8] focus-visible:ring-offset-2"
                           >
                             <EyeIcon size={14} strokeWidth={2.2} />
@@ -790,4 +1013,4 @@ const GeneralEnquiryList = () => {
   );
 };
 
-export default GeneralEnquiryList;
+export default FeedbackList;

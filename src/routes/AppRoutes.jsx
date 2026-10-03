@@ -36,8 +36,8 @@ import SimpleEnquiry from "../pages/admin/enquiry/SimpleEnquiry";
 import GeneralEnquiry from "../pages/admin/enquiry/GeneralEnquiry";
 import ViewSimpleEnquiry from "../pages/admin/enquiry/ViewSimpleEnquiry";
 import ViewGerneralEnquiry from "../pages/admin/enquiry/ViewGerneralEnquiry";
-import FeedbackList from "../pages/Feedback/FeedbackList";
-import ViewFeedbackList from "../pages/Feedback/ViewFeedbackList";
+import FeedbackList from "../pages/admin/Feedback/FeedbackList";
+import ViewFeedbackList from "../pages/admin/Feedback/ViewFeedbackList";
 import ComplaintList from "../pages/admin/Complaints/ComplaintList";
 import ViewComplaintList from "../pages/admin/Complaints/ViewComplaintList";
 
