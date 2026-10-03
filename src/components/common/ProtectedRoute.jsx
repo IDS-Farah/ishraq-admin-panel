@@ -1,18 +1,15 @@
+
 import { Navigate, Outlet } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext";
 
 const ProtectedRoute = ({ allowedRole }) => {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  // const token = localStorage.getItem("token");
+  const user = JSON.parse(localStorage.getItem("user") || "null");
 
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRole && user.role !== allowedRole) {
+  if (user.role?.toLowerCase() !== allowedRole.toLowerCase()) {
     return <Navigate to="/unauthorized" replace />;
   }
 

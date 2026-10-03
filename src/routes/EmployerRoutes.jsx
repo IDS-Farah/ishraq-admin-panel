@@ -1,32 +1,26 @@
+
+import { Route, Navigate } from "react-router-dom";
+
+import ProtectedRoute from "../components/common/ProtectedRoute";
 import EmployerLayout from "../layouts/EmployerLayout/EmployerLayout";
 
-import Dashboard from "../pages/employer/Dashboard";
-import Profile from "../pages/employer/Profile";
-import Jobs from "../pages/employer/Jobs";
+import EmployerDashboard from "../pages/employer/Dashboard/EmployerDashboard";
+import EmployerProfile from "../pages/employer/Dashboard/Profile/Profile";
+import EmployerJobs from "../pages/employer/Dashboard/Jobs/MyJobs";
 
-const EmployerRoutes = () => {
-  return {
-    path: "/employer",
-    element: <EmployerLayout />,
-    children: [
-      {
-        index: true,
-        element: <Dashboard />,
-      },
-      {
-        path: "dashboard",
-        element: <Dashboard />,
-      },
-      {
-        path: "profile",
-        element: <Profile />,
-      },
-      {
-        path: "jobs",
-        element: <Jobs />,
-      },
-    ],
-  };
-};
+const EmployerRoutes = (
+  <Route element={<ProtectedRoute allowedRole="employer" />}>
+    <Route path="/employer" element={<EmployerLayout />}>
+      <Route
+        index
+        element={<Navigate to="/employer/dashboard" replace />}
+      />
+
+      <Route path="dashboard" element={<EmployerDashboard />} />
+      <Route path="profile" element={<EmployerProfile />} />
+      <Route path="jobs" element={<EmployerJobs />} />
+    </Route>
+  </Route>
+);
 
 export default EmployerRoutes;
