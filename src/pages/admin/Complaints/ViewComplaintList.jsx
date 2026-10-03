@@ -69,7 +69,7 @@ const ViewComplaintList = () => {
   if (!complaint) {
     return (
       <div className="min-h-full bg-[#f7f9fb] p-0 text-[#1e2b36]">
-        <div className="mx-auto max-w-[1400px] rounded-[10px] border border-[#e2e8ee] bg-white p-3.5 sm:px-[22px] sm:pb-4 sm:pt-5">
+        <div className="mx-auto max-w-[1400px] rounded-[10px] border border-[#e2e8ee] bg-white p-3.5 sm:px-[18px] sm:pb-4 sm:pt-5">
           <div className="border-b border-[#e2e8ee] pb-4">
             <h1 className="m-0 font-serif text-[22px] font-bold text-[#2c6b8a] sm:text-[26px]">
               Complaint Details
@@ -98,7 +98,7 @@ const ViewComplaintList = () => {
 
   return (
     <div className="min-h-full bg-[#f7f9fb] p-0 text-[#1e2b36]">
-      <div className="mx-auto max-w-[1400px] rounded-[10px] border border-[#e2e8ee] bg-white p-3.5 sm:px-[22px] sm:pb-4 sm:pt-5">
+      <div className="mx-auto max-w-[1400px] rounded-[10px] border border-[#e2e8ee] bg-white p-3.5 sm:px-[18px] sm:pb-4 sm:pt-5">
 
         {/* Header */}
 

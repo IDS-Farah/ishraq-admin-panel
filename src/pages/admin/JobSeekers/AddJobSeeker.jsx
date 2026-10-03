@@ -252,7 +252,7 @@ const AddJobSeeker = () => {
   return (
     <div className="min-h-full bg-[#f7f9fb] p-0 text-[#1e2b36]">
 
-      <div className="w-full rounded-[10px] border border-[#e2e8ee] bg-white p-3.5 sm:px-[22px] sm:pb-[22px] sm:pt-5">
+      <div className="w-full rounded-[10px] border border-[#e2e8ee] bg-white p-3.5 sm:px-[18px] sm:pb-[22px] sm:pt-5">
 
         {/* ================= TOP BAR ================= */}
 

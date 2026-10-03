@@ -743,7 +743,7 @@ const JobSeekerList = () => {
 
   return (
     <div className="js-page min-h-full bg-[#f7f9fb] p-0 text-[#1e2b36]">
-      <div className="mx-auto max-w-[1400px] rounded-[12px] border border-[#e2e8ee] bg-white p-3.5 shadow-sm sm:px-[22px] sm:pb-4 sm:pt-5">
+      <div className="mx-auto max-w-[1400px] rounded-[12px] border border-[#e2e8ee] bg-white p-2 shadow-sm sm:px-[18px] sm:pb-4 sm:pt-5">
         {/* TITLE + FILTERS */}
 
         <div className="mb-4 flex flex-col items-start justify-between gap-3 xl:flex-row xl:items-center">

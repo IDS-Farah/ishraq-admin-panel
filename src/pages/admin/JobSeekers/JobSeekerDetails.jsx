@@ -100,7 +100,7 @@ const JobSeekerDetails = () => {
 
   return (
     <div className="min-h-full bg-[#f7f9fb] p-0 text-[#1e2b36]">
-      <div className="w-full rounded-[10px] border border-[#e2e8ee] bg-white p-3.5 sm:px-[22px] sm:pb-[22px] sm:pt-5">
+      <div className="w-full rounded-[10px] border border-[#e2e8ee] bg-white p-3.5 sm:px-[18px] sm:pb-[22px] sm:pt-5">
 
         {/* HEADER */}
         <div className="mb-[22px] flex items-center gap-3.5 border-b border-[#e2e8ee] pb-4">
@@ -115,7 +115,7 @@ const JobSeekerDetails = () => {
           </button>
 
           <h1 className="m-0 flex flex-1 items-center gap-3 font-serif text-[22px] font-bold text-[#2c6b8a] sm:text-[26px]">
-            User Details
+            User Detail
 
             <span
               className={

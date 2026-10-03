@@ -536,7 +536,7 @@ const EmployerDetails = () => {
         }
       `}</style>
 
-      <div className="mx-auto max-w-[1400px] rounded-[12px] border border-[#e2e8ee] bg-white p-3.5 shadow-sm sm:px-[22px] sm:pb-4 sm:pt-5">
+      <div className="mx-auto max-w-[1400px] rounded-[12px] border border-[#e2e8ee] bg-white p-3.5 shadow-sm sm:px-[18px] sm:pb-4 sm:pt-5">
         {/* TITLE + QUICK STATS */}
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
