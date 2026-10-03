@@ -371,12 +371,12 @@ const JobSeekerDetails = () => {
           <div className="h-20 bg-gradient-to-r from-[#2c6b8a] via-[#4a9bb3] to-[#73c8a4]" />
           <div className="px-4 pb-4">
             <div className="relative -mt-11 flex flex-col items-center text-center">
-              <div className="relative grid h-[88px] w-[88px] place-items-center">
+              <div className="relative grid h-[150px] w-[150px] place-items-center">
                 <span
                   className={`jp-halo absolute inset-0 rounded-full bg-gradient-to-br ${AVATAR_GRADIENTS[user.id % AVATAR_GRADIENTS.length]}`}
                 />
                 <span
-                  className={`relative grid h-[80px] w-[80px] place-items-center rounded-full bg-gradient-to-br ${
+                  className={`relative grid h-[140px] w-[140px] place-items-center rounded-full bg-gradient-to-br ${
                     AVATAR_GRADIENTS[user.id % AVATAR_GRADIENTS.length]
                   } text-[26px] font-extrabold text-white shadow-lg ring-4 ring-white`}
                 >

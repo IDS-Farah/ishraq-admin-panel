@@ -13,6 +13,7 @@ import JobSeekerDetails from "../pages/admin/JobSeekers/JobSeekerDetails";
 import AddJobSeeker from "../pages/admin/JobSeekers/AddJobSeeker";
 
 import EmployerList from "../pages/admin/Employer/EmployerList";
+import EmployerProfile from "../pages/admin/Employer/EmployerDetails";
 
 import ResetPassword from "../pages/admin/ResetPassword/ResetPassword";
 
@@ -64,6 +65,7 @@ const AdminRoutes = (
 
       {/* Employer */}
       <Route path="employer" element={<EmployerList />} />
+      <Route path="employers/:id" element={<EmployerProfile />} />
 
       {/* Settings */}
       <Route path="settings" element={<AdminSettings />} />
