@@ -16,7 +16,9 @@ import {
   Sparkles,
   LifeBuoy,
   LogOut,
-  Activity
+  Activity,
+  ChevronsRight,
+  ChevronsLeft,
 } from "lucide-react";
 
 // Keyframes live here so no tailwind.config changes are needed
@@ -239,7 +241,7 @@ export const EmployerSidebar = () => {
           {expanded && (
             <div className="flex items-center gap-2 min-w-0">
               <span className="sb-logo-badge grid place-items-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#2f6b8a] to-[#38b2ac] shadow-md shadow-[#2f6b8a]/30">
-                 <Activity  size={18} className="text-white" />
+                <Activity size={18} className="text-white" />
               </span>
               <h2 className="sb-brand font-bold text-xl tracking-wide whitespace-nowrap">
                 Ishraq HR
@@ -254,7 +256,11 @@ export const EmployerSidebar = () => {
             className="p-2 rounded-full text-white bg-gradient-to-br from-[#2f6b8a] to-[#4aa3c0]
               shadow-md hover:shadow-lg hover:scale-110 active:scale-95 transition-all duration-200"
           >
-            {expanded ? <ChevronFirst size={14} /> : <ChevronLast size={14} />}
+            {expanded ? (
+              <ChevronsLeft size={14} />
+            ) : (
+              <ChevronsRight size={14} />
+            )}
           </button>
         </div>
 

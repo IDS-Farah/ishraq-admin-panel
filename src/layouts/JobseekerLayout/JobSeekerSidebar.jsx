@@ -16,6 +16,9 @@ import {
   Sparkles,
   LifeBuoy,
   LogOut,
+  Activity,
+  ChevronsRight,
+  ChevronsLeft
 } from "lucide-react";
 
 // Keyframes live here so no tailwind.config changes are needed
@@ -84,13 +87,13 @@ export const JobSeekerSidebar = () => {
       link: "/jobseeker/dashboard",
       tile: "from-sky-400 to-blue-500",
     },
-    // {
-    //   text: "JobSeeker List",
-    //   icon: BookUser,
-    //   link: "/admin/jobseekers",
-    //   tile: "from-emerald-400 to-teal-500",
-    //   // alert: true,
-    // },
+    {
+      text: "My Profile",
+      icon: BookUser,
+      link: "/jobseeker/profile/1",
+      tile: "from-emerald-400 to-teal-500",
+      // alert: true,
+    },
     // {
     //   text: "Employers",
     //   icon: Building2,
@@ -236,7 +239,7 @@ export const JobSeekerSidebar = () => {
           {expanded && (
             <div className="flex items-center gap-2 min-w-0">
               <span className="sb-logo-badge grid place-items-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#2f6b8a] to-[#38b2ac] shadow-md shadow-[#2f6b8a]/30">
-                <Sparkles size={18} className="text-white" />
+                 <Activity  size={18} className="text-white" />
               </span>
               <h2 className="sb-brand font-bold text-xl tracking-wide whitespace-nowrap">
                 Ishraq HR
@@ -244,14 +247,14 @@ export const JobSeekerSidebar = () => {
             </div>
           )}
 
-          <button
+            <button
             type="button"
             onClick={() => setExpanded((prev) => !prev)}
             title={expanded ? "Collapse sidebar" : "Expand sidebar"}
             className="p-2 rounded-full text-white bg-gradient-to-br from-[#2f6b8a] to-[#4aa3c0]
               shadow-md hover:shadow-lg hover:scale-110 active:scale-95 transition-all duration-200"
           >
-            {expanded ? <ChevronFirst size={14} /> : <ChevronLast size={14} />}
+            {expanded ? <ChevronsLeft size={14} /> : <ChevronsRight size={14} />}
           </button>
         </div>
 
@@ -266,17 +269,6 @@ export const JobSeekerSidebar = () => {
               No menu items match "{search}"
             </p>
           )}
-        </div>
-
-        {/* Bottom Menu */}
-        <div className="px-2 py-3 border-t border-gray-100">
-          <ul className="space-y-1">
-            {filteredBottomItems.map((item, i) =>
-              renderItem(item, filteredItems.length + i),
-            )}
-          </ul>
-
-        
         </div>
       </nav>
     </aside>
