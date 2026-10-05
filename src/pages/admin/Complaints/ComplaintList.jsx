@@ -637,7 +637,7 @@ const ComplaintList = () => {
                           <button
                             type="button"
                             onClick={() =>
-                              navigate(`/admin/Complaints/${user.id}`)
+                              navigate(`/admin/complaints/${user.id}`)
                             }
                             title="View complaint"
                             aria-label={`View complaint from ${user.fullName || "user"}`}

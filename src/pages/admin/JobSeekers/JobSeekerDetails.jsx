@@ -529,7 +529,6 @@ const JobSeekerDetails = () => {
 
             {tab === "jobs" && (
               <div className="space-y-4">
-               
                 {/* Job list */}
                 <section className="rounded-2xl border border-[#e2e8ee] bg-white p-4 shadow-sm">
                   <div className="mb-4 flex flex-wrap items-center justify-between gap-2">

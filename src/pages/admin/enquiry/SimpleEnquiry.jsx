@@ -935,7 +935,7 @@ const SimpleEnquiry = () => {
                         <button
                           type="button"
                           onClick={() =>
-                            navigate(`/admin/Employers/${user.id}`)
+                            navigate(`/admin/simple-enquiry/${user.id}`)
                           }
                           title="View Employer"
                           aria-label={`View ${user.fullName}`}

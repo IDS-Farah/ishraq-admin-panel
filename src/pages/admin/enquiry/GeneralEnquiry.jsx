@@ -658,7 +658,7 @@ const GeneralEnquiryList = () => {
                           <button
                             type="button"
                             onClick={() =>
-                              navigate(`/admin/Contacts/${user.id}`)
+                              navigate(`/admin/general-enquiry/${user.id}`)
                             }
                             title="View contact"
                             aria-label={`View ${user.name || "contact"}`}

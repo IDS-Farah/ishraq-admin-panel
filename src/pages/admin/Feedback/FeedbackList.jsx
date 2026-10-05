@@ -881,7 +881,7 @@ const FeedbackList = () => {
                           <button
                             type="button"
                             onClick={() =>
-                              navigate(`/admin/Feedback/${user.id}`)
+                              navigate(`/admin/feedback/${user.id}`)
                             }
                             title="View feedback"
                             aria-label={`View feedback from ${user.name || "user"}`}
