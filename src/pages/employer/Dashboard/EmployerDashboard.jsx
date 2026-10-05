@@ -314,51 +314,6 @@ const EmployerDashboard = () => {
       spark: r.series.map((d) => d.views),
       metric: "views",
     },
-    {
-      title: "Shortlisted",
-      value: sl,
-      delta: r.d.sl,
-      good: true,
-      note: r.label,
-      icon: Star,
-      color: "#10b981",
-      color2: "#059669",
-      spark: r.series.map((d) => d.sl),
-      metric: "sl",
-    },
-    {
-      title: "Interviews",
-      value: interviews,
-      delta: "+4",
-      good: true,
-      note: "scheduled",
-      icon: CalendarDays,
-      color: "#ec4899",
-      color2: "#be185d",
-      spark: r.series.map((d) => d.sl * 0.4 + 3),
-    },
-    {
-      title: "Hired",
-      value: hired,
-      delta: r.d.hired,
-      good: true,
-      note: r.label,
-      icon: UserCheck,
-      color: "#2f6b8a",
-      color2: "#75c5c4",
-      spark: r.series.map((d) => d.apps * 0.03 + 1),
-    },
-    {
-      title: "Unread messages",
-      value: unread,
-      delta: "+6",
-      good: false,
-      note: "need reply",
-      icon: MessageSquare,
-      color: "#7c3aed",
-      color2: "#818cf8",
-      spark: r.series.map((d, i) => 10 + i * 2),
-    },
   ];
 
   const chartMeta = {
@@ -445,7 +400,7 @@ const EmployerDashboard = () => {
   const maxInterest = Math.max(...jobs.map((j) => j.interested));
 
   return (
-    <div className="isharq-dash min-h-full bg-slate-50 p-3 pb-4">
+    <div className="isharq-dash min-h-full bg-slate-50  pb-4">
       <KitStyles />
 
       <DashboardHeader
@@ -565,33 +520,28 @@ const EmployerDashboard = () => {
         </Panel>
 
         <Panel
-          title="Hiring funnel"
-          subtitle={`${r.sub} · from view to hire`}
+          title="Interest per job"
+          subtitle="People interested in each posting"
           icon={Users}
         >
-          <ul className="space-y-1">
-            {stages.map((s, i) => (
-              <li key={s.name}>
-                <BarRow
-                  name={s.name}
-                  right={
-                    <>
-                      <b className="text-slate-800">{fmt(s.v)}</b> ·{" "}
-                      {((s.v / views) * 100).toFixed(s.v / views < 0.1 ? 1 : 0)}
-                      %
-                    </>
-                  }
-                  pct={Math.max((s.v / views) * 100, 3)}
-                  color={s.color}
-                  animKey={`${range}-${s.name}`}
-                  delay={i * 80}
-                />
-              </li>
-            ))}
+          <ul className="space-y-0.5">
+            {[...jobs]
+              .sort((a, b) => b.interested - a.interested)
+              .map((j, i) => (
+                <li key={j.id}>
+                  <BarRow
+                    name={j.title}
+                    right={
+                      <b className="text-slate-800">{fmt(j.interested)}</b>
+                    }
+                    pct={(j.interested / maxInterest) * 100}
+                    color={j.color}
+                    animKey={j.title}
+                    delay={i * 70}
+                  />
+                </li>
+              ))}
           </ul>
-          <div className="mt-2 rounded-xl bg-[#f2f8fa] px-3 py-1.5 text-[11px] text-slate-600">
-            About 1 in {Math.round(apps / hired)} interested people gets hired.
-          </div>
         </Panel>
       </div>
 
@@ -800,68 +750,6 @@ const EmployerDashboard = () => {
           <p className="mt-2 rounded-xl bg-[#f2f8fa] px-3 py-1.5 text-[11px] text-slate-600">
             Numbers show open / total vacancies per job.
           </p>
-        </Panel>
-      </div>
-
-      {/* Row 3 */}
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-2">
-        <Panel
-          title="Interest per job"
-          subtitle="People interested in each posting"
-          icon={Users}
-        >
-          <ul className="space-y-0.5">
-            {[...jobs]
-              .sort((a, b) => b.interested - a.interested)
-              .map((j, i) => (
-                <li key={j.id}>
-                  <BarRow
-                    name={j.title}
-                    right={
-                      <b className="text-slate-800">{fmt(j.interested)}</b>
-                    }
-                    pct={(j.interested / maxInterest) * 100}
-                    color={j.color}
-                    animKey={j.title}
-                    delay={i * 70}
-                  />
-                </li>
-              ))}
-          </ul>
-        </Panel>
-        <Panel
-          className="lg:col-span-2 xl:col-span-1"
-          title="Upcoming interviews"
-          subtitle="Next on your calendar"
-          icon={CalendarDays}
-        >
-          <ul className="space-y-1.5">
-            {INTERVIEWS.map((v) => (
-              <li
-                key={v.id}
-                className="row-in flex items-center gap-2 rounded-xl bg-slate-50 px-2.5 py-2"
-              >
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-pink-500 to-rose-400 text-white">
-                  {v.mode === "Video" ? (
-                    <Video size={14} />
-                  ) : (
-                    <MapPin size={14} />
-                  )}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[11px] font-semibold text-slate-800">
-                    {v.name}
-                  </p>
-                  <p className="truncate text-[10px] text-slate-400">
-                    {v.job} · {v.when}
-                  </p>
-                </div>
-                <span className="shrink-0 rounded-full bg-white px-2 py-0.5 text-[10px] font-semibold text-slate-500 ring-1 ring-slate-200">
-                  {v.mode}
-                </span>
-              </li>
-            ))}
-          </ul>
         </Panel>
       </div>
 

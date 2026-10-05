@@ -17,7 +17,7 @@ const EmployerLayout = () => {
         <EmployerHeader />
 
         {/* PAGE CONTENT */}
-        <main className="min-w-0 flex-1 overflow-auto">
+        <main className="min-w-0 flex-1 overflow-auto p-3">
           <Outlet />
         </main>
 

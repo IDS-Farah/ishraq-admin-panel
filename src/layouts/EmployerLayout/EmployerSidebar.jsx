@@ -91,24 +91,24 @@ export const EmployerSidebar = () => {
     //   tile: "from-emerald-400 to-teal-500",
     //   // alert: true,
     // },
-    // {
-    //   text: "Employers",
-    //   icon: Building2,
-    //   link: "/admin/employer",
-    //   tile: "from-violet-400 to-indigo-500",
-    // },
+    {
+      text: "Organization Profile",
+      icon: Building2,
+      link: "/employer/organization-profile/1",
+      tile: "from-violet-400 to-indigo-500",
+    },
     // {
     //   text: "Reset Password",
     //   icon: KeyRound,
     //   link: "/admin/reset-password",
     //   tile: "from-amber-400 to-orange-500",
     // },
-    // {
-    //   text: "Simple Enquiry",
-    //   icon: ClipboardList,
-    //   link: "/admin/simple-enquiry",
-    //   tile: "from-cyan-400 to-sky-500",
-    // },
+    {
+      text: "Job Requirements",
+      icon: ClipboardList,
+      link: "/employer/job-requirements",
+      tile: "from-cyan-400 to-sky-500",
+    },
     // {
     //   text: "General Enquiry",
     //   icon: MessageCircleQuestion,
@@ -204,7 +204,9 @@ export const EmployerSidebar = () => {
               {item.alert && (
                 <span
                   className={`absolute z-10 ${
-                    expanded ? "right-3 top-1/2 -translate-y-1/2" : "right-1.5 top-1.5"
+                    expanded
+                      ? "right-3 top-1/2 -translate-y-1/2"
+                      : "right-1.5 top-1.5"
                   }`}
                 >
                   <span className="sb-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-red-400" />
@@ -255,21 +257,21 @@ export const EmployerSidebar = () => {
           </button>
         </div>
 
-       
-
         {/* Main Menu */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-2 pt-2">
           <ul className="space-y-1">{filteredItems.map(renderItem)}</ul>
 
-          {filteredItems.length === 0 && filteredBottomItems.length === 0 && expanded && (
-            <p className="px-3 py-6 text-center text-sm text-gray-400">
-              No menu items match "{search}"
-            </p>
-          )}
+          {filteredItems.length === 0 &&
+            filteredBottomItems.length === 0 &&
+            expanded && (
+              <p className="px-3 py-6 text-center text-sm text-gray-400">
+                No menu items match "{search}"
+              </p>
+            )}
         </div>
 
         {/* Bottom Menu */}
-        <div className="px-2 py-3 border-t border-gray-100">
+        {/* <div className="px-2 py-3 border-t border-gray-100">
           <ul className="space-y-1">
             {filteredBottomItems.map((item, i) =>
               renderItem(item, filteredItems.length + i),
@@ -277,7 +279,7 @@ export const EmployerSidebar = () => {
           </ul>
 
         
-        </div>
+        </div> */}
       </nav>
     </aside>
   );
