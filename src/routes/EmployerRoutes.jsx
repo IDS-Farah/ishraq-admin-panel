@@ -8,6 +8,10 @@ import EmployerProfile from "../pages/employer/Dashboard/Profile/Profile";
 import EmployerJobs from "../pages/employer/Dashboard/Jobs/MyJobs";
 import OrganizationDetails from "../pages/employer/OrganizationDetails/OrganizationDetails";
 import JobRequirementList from "../pages/employer/JobRequirement/JobRequirementList";
+import JobRequirementEdit from "../pages/employer/JobRequirement/Jobrequirementedit";
+import JobRequirementView from "../pages/employer/JobRequirement/Jobrequirementview";
+import JobRequirementCreate from "../pages/employer/JobRequirement/Jobrequirementcreate";
+import EmployerEdit from "../pages/employer/OrganizationDetails/EditOrganization";
 
 const EmployerRoutes = (
   <Route element={<ProtectedRoute allowedRole="employer" />}>
@@ -17,8 +21,19 @@ const EmployerRoutes = (
       <Route path="dashboard" element={<EmployerDashboard />} />
       <Route path="profile" element={<EmployerProfile />} />
       <Route path="jobs" element={<EmployerJobs />} />
-      <Route path="organization-profile/:id" element={<OrganizationDetails />} />
-      <Route path="job-requirements" element={<JobRequirementList />} />
+      <Route
+        path="organization-profile/:id"
+        element={<OrganizationDetails />}
+      />
+      <Route path="organization-profile/edit/:id" element={<EmployerEdit />} />
+      <Route path="job-requirement-list" element={<JobRequirementList />} />
+      {/* <Route path="/admin/job-requirements" element={<JobRequirementList />} /> */}
+      <Route path="job-requirements/:id" element={<JobRequirementView />} />
+      <Route
+        path="job-requirements/:id/edit"
+        element={<JobRequirementEdit />}
+      />
+      <Route path="job-requirements/create" element={<JobRequirementCreate />} />
     </Route>
   </Route>
 );

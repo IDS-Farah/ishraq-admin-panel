@@ -16,6 +16,7 @@ import {
   Sparkles,
   LifeBuoy,
   LogOut,
+  Activity
 } from "lucide-react";
 
 // Keyframes live here so no tailwind.config changes are needed
@@ -106,7 +107,7 @@ export const EmployerSidebar = () => {
     {
       text: "Job Requirements",
       icon: ClipboardList,
-      link: "/employer/job-requirements",
+      link: "/employer/job-requirement-list",
       tile: "from-cyan-400 to-sky-500",
     },
     // {
@@ -238,7 +239,7 @@ export const EmployerSidebar = () => {
           {expanded && (
             <div className="flex items-center gap-2 min-w-0">
               <span className="sb-logo-badge grid place-items-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#2f6b8a] to-[#38b2ac] shadow-md shadow-[#2f6b8a]/30">
-                <Sparkles size={18} className="text-white" />
+                 <Activity  size={18} className="text-white" />
               </span>
               <h2 className="sb-brand font-bold text-xl tracking-wide whitespace-nowrap">
                 Ishraq HR

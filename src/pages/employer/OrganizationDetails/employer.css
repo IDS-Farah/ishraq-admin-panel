@@ -1,0 +1,175 @@
+:root {
+  --navy: #0b2545;
+  --teal: #0e9aa7;
+  --bg: #f4f7f9;
+  --line: #dde5ea;
+  --muted: #5b6b78;
+}
+.emp-page {
+  min-height: 100vh;
+  background: var(--bg);
+  color: #1c2b36;
+  font-family: system-ui, sans-serif;
+}
+.emp-page * {
+  box-sizing: border-box;
+}
+.emp-loading {
+  padding: 20px;
+  font-family: system-ui, sans-serif;
+}
+.emp-header {
+  background: var(--navy);
+  color: #fff;
+  padding: 14px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.emp-header h1 {
+  font-size: 18px;
+  margin: 0;
+}
+.emp-header a {
+  color: #9fe3ea;
+  text-decoration: none;
+}
+.emp-main {
+  /* max-width: 820px; */
+  /* margin: 20px auto; */
+  /* padding: 0 14px; */
+}
+.emp-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 18px;
+}
+.emp-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.emp-bar h2 {
+  font-size: 16px;
+  margin: 0;
+}
+.emp-btn {
+  background: var(--teal);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 8px;
+  text-decoration: none;
+}
+.emp-badge {
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 13px;
+  background: #e3f6f8;
+  color: #07707a;
+}
+.emp-badge.off {
+  background: #fde8e8;
+  color: #9b1c1c;
+}
+.emp-dl {
+  margin: 0;
+}
+.emp-row {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  gap: 14px;
+  padding: 6px 0;
+}
+.emp-row dt {
+  color: var(--muted);
+  font-size: 14px;
+}
+.emp-row dd {
+  margin: 0;
+  word-break: break-word;
+}
+.emp-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.emp-full {
+  grid-column: 1/-1;
+}
+.emp-label {
+  display: block;
+  font-size: 14px;
+  color: var(--muted);
+}
+.emp-label b {
+  color: #b00020;
+}
+.emp-card input:not([type="checkbox"]),
+.emp-card select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font: inherit;
+  margin-top: 4px;
+}
+.emp-card .bad {
+  border-color: #b00020;
+}
+.emp-err {
+  color: #b00020;
+  font-size: 12px;
+  min-height: 14px;
+}
+.emp-chk {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: #1c2b36;
+}
+.emp-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+.emp-actions button,
+.emp-cancel {
+  padding: 10px 18px;
+  border-radius: 8px;
+  font: inherit;
+  cursor: pointer;
+  border: 0;
+  text-decoration: none;
+}
+.emp-actions button {
+  background: var(--teal);
+  color: #fff;
+}
+.emp-actions button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.emp-cancel {
+  background: #e8eef2;
+  color: #1c2b36;
+}
+.emp-msg {
+  margin-top: 12px;
+  font-size: 14px;
+  color: #07707a;
+}
+.emp-msg.bad {
+  color: #b00020;
+}
+@media (max-width: 560px) {
+  .emp-grid {
+    grid-template-columns: 1fr;
+  }
+  .emp-row {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+}
