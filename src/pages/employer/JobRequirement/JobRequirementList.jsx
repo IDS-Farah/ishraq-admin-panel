@@ -787,49 +787,7 @@ const JobRequirementList = () => {
                   className="h-9 w-full rounded-lg border border-[#c9d5dd] bg-white pl-9 pr-3 text-[15px] text-[#1e2b36] outline-none transition placeholder:text-[#9aa5b1] hover:border-[#2c6b8a] focus:border-[#2c6b8a] focus:ring-2 focus:ring-[#2c6b8a]/30"
                 />
               </div>
-              {/* STATUS FILTER */}
-              <div className="relative w-full sm:w-[150px]">
-                <select
-                  aria-label="Filter by status"
-                  value={statusFilter}
-                  onChange={(e) => {
-                    setPageSize(Number(e.target.value));
-                    setPage(1);
-                  }}
-                  className={selectCls}
-                >
-                  <option value="All">Status: All</option>
-                  <option value="Active">Status: Active</option>
-                  <option value="Inactive">Status: Inactive</option>
-                </select>
-                <ChevronDown
-                  size={14}
-                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#2c6b8a]"
-                />
-              </div>
-              {/* CATEGORY FILTER */}
-              <div className="relative w-full sm:w-[190px]">
-                <select
-                  aria-label="Filter by Organization Type"
-                  value={categoryFilter}
-                  onChange={(e) => {
-                    setPageSize(Number(e.target.value));
-                    setPage(1);
-                  }}
-                  className={selectCls}
-                >
-                  <option value="All">Organization Type: All</option>
-                  {JOB_CATEGORIES.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
-                  ))}
-                </select>
-                <ChevronDown
-                  size={14}
-                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#2c6b8a]"
-                />
-              </div>
+             
               {/* RESET */}
               <button
                 type="button"
