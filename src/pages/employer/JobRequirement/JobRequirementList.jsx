@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Eye as ChevronsRight,
+  ChevronsRight,
   Pencil,
   FileSpreadsheet as ExcelIcon,
   ChevronDown,

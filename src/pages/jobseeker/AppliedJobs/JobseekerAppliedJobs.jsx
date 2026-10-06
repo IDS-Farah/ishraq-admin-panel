@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-  Eye as ChevronsRight,
+  ChevronsRight,
   Search as SearchIcon,
   ChevronDown,
   RotateCcw,

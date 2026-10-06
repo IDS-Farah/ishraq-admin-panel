@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import * as XLSX from "xlsx";
 
 import {
-  Eye as ChevronsRight,
+  ChevronsRight,
   Download as DownloadIcon,
   FileText as FileIcon,
   X as CloseIcon,

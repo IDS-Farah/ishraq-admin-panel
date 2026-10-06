@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Eye as ChevronsRight,
+  ChevronsRight,
   FileSpreadsheet as ExcelIcon,
   ChevronDown,
   ChevronUp,
@@ -639,7 +639,7 @@ const GeneralEnquiryList = () => {
                       </td>
 
                       <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
-                        <div className="inline-flex flex-col gap-1">
+                        <div className="inline-flex flex-col">
                           <span>{user.name || "-"}</span>
                           <span>{user.email || "-"}</span>
                         </div>

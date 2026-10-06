@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Eye as ChevronsRight,
+  ChevronsRight,
   FileSpreadsheet as ExcelIcon,
   ChevronDown,
   ChevronUp,
@@ -42,6 +42,7 @@ const SEED_COMPLAINTS = [
     email: "ayesha.khan@gmail.com",
     youAre: "Jobseeker",
     complaintCategory: "Service Related",
+    createdAt: "21-09-2026",
   },
   {
     id: 2,
@@ -50,6 +51,7 @@ const SEED_COMPLAINTS = [
     email: "imran.shaikh@gmail.com",
     youAre: "Employer",
     complaintCategory: "Technical Issue",
+    createdAt: "09-05-2026",
   },
   {
     id: 3,
@@ -58,6 +60,7 @@ const SEED_COMPLAINTS = [
     email: "sana.pathan@gmail.com",
     youAre: "Jobseeker",
     complaintCategory: "Website Related",
+    createdAt: "11-06-2026",
   },
 ];
 
@@ -331,9 +334,9 @@ const HEADINGS = [
   "Sr.No",
   "Full Name",
   "Contact No.",
-  "Email",
   "You Are",
   "Complaint Category",
+  "Submit Date",
   "Actions",
 ];
 
@@ -613,15 +616,14 @@ const ComplaintList = () => {
                       </td>
 
                       <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
-                        {user.fullName || "-"}
+                        <div className="inline-flex flex-col">
+                          <span>{user.fullName || "-"}</span>
+                          <span>{user.email || "-"}</span>
+                        </div>
                       </td>
 
                       <td className="whitespace-nowrap border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
                         {user.contactNo || "-"}
-                      </td>
-
-                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
-                        {user.email || "-"}
                       </td>
 
                       <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
@@ -630,6 +632,10 @@ const ComplaintList = () => {
 
                       <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
                         {user.complaintCategory || "-"}
+                      </td>
+
+                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
+                        {user.createdAt}
                       </td>
 
                       <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]">
