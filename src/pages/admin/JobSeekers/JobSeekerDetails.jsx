@@ -540,7 +540,7 @@ const JobSeekerDetails = () => {
                     </span>
                   </div>
 
-                  <div className="space-y-3 h-[51vh] overflow-y-scroll">
+                  <div className="space-y-3 h-[51vh] overflow-y-auto common-scrollbar">
                     {DUMMY_JOBS.map((job) => (
                       <div
                         key={job.id}

@@ -4,12 +4,9 @@ import {
   ChevronsLeft,
   Mail,
   Phone,
-  MessageCircle,
   MapPin,
   Globe,
   Building2,
-  BadgeCheck,
-  ShieldAlert,
   BriefcaseBusiness,
   Users,
   UserPlus,
@@ -89,7 +86,7 @@ function useCountUp(value, duration = 900) {
 const Card = ({ title, icon: Icon, children, delay = 0, className = "" }) => (
   <section
     style={{ animationDelay: `${delay}ms` }}
-    className={`ep-up min-w-0 rounded-2xl border border-[#e2e8ee] bg-white p-4 shadow-sm transition duration-300 hover:shadow-md ${className}`}
+    className={`ep-up min-w-0 h-[62vh] overflow-y-auto rounded-2xl border border-[#e2e8ee] bg-white p-4 shadow-sm transition duration-300 hover:shadow-md ${className}`}
   >
     <h2 className="mb-2 flex items-center gap-2.5 text-[15px] font-bold text-[#1e2b36]">
       <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-[#2c6b8a] to-[#5ba6bd] text-white shadow-sm">
@@ -124,7 +121,7 @@ const StatCard = ({ icon: Icon, label, value, note, from, to, index }) => {
         </span>
       </div>
       <p className="relative mt-2 text-[30px] font-extrabold leading-none tabular-nums">{n}</p>
-      <p className="relative mt-1.5 text-[11px] text-white/80">{note}</p>
+      {/* <p className="relative mt-1.5 text-[11px] text-white/80">{note}</p> */}
     </div>
   );
 };
@@ -318,22 +315,16 @@ const EmployerProfile = () => {
                 </span>
               </div>
               <h2 className="mt-2.5 text-[17px] font-extrabold leading-snug text-[#1e2b36]">{val(emp.companyName)}</h2>
-              <p className="text-[13px] font-medium text-[#6b7a88]">{val(emp.orgType)}</p>
-
-              <span className={`mt-2 inline-flex h-7 items-center gap-1.5 rounded-md px-2.5 text-[13px] font-medium text-white ring-1 ring-inset ${emp.verified ? "bg-sky-600 ring-sky-700" : "bg-amber-500 ring-amber-600"}`}>
-                {emp.verified ? <BadgeCheck size={14} /> : <ShieldAlert size={14} />}
-                {emp.verified ? "Verified employer" : "Verification pending"}
-              </span>
             </div>
 
-            <div className="mt-4 space-y-2.5 border-t border-[#eef2f6] pt-4">
+            <div className="mt-2 space-y-2.5 border-t border-[#eef2f6] pt-4">
               <ContactLine icon={Mail} href={emp.email ? `mailto:${emp.email}` : undefined}>{val(emp.email)}</ContactLine>
               <ContactLine icon={Phone} href={tel}>{val(emp.mobile)}</ContactLine>
               <ContactLine icon={Globe} href={emp.website ? `https://${emp.website.replace(/^https?:\/\//, "")}` : undefined}>{val(emp.website)}</ContactLine>
               <ContactLine icon={MapPin}>{val([emp.city, emp.state].filter(Boolean).join(", "))}</ContactLine>
             </div>
 
-            <div className="mt-4 border-t border-[#eef2f6] pt-4">
+            <div className="mt-2 border-t border-[#eef2f6] pt-4">
               <h3 className="mb-2 text-[13px] font-bold text-[#1e2b36]">Contact person</h3>
               <div className="flex items-center gap-2.5 rounded-xl bg-[#f7f9fb] p-2.5">
                 <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-400 text-[12px] font-bold text-white">
@@ -350,12 +341,7 @@ const EmployerProfile = () => {
 
         {/* MAIN */}
         <main className="min-w-0">
-          <div className="mb-4 grid grid-cols-2 gap-3 xl:grid-cols-4">
-            <StatCard index={0} icon={BriefcaseBusiness} label="Job requirements posted" value={totals.posted} note="all time" from="#6366f1" to="#8b5cf6" />
-            <StatCard index={1} icon={BadgeCheck} label="Open jobs" value={totals.open} note="accepting applicants" from="#10b981" to="#059669" />
-            <StatCard index={2} icon={UserPlus} label="Total vacancies" value={totals.vacancies} note="across all jobs" from="#f59e0b" to="#ef4444" />
-            <StatCard index={3} icon={Users} label="Total applicants" value={totals.applicants} note="across all jobs" from="#0ea5e9" to="#2563eb" />
-          </div>
+
 
           <div role="tablist" aria-label="Employer sections" className="mb-4 flex gap-1 overflow-x-auto rounded-xl border border-[#e2e8ee] bg-white p-1 shadow-sm">
             {TABS.map((t) => {
@@ -388,8 +374,6 @@ const EmployerProfile = () => {
                 <Card title="Company Information" icon={Building2} delay={0}>
                   <Row label="Company Name" value={emp.companyName} />
                   <Row label="Organization Type" value={emp.orgType} />
-                  <Row label="Registration Number" value={emp.registrationNumber} />
-                  <Row label="Joined On" value={emp.joinedOn} />
                   <Row label="Website" value={emp.website} />
                 </Card>
 
@@ -398,12 +382,7 @@ const EmployerProfile = () => {
                   <Row label="Designation" value={emp.designation} />
                   <Row label="Email Address" value={emp.email} />
                   <Row label="Mobile Number" value={emp.mobile} />
-                  <Row label="Address" value={emp.address} />
                   <Row label="City / State" value={[emp.city, emp.state].filter(Boolean).join(", ")} />
-                </Card>
-
-                <Card title="About the Company" icon={FileText} delay={180} className="xl:col-span-2">
-                  <p className="text-[13.5px] leading-relaxed text-[#34445a]">{val(emp.about)}</p>
                 </Card>
               </div>
             )}
@@ -443,7 +422,7 @@ const EmployerProfile = () => {
                     </p>
                   </div>
                 ) : (
-                  <ul key={jobFilter} className="space-y-3">
+                  <ul key={jobFilter} className="space-y-3  h-[49vh] overflow-y-auto common-scrollbar">
                     {visibleJobs.map((j, i) => (
                       <JobCard key={j.id} job={j} index={i} />
                     ))}
