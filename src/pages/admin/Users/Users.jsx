@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import * as XLSX from "xlsx";
 
 import {
-  Eye as EyeIcon,
+  Eye as ChevronsRight,
   Download as DownloadIcon,
   FileText as FileIcon,
   X as CloseIcon,
@@ -641,7 +641,7 @@ export default function Users() {
                             aria-label="View"
                             className="grid h-9 w-9 place-items-center rounded-md bg-[#2c3e73] text-white transition hover:bg-[#22315d]"
                           >
-                            <EyeIcon size={16} />
+                            <ChevronsRight size={16} />
                           </button>
 
                           {/* Status */}

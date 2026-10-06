@@ -832,7 +832,7 @@ const AdminDashboard = () => {
       spark: r.series.map((d) => d.employers),
     },
     {
-      title: "New users",
+      title: "Active Users",
       value: newUsers,
       delta: r.d.fresh,
       good: true,
@@ -879,7 +879,7 @@ const AdminDashboard = () => {
       spark: sparkFrom(openComplaints, 3).reverse(),
     },
     {
-      title: "Pending verifications",
+      title: "Feedback",
       value: pendingVerify,
       delta: "+3",
       good: false,
@@ -1298,38 +1298,52 @@ const AdminDashboard = () => {
             ))}
           </ul>
         </Panel>
-
         <Panel
-          title="Application journey"
-          subtitle={`${r.sub} · what happens after applying`}
-          icon={FileText}
+          title="Employer verification"
+          subtitle={`${verify.length} waiting in this view`}
+          icon={ShieldCheck}
         >
-          <ul className="space-y-1">
-            {APP_STAGES.map((s, i) => {
-              const v = Math.round(sum("apps") * s.share);
-              return (
-                <li key={s.name}>
-                  <BarRow
-                    name={s.name}
-                    right={
-                      <>
-                        <b className="text-slate-800">{fmt(v)}</b> ·{" "}
-                        {(s.share * 100).toFixed(s.share < 0.1 ? 1 : 0)}%
-                      </>
-                    }
-                    pct={s.share * 100}
-                    color={s.color}
-                    animKey={`${range}-${s.name}`}
-                    delay={i * 80}
-                  />
-                </li>
-              );
-            })}
+          {verify.length === 0 && (
+            <p className="rounded-xl bg-slate-50 px-3 py-4 text-center text-[11px] text-slate-500">
+              No employers waiting for verification.
+            </p>
+          )}
+          <ul className="space-y-1.5">
+            {verify.map((v) => (
+              <li
+                key={v.id}
+                className="row-in flex items-center gap-2 rounded-xl bg-slate-50 px-2.5 py-1.5"
+              >
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-400 text-[11px] font-bold text-white">
+                  {v.company[0]}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-[11px] font-semibold text-slate-800">
+                    {v.company}
+                  </p>
+                  <p className="truncate text-[10px] text-slate-400">
+                    {v.industry} · {v.city} · {v.docs} · {v.when}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  aria-label={`Approve ${v.company}`}
+                  onClick={() => decide(v, true)}
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+                >
+                  <Check size={13} />
+                </button>
+                <button
+                  type="button"
+                  aria-label={`Reject ${v.company}`}
+                  onClick={() => decide(v, false)}
+                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
+                >
+                  <X size={13} />
+                </button>
+              </li>
+            ))}
           </ul>
-          <div className="mt-2 flex items-center gap-2 rounded-xl bg-[#f2f8fa] px-3 py-1.5 text-[11px] text-slate-600">
-            <Sparkles size={13} className="shrink-0 text-[#2f6b8a]" />
-            About 1 in 31 applications ends in a hire.
-          </div>
         </Panel>
       </div>
 
@@ -1538,103 +1552,6 @@ const AdminDashboard = () => {
                     </span>
                   )}
                 </div>
-              </li>
-            ))}
-          </ul>
-        </Panel>
-      </div>
-
-      {/* ROW 4: verification, signups, live feed */}
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2 xl:grid-cols-2">
-        <Panel
-          title="Employer verification"
-          subtitle={`${verify.length} waiting in this view`}
-          icon={ShieldCheck}
-        >
-          {verify.length === 0 && (
-            <p className="rounded-xl bg-slate-50 px-3 py-4 text-center text-[11px] text-slate-500">
-              No employers waiting for verification.
-            </p>
-          )}
-          <ul className="space-y-1.5">
-            {verify.map((v) => (
-              <li
-                key={v.id}
-                className="row-in flex items-center gap-2 rounded-xl bg-slate-50 px-2.5 py-1.5"
-              >
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-400 text-[11px] font-bold text-white">
-                  {v.company[0]}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[11px] font-semibold text-slate-800">
-                    {v.company}
-                  </p>
-                  <p className="truncate text-[10px] text-slate-400">
-                    {v.industry} · {v.city} · {v.docs} · {v.when}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  aria-label={`Approve ${v.company}`}
-                  onClick={() => decide(v, true)}
-                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-                >
-                  <Check size={13} />
-                </button>
-                <button
-                  type="button"
-                  aria-label={`Reject ${v.company}`}
-                  onClick={() => decide(v, false)}
-                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-rose-50 text-rose-500 hover:bg-rose-100 focus:outline-none focus-visible:ring-2 focus-visible:ring-rose-500"
-                >
-                  <X size={13} />
-                </button>
-              </li>
-            ))}
-          </ul>
-        </Panel>
-
-        <Panel
-          title="New users"
-          subtitle="Latest registrations"
-          icon={UserPlus}
-          action={
-            <Segmented
-              label="User type"
-              value={userFilter}
-              onChange={setUserFilter}
-              options={[
-                { value: "All", label: "All" },
-                { value: "Job seeker", label: "Seekers" },
-                { value: "Employer", label: "Employers" },
-              ]}
-            />
-          }
-        >
-          <ul className="space-y-1">
-            {visibleSignups.map((u) => (
-              <li
-                key={u.id}
-                className="row-in flex items-center gap-2 rounded-lg px-1.5 py-1 hover:bg-slate-50"
-              >
-                <span
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold text-white ${u.type === "Employer" ? "bg-gradient-to-br from-violet-500 to-indigo-400" : "bg-gradient-to-br from-[#2f6b8a] to-[#5ba6bd]"}`}
-                >
-                  {u.name[0]}
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-[11px] font-semibold text-slate-800">
-                    {u.name}
-                  </p>
-                  <p className="truncate text-[10px] text-slate-400">
-                    {u.type} · {u.city} · {u.when}
-                  </p>
-                </div>
-                <span
-                  className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${u.verified ? "bg-emerald-50 text-emerald-600" : "bg-amber-50 text-amber-600"}`}
-                >
-                  {u.verified ? "Verified" : "Unverified"}
-                </span>
               </li>
             ))}
           </ul>

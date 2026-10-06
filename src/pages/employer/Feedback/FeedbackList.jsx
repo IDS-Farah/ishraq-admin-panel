@@ -18,6 +18,8 @@ import {
   UserRoundCheck,
   UserRoundX,
   Building2,
+  Star,
+  Plus
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
@@ -64,103 +66,31 @@ const INACTIVE_REASONS = [
 const SEED_USERS = [
   {
     id: 1,
-    srNo: 1,
     name: "Ayesha Khan",
-    age: 28,
-    qualification: "B.Sc Nursing",
-    mobile: "+91 98765 43210",
+    contactNo: "+91 98765 43210",
     email: "ayesha.khan@gmail.com",
-    organizationType: "Ayesha Health Services",
-    course: "Nurse",
-    createdAt: "21-09-2026",
+    youAre: "Jobseeker",
+    overallExperience: 5,
   },
   {
     id: 2,
-    srNo: 2,
     name: "Imran Shaikh",
-    age: 31,
-    qualification: "B.Sc Medical Laboratory Technology",
-    mobile: "+91 98230 12345",
+    contactNo: "+91 98230 12345",
     email: "imran.shaikh@gmail.com",
-    organizationType: "Imran Labs",
-    course: "Lab Technician",
-    createdAt: "16-09-2026",
+    youAre: "Employer",
+    overallExperience: 4,
   },
   {
     id: 3,
-    srNo: 3,
     name: "Sana Pathan",
-    age: 26,
-    qualification: "Bachelor of Pharmacy",
-    mobile: "+91 99223 34455",
-    email: "",
-    organizationType: "Sana Pathan Enterprises",
-    course: "Pharmacist",
-    createdAt: "05-10-2026",
-  },
-  {
-    id: 4,
-    srNo: 4,
-    name: "Rohit Deshmukh",
-    age: 35,
-    qualification: "MBBS",
-    mobile: "+91 90110 22334",
-    email: "rohit.deshmukh@gmail.com",
-    organizationType: "Rohit Deshmukh Clinic",
-    course: "Doctor",
-    createdAt: "04-10-2026",
-  },
-  {
-    id: 5,
-    srNo: 5,
-    name: "Neha Jadhav",
-    age: 29,
-    qualification: "Diploma in Caregiving",
-    mobile: "+91 97650 88123",
-    email: "neha.jadhav@outlook.com",
-    organizationType: "Neha Jadhav",
-    course: "Caregiver",
-    createdAt: "21-09-2026",
-  },
-  {
-    id: 6,
-    srNo: 6,
-    name: "Farhan Sayyed",
-    age: 32,
-    qualification: "B.Com",
-    mobile: "+91 88888 41290",
-    email: "farhan.s@gmail.com",
-    organizationType: "Farhan Sayyed",
-    course: "Admin / Office Staff",
-    createdAt: "21-09-2026",
-  },
-  {
-    id: 7,
-    srNo: 7,
-    name: "Pooja Wagh",
-    age: 24,
-    qualification: "GNM",
-    mobile: "+91 93720 55671",
-    email: "pooja.wagh@gmail.com",
-    organizationType: "",
-    course: "Nurse",
-    createdAt: "21-09-2026",
-  },
-  {
-    id: 8,
-    srNo: 8,
-    name: "Zaid Ansari",
-    age: 27,
-    qualification: "HSC",
-    mobile: "+91 70200 91822",
-    email: "",
-    organizationType: "",
-    course: "Other",
-    createdAt: "21-09-2026",
+    contactNo: "+91 99223 34455",
+    email: "sana.pathan@gmail.com",
+    youAre: "Visitor",
+    overallExperience: 3,
   },
 ];
 
-const STORAGE_KEY = "ishraq_simple_enquiry";
+const STORAGE_KEY = "ishraq_feedback";
 
 const getUsers = () => {
   const saved = localStorage.getItem(STORAGE_KEY);
@@ -579,15 +509,13 @@ const StatusDialog = ({ user, onCancel, onConfirm }) => {
 const HEADINGS = [
   "Sr.No",
   "Name",
-  "Age",
-  "Qualification",
-  "Mobile",
-  "Course",
-  "Submit Date",
-  "Actions",
+  "Contact Number / Email",
+  "You Are",
+  "Overall Experience",
+  "Action",
 ];
 
-const SimpleEnquiry = () => {
+const FeedbackList = () => {
   const navigate = useNavigate();
 
   const [users, setUsers] = useState(getUsers);
@@ -761,13 +689,13 @@ const SimpleEnquiry = () => {
 
   return (
     <div className="js-page min-h-full bg-[#f7f9fb] p-0 text-[#1e2b36]">
-      <div className="mx-auto max-w-[1400px] rounded-[12px] border border-[#e2e8ee] bg-white p-2 shadow-sm sm:px-[18px] sm:pb-4 sm:pt-5">
+      <div className="mx-auto max-w-[1400px] rounded-[12px] border border-[#e2e8ee] bg-white p-4 shadow-sm sm:px-[18px] sm:pb-4 sm:pt-5">
         {/* TITLE + FILTERS */}
 
         <div className="mb-4 flex flex-col items-start justify-between gap-3 xl:flex-row xl:items-center">
           <div>
             <h1 className="m-0 text-[22px] font-extrabold tracking-tight text-[#2c6b8a] sm:text-[26px]">
-              Ask Career Expert Enquiry
+              Feedback List
             </h1>
           </div>
 
@@ -792,6 +720,24 @@ const SimpleEnquiry = () => {
                 className="h-9 w-full rounded-lg border border-[#c9d5dd] bg-white pl-9 pr-3 text-[15px] text-[#1e2b36] outline-none transition placeholder:text-[#9aa5b1] hover:border-[#2c6b8a] focus:border-[#2c6b8a] focus:ring-2 focus:ring-[#2c6b8a]/30"
               />
             </div>
+            <div>
+            <button
+              type="button"
+              onClick={() =>
+                navigate(`/employer/feedback-add`)
+              }
+              title="Edit"
+              className="group inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#16834f] to-[#2fb877] px-3 text-[15px] font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#16834f] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {/* <SquarePen /> */}
+              <Plus
+                size={15}
+                strokeWidth={2.2}
+                className="transition-transform group-hover:scale-110"
+              />
+              <span className="hidden sm:inline">Add Feedback</span>
+            </button>
+          </div>
           </div>
         </div>
         <hr />
@@ -908,45 +854,61 @@ const SimpleEnquiry = () => {
                       </td>
 
                       <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
-                      
-                        <div className="inline-flex flex-col gap-1">
-                          <span>{user.name || "-"}</span>
-                          <span>{user.email || "-"}</span>
+                        {user.name || "-"}
+                      </td>
+
+                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
+                        <div>{user.contactNo || "-"}</div>
+                        {user.email && (
+                          <div className="text-sm text-slate-500">
+                            {user.email}
+                          </div>
+                        )}
+                      </td>
+
+                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
+                        {user.youAre || "-"}
+                      </td>
+
+                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5">
+                        <div
+                          className="flex items-center gap-1"
+                          role="img"
+                          aria-label={`${user.overallExperience} out of 5 stars`}
+                        >
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              size={16}
+                              fill={
+                                star <= user.overallExperience
+                                  ? "#f59e0b"
+                                  : "none"
+                              }
+                              className={
+                                star <= user.overallExperience
+                                  ? "text-amber-500"
+                                  : "text-slate-300"
+                              }
+                            />
+                          ))}
                         </div>
                       </td>
 
-                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
-                        {user.age || "-"}
-                      </td>
-
-                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
-                        {user.qualification || "-"}
-                      </td>
-
-                      <td className="whitespace-nowrap border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
-                          {user.mobile || "-"}
-                      </td>
-
-                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
-                        {user.course || "-"}
-                      </td>
-                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
-                        {user.createdAt}
-                      </td>
-                      {/* ACTIONS */}
-
-                      <td className="border-t inline-flex justify-center border-[#e2e8ee] px-3.5 py-2.5 text-[15px]">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            navigate(`/admin/simple-enquiry/${user.id}`)
-                          }
-                          title="View Employer"
-                          aria-label={`View ${user.fullName}`}
-                          className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-gradient-to-br from-[#168fa1] to-[#35b8c4] text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a9aa8] focus-visible:ring-offset-2"
-                        >
-                          <ChevronsRight size={14} strokeWidth={2.2} />
-                        </button>
+                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]">
+                        <div className="flex justify-center">
+                          <button
+                            type="button"
+                            onClick={() =>
+                              navigate(`/employer/feedback/${user.id}`)
+                            }
+                            title="View feedback"
+                            aria-label={`View feedback from ${user.name || "user"}`}
+                            className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-gradient-to-br from-[#168fa1] to-[#35b8c4] text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a9aa8] focus-visible:ring-offset-2"
+                          >
+                            <ChevronsRight size={14} strokeWidth={2.2} />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -1070,4 +1032,4 @@ const SimpleEnquiry = () => {
   );
 };
 
-export default SimpleEnquiry;
+export default FeedbackList;

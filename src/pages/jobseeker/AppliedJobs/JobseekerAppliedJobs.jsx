@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-  Eye as EyeIcon,
+  Eye as ChevronsRight,
   Search as SearchIcon,
   ChevronDown,
   RotateCcw,
@@ -843,7 +843,7 @@ const JobseekerAppliedJobs = () => {
                           focus-visible:ring-offset-2
                         "
                       >
-                        <EyeIcon size={14} strokeWidth={2.2} />
+                        <ChevronsRight size={14} strokeWidth={2.2} />
                       </button>
                     </td>
                   </tr>

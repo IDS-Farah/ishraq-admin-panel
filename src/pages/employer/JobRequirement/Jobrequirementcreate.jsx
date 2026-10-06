@@ -77,7 +77,7 @@ export default function JobRequirementCreate() {
       document: file ? { name: file.name, url: "" } : null,
     });
     setToast({ tone: "ok", msg: "Job requirement created" });
-    setTimeout(() => navigate(`/admin/job-requirements/${job.id}`), 800);
+    setTimeout(() => navigate(`/employer/job-requirement-list/${job.id}`), 800);
   };
 
   useEffect(() => {
@@ -224,7 +224,7 @@ export default function JobRequirementCreate() {
             </button>
             <button
               type="button"
-              onClick={() => navigate("/admin/job-requirements")}
+              onClick={() => navigate("/employer/job-requirement-list")}
               className="h-10 cursor-pointer rounded-[10px] border border-[#dce3eb] bg-white px-5 text-[14px] font-semibold text-[#34445a] hover:bg-slate-50"
             >
               Cancel

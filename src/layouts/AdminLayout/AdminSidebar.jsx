@@ -105,13 +105,13 @@ export const AdminSidebar = () => {
       tile: "from-amber-400 to-orange-500",
     },
     {
-      text: "Simple Enquiry",
+      text: "Ask Expert Enquiry",
       icon: ClipboardList,
       link: "/admin/simple-enquiry",
       tile: "from-cyan-400 to-sky-500",
     },
     {
-      text: "General Enquiry",
+      text: "Contact Us Enquiry",
       icon: MessageCircleQuestion,
       link: "/admin/general-enquiry",
       tile: "from-fuchsia-400 to-purple-500",

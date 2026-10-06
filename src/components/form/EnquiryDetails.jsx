@@ -540,7 +540,7 @@ const EnquiryDetails = ({
   // --------------------------------------------------
 
   return (
-    <div className="min-h-screen bg-[#f4f7f9]">
+    <div className=" bg-[#f4f7f9]">
       {/* Header */}
       <div className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-2 sm:px-6">
@@ -569,251 +569,58 @@ const EnquiryDetails = ({
 
       {/* Main */}
       <main className="mx-auto py-4">
-        <div className="space-y-5">
-          {/* -----------------------------------------
+        {/* -----------------------------------------
               DETAILS
           ------------------------------------------ */}
-          <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-              <div className="flex items-center gap-2">
-                <div className="rounded-lg bg-[#e9f4f7] p-2 text-[#2f6b8a]">
-                  <FileText size={18} />
-                </div>
-
-                <h2 className="font-semibold text-slate-800">Details</h2>
+        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-[#e9f4f7] p-2 text-[#2f6b8a]">
+                <FileText size={18} />
               </div>
 
-              <span
-                className={`rounded-full border px-3 py-1 text-xs font-semibold ${getStatusClass(
-                  record.status,
-                )}`}
-              >
-                {record.status || "New"}
-              </span>
+              <h2 className="font-semibold text-slate-800">Details</h2>
             </div>
 
-            <div className="divide-y divide-slate-100">
-              {form.fields.map((field) => (
-                <div
-                  key={field.name}
-                  className="grid grid-cols-1 gap-1 px-5 py-4 sm:grid-cols-[220px_1fr] sm:gap-5"
-                >
-                  <div className="text-sm font-medium text-slate-500">
-                    {field.label}
-                  </div>
+            <span
+              className={`rounded-full border px-3 py-1 text-xs font-semibold ${getStatusClass(
+                record.status,
+              )}`}
+            >
+              {record.status || "New"}
+            </span>
+          </div>
 
-                  <div className="text-sm text-slate-800">
-                    {renderValue(field, record[field.name])}
-                  </div>
-                </div>
-              ))}
-
-              <div className="grid grid-cols-1 gap-1 px-5 py-4 sm:grid-cols-[220px_1fr] sm:gap-5">
-                <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
-                  <Clock size={15} />
-                  Submitted
+          <div className="divide-y divide-slate-100">
+            {form.fields.map((field) => (
+              <div
+                key={field.name}
+                className="grid grid-cols-1 gap-1 px-5 py-4 sm:grid-cols-[220px_1fr] sm:gap-5"
+              >
+                <div className="text-sm font-medium text-slate-500">
+                  {field.label}
                 </div>
 
                 <div className="text-sm text-slate-800">
-                  {record.submittedAt
-                    ? new Date(record.submittedAt).toLocaleString()
-                    : "—"}
+                  {renderValue(field, record[field.name])}
                 </div>
               </div>
-            </div>
-          </section>
+            ))}
 
-          {/* -----------------------------------------
-              CONTACT
-          ------------------------------------------ */}
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="mb-4 flex items-center gap-2">
-              <div className="rounded-lg bg-[#e9f4f7] p-2 text-[#2f6b8a]">
-                <User size={18} />
+            <div className="grid grid-cols-1 gap-1 px-5 py-4 sm:grid-cols-[220px_1fr] sm:gap-5">
+              <div className="flex items-center gap-2 text-sm font-medium text-slate-500">
+                <Clock size={15} />
+                Submitted
               </div>
 
-              <h2 className="font-semibold text-slate-800">
-                Contact the Sender
-              </h2>
-            </div>
-
-            {contactValue ? (
-              <div className="flex flex-wrap gap-3">
-                {isEmail ? (
-                  <a
-                    href={`mailto:${contactValue}`}
-                    className="inline-flex items-center gap-2 rounded-lg bg-[#2f6b8a] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#25566f]"
-                  >
-                    <Mail size={16} />
-                    Email
-                  </a>
-                ) : (
-                  <a
-                    href={`https://wa.me/91${phoneNumber}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-lg bg-[#2f6b8a] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#25566f]"
-                  >
-                    <MessageCircle size={16} />
-                    WhatsApp
-                  </a>
-                )}
-
-                {!isEmail && phoneNumber && (
-                  <a
-                    href={`tel:${phoneNumber}`}
-                    className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-[#2f6b8a] hover:text-[#2f6b8a]"
-                  >
-                    Call
-                  </a>
-                )}
-              </div>
-            ) : (
-              <p className="text-sm text-slate-500">
-                No contact details provided. Response will be saved internally
-                only.
-              </p>
-            )}
-          </section>
-
-          {/* -----------------------------------------
-              RESPONSE HISTORY
-          ------------------------------------------ */}
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="mb-4 flex items-center gap-2">
-              <div className="rounded-lg bg-[#e9f4f7] p-2 text-[#2f6b8a]">
-                <MessageCircle size={18} />
-              </div>
-
-              <h2 className="font-semibold text-slate-800">Response History</h2>
-            </div>
-
-            {record.responses?.length ? (
-              <div className="space-y-3">
-                {record.responses.map((response, index) => (
-                  <div
-                    key={index}
-                    className="rounded-lg border-l-4 border-[#2f6b8a] bg-[#f5fafb] p-4"
-                  >
-                    <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                      <span className="font-semibold text-slate-700">
-                        {response.by}
-                      </span>
-
-                      <span>·</span>
-
-                      <span>{new Date(response.at).toLocaleString()}</span>
-
-                      <span>·</span>
-
-                      <span
-                        className={`rounded-full px-2 py-0.5 font-medium ${getStatusClass(
-                          response.status,
-                        )}`}
-                      >
-                        {response.status}
-                      </span>
-                    </div>
-
-                    <p className="whitespace-pre-wrap text-sm leading-6 text-slate-700">
-                      {response.text}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="rounded-lg border border-dashed border-slate-200 py-8 text-center">
-                <MessageCircle
-                  className="mx-auto mb-2 text-slate-300"
-                  size={30}
-                />
-
-                <p className="text-sm text-slate-500">No responses yet.</p>
-              </div>
-            )}
-          </section>
-
-          {/* -----------------------------------------
-              ADMIN RESPONSE
-          ------------------------------------------ */}
-          <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-            <div className="mb-5 flex items-center gap-2">
-              <div className="rounded-lg bg-[#e9f4f7] p-2 text-[#2f6b8a]">
-                <Send size={18} />
-              </div>
-
-              <div>
-                <h2 className="font-semibold text-slate-800">Admin Response</h2>
-
-                <p className="text-xs text-slate-500">
-                  Send a response to the enquiry sender
-                </p>
+              <div className="text-sm text-slate-800">
+                {record.submittedAt
+                  ? new Date(record.submittedAt).toLocaleString()
+                  : "—"}
               </div>
             </div>
-
-            <div className="space-y-5">
-              {/* Status */}
-              {/* Status */}
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                  Status
-                </label>
-
-                <div className="relative">
-                  <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                    className="w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2.5 pr-10 text-sm text-slate-700 outline-none transition focus:border-[#2f6b8a] focus:ring-2 focus:ring-[#2f6b8a]/10"
-                  >
-                    {STATUS_OPTIONS.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-
-                  <ChevronDown
-                    size={18}
-                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
-                  />
-                </div>
-              </div>
-
-              {/* Response */}
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                  Response
-                </label>
-
-                <textarea
-                  rows={5}
-                  value={reply}
-                  onChange={(e) => setReply(e.target.value)}
-                  placeholder="Write your response..."
-                  className="w-full resize-none rounded-lg border border-slate-300 px-3 py-2.5 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#2f6b8a] focus:ring-2 focus:ring-[#2f6b8a]/10"
-                />
-              </div>
-
-              {/* Message */}
-              {message && (
-                <div className="flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
-                  <CheckCircle2 size={17} />
-                  {message}
-                </div>
-              )}
-
-              {/* Send */}
-              <button
-                type="button"
-                onClick={sendResponse}
-                className="inline-flex items-center gap-2 rounded-lg bg-[#2f6b8a] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#25566f] focus:outline-none focus:ring-2 focus:ring-[#2f6b8a]/30"
-              >
-                <Send size={16} />
-                Send Response
-              </button>
-            </div>
-          </section>
-        </div>
+          </div>
+        </section>
       </main>
     </div>
   );

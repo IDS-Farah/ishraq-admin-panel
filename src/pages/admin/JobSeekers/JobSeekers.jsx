@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Eye as EyeIcon,
+  Eye as ChevronsRight,
   FileSpreadsheet as ExcelIcon,
   ChevronDown,
   ChevronUp,
@@ -1050,7 +1050,7 @@ const JobSeekerList = () => {
                             aria-label={`View ${user.fullName}`}
                             className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-gradient-to-br from-[#168fa1] to-[#35b8c4] text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a9aa8] focus-visible:ring-offset-2"
                           >
-                            <EyeIcon size={14} strokeWidth={2.2} />
+                            <ChevronsRight size={14} strokeWidth={2.2} />
                           </button>
 
                           <StatusSwitch

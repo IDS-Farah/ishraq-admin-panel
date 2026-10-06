@@ -42,7 +42,10 @@ const EMPTY_FORM = {
   willingToRelocate: "",
   employmentPreference: "",
   availabilityToJoin: "",
-  document: null,
+  resume: null,
+  qualificationCertificate: null,
+  professionalCertificate: null,
+  experienceCertificate: null,
 };
 
 const getUsers = () => {
@@ -77,7 +80,7 @@ const val = (v) => (v && String(v).trim() ? v : "-");
 const TABS = [
   { id: "overview", label: "Overview" },
   { id: "preferences", label: "Location & Preferences" },
-  { id: "resume", label: "Resume" },
+  { id: "resume", label: "Documents" },
   { id: "jobs", label: "Interested / Applied Jobs" },
 ];
 
@@ -146,6 +149,7 @@ const ResumeBox = ({ doc, big = false }) => {
       </div>
     );
   }
+
   return (
     <div
       className={`rounded-xl border border-[#e2e8ee] bg-[#f9fbfc] ${big ? "p-5" : "p-3"}`}
@@ -328,6 +332,13 @@ const JobSeekerDetails = () => {
   ].filter(Boolean);
   const wa = (form.whatsapp || "").replace(/\D/g, "");
 
+  const documents = [
+    { label: "Resume", doc: form.resume },
+    { label: "Qualification Certificate", doc: form.qualificationCertificate },
+    { label: "Professional Certificate", doc: form.professionalCertificate },
+    { label: "Experience Certificate", doc: form.experienceCertificate },
+  ];
+
   return (
     <div className="jp-page min-h-full bg-[#f7f9fb] text-[#1e2b36]">
       {Styles}
@@ -484,15 +495,8 @@ const JobSeekerDetails = () => {
                     label="Current Designation"
                     value={form.currentDesignation}
                   />
-                  <Row
-                    label="Current Employer"
-                    value={form.currentEmployer}
-                  />
-                  <Row
-                    label="Current Salary"
-                    value={form.currentSalary}
-                  />
-                  
+                  <Row label="Current Employer" value={form.currentEmployer} />
+                  <Row label="Current Salary" value={form.currentSalary} />
                 </Card>
               </div>
             )}
@@ -528,12 +532,16 @@ const JobSeekerDetails = () => {
             )}
 
             {tab === "resume" && (
-              <Card title="Document Upload" icon={FileIcon}>
-                <div className="pt-3">
-                  <p className="mb-2 text-[13px] font-medium text-[#6b7a88]">
-                    Resume / CV
-                  </p>
-                  <ResumeBox doc={form.document} big />
+              <Card title="Uploaded Documents" icon={FileIcon}>
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  {documents.map(({ label, doc }) => (
+                    <div key={label} className="space-y-2">
+                      <h3 className="text-sm font-semibold text-[#17405a]">
+                        {label}
+                      </h3>
+                      <ResumeBox doc={doc} big />
+                    </div>
+                  ))}
                 </div>
               </Card>
             )}

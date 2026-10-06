@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   BookUser,
   Building2,
+  MessagesSquare,
   KeyRound,
   ClipboardList,
   MessageCircleQuestion,
@@ -123,6 +124,22 @@ export const EmployerSidebar = () => {
     //   tile: "from-rose-400 to-red-500",
     //   alert: true,
     // },
+  ];
+
+  const bottomItems = [
+    {
+      text: "Complaints",
+      icon: ShieldAlert,
+      link: "/employer/complaint-list",
+      tile: "from-rose-400 to-red-500",
+      // alert: true,
+    },
+    {
+      text: "Feedback",
+      icon: MessagesSquare,
+      link: "/employer/feedback-list",
+      tile: "from-pink-400 to-rose-500",
+    },
   ];
 
   const matches = (item) =>
@@ -251,22 +268,20 @@ export const EmployerSidebar = () => {
           <ul className="space-y-1">{filteredItems.map(renderItem)}</ul>
 
           {filteredItems.length === 0 && expanded && (
-              <p className="px-3 py-6 text-center text-sm text-gray-400">
-                No menu items match "{search}"
-              </p>
-            )}
+            <p className="px-3 py-6 text-center text-sm text-gray-400">
+              No menu items match "{search}"
+            </p>
+          )}
         </div>
 
         {/* Bottom Menu */}
-        {/* <div className="px-2 py-3 border-t border-gray-100">
+        <div className="px-2 py-3 border-t border-gray-100">
           <ul className="space-y-1">
-            {filteredBottomItems.map((item, i) =>
+            {bottomItems.map((item, i) =>
               renderItem(item, filteredItems.length + i),
             )}
           </ul>
-
-        
-        </div> */}
+        </div>
       </nav>
     </aside>
   );

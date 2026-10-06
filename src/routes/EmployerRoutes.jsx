@@ -12,7 +12,12 @@ import JobRequirementEdit from "../pages/employer/JobRequirement/Jobrequiremente
 import JobRequirementView from "../pages/employer/JobRequirement/Jobrequirementview";
 import JobRequirementCreate from "../pages/employer/JobRequirement/Jobrequirementcreate";
 import EmployerEdit from "../pages/employer/OrganizationDetails/EditOrganization";
-
+import FeedbackList from "../pages/employer/Feedback/FeedbackList";
+import FeedbackDetails from "../pages/employer/Feedback/FeedbackDetails";
+import ComplaintList from "../pages/employer/Complaints/ComplaintList";
+import ComplaintDetails from "../pages/employer/Complaints/ComplaintDetails";
+import CreateComplaint from "../pages/employer/Complaints/ComplaintDetails";
+import CreateFeedback from "../pages/employer/Feedback/CreateFeedback";
 const EmployerRoutes = (
   <Route element={<ProtectedRoute allowedRole="employer" />}>
     <Route path="/employer" element={<EmployerLayout />}>
@@ -33,7 +38,16 @@ const EmployerRoutes = (
         path="job-requirements/:id/edit"
         element={<JobRequirementEdit />}
       />
-      <Route path="job-requirements/create" element={<JobRequirementCreate />} />
+      <Route
+        path="job-requirements/create"
+        element={<JobRequirementCreate />}
+      />
+      <Route path="feedback-list" element={<FeedbackList />} />
+      <Route path="feedback/:id" element={<FeedbackDetails />} />
+      <Route path="feedback-add" element={<CreateFeedback />} />
+      <Route path="complaint-list" element={<ComplaintList />} />
+      <Route path="complaints/:id" element={<ComplaintDetails />} />
+      <Route path="complaint-add" element={<CreateComplaint />} />
     </Route>
   </Route>
 );

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Eye as EyeIcon,
+  Eye as ChevronsRight,
   FileSpreadsheet as ExcelIcon,
   ChevronDown,
   ChevronUp,
@@ -43,6 +43,7 @@ const SEED_USERS = [
     email: "ayesha.khan@gmail.com",
     youAre: "Employer",
     subject: "Hiring nurses for a multispecialty clinic",
+    createdAt: "21-09-2026",
   },
   {
     id: 2,
@@ -52,6 +53,7 @@ const SEED_USERS = [
     email: "imran.shaikh@gmail.com",
     youAre: "Jobseeker",
     subject: "Looking for lab technician opportunities",
+    createdAt: "21-09-2026",
   },
   {
     id: 3,
@@ -61,6 +63,7 @@ const SEED_USERS = [
     email: "sana.pathan@gmail.com",
     youAre: "Jobseeker",
     subject: "Interested in pharmacist positions",
+    createdAt: "21-09-2026",
   },
   {
     id: 4,
@@ -70,6 +73,7 @@ const SEED_USERS = [
     email: "rohit.deshmukh@gmail.com",
     youAre: "Employer",
     subject: "Seeking qualified doctors for our clinic",
+    createdAt: "21-09-2026",
   },
   {
     id: 5,
@@ -79,6 +83,7 @@ const SEED_USERS = [
     email: "neha.jadhav@outlook.com",
     youAre: "Other",
     subject: "Question about the hiring process",
+    createdAt: "21-09-2026",
   },
 ];
 
@@ -352,9 +357,9 @@ const HEADINGS = [
   "Sr.No",
   "Name",
   "Mobile",
-  "Email",
   "You Are",
   "Subject",
+  "Submit Date",
   "Actions",
 ];
 
@@ -495,7 +500,7 @@ const GeneralEnquiryList = () => {
         <div className="mb-4 flex flex-col items-start justify-between gap-3 xl:flex-row xl:items-center">
           <div>
             <h1 className="m-0 text-[22px] font-extrabold tracking-tight text-[#2c6b8a] sm:text-[26px]">
-              General Enquiry
+              Contact Us Enquiry
             </h1>
           </div>
 
@@ -634,15 +639,14 @@ const GeneralEnquiryList = () => {
                       </td>
 
                       <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
-                        {user.name || "-"}
+                        <div className="inline-flex flex-col gap-1">
+                          <span>{user.name || "-"}</span>
+                          <span>{user.email || "-"}</span>
+                        </div>
                       </td>
 
                       <td className="whitespace-nowrap border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
                         {user.mobile || "-"}
-                      </td>
-
-                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
-                        {user.email || "-"}
                       </td>
 
                       <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
@@ -651,6 +655,9 @@ const GeneralEnquiryList = () => {
 
                       <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
                         {user.subject || "-"}
+                      </td>
+                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
+                        {user.createdAt || "-"}
                       </td>
 
                       <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]">
@@ -664,7 +671,7 @@ const GeneralEnquiryList = () => {
                             aria-label={`View ${user.name || "contact"}`}
                             className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-gradient-to-br from-[#168fa1] to-[#35b8c4] text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a9aa8] focus-visible:ring-offset-2"
                           >
-                            <EyeIcon size={14} strokeWidth={2.2} />
+                            <ChevronsRight size={14} strokeWidth={2.2} />
                           </button>
                         </div>
                       </td>
