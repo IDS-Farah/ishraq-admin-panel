@@ -16,6 +16,7 @@ import {
   Plane,
   UserRound,
   Navigation,
+  SquarePen,
 } from "lucide-react";
 
 /* Must match the key used in the Jobseeker list page */
@@ -32,7 +33,6 @@ const EMPTY_FORM = {
   professionalRegistrationNumber: "",
   totalExperience: "",
   currentDesignation: "",
-  address: "",
   currentCity: "",
   state: "",
   expectedSalary: "",
@@ -76,7 +76,7 @@ const TABS = [
   { id: "overview", label: "Overview" },
   { id: "preferences", label: "Location & Preferences" },
   { id: "resume", label: "Resume" },
-  { id: "jobs", label: "Interested / Applied Jobs" },
+  // { id: "jobs", label: "Interested Jobs" },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -186,58 +186,6 @@ const ResumeBox = ({ doc, big = false }) => {
   );
 };
 
-const DUMMY_JOBS = [
-  {
-    id: 1,
-    title: "Senior React Developer",
-    company: "Tech Solutions Pvt. Ltd.",
-    location: "Pune, Maharashtra",
-    jobType: "Full Time",
-    salary: "₹8 - 12 LPA",
-    status: "Interested",
-    postedAt: "02 Oct 2026",
-  },
-  {
-    id: 2,
-    title: "Frontend Developer",
-    company: "Innovate Technologies",
-    location: "Mumbai, Maharashtra",
-    jobType: "Full Time",
-    salary: "₹6 - 9 LPA",
-    status: "Applied",
-    appliedAt: "01 Oct 2026",
-  },
-  {
-    id: 3,
-    title: "UI/UX Designer",
-    company: "Creative Minds",
-    location: "Remote",
-    jobType: "Remote",
-    salary: "₹5 - 8 LPA",
-    status: "Interested",
-    postedAt: "28 Sep 2026",
-  },
-  {
-    id: 4,
-    title: "Full Stack Developer",
-    company: "Digital Works",
-    location: "Hyderabad, Telangana",
-    jobType: "Full Time",
-    salary: "₹7 - 10 LPA",
-    status: "Applied",
-    appliedAt: "25 Sep 2026",
-  },
-  {
-    id: 5,
-    title: "Software Engineer",
-    company: "Global Systems",
-    location: "Bengaluru, Karnataka",
-    jobType: "Hybrid",
-    salary: "₹9 - 14 LPA",
-    status: "Interested",
-    postedAt: "20 Sep 2026",
-  },
-];
 
 /* ------------------------------------------------------------------ */
 /* Page                                                                */
@@ -347,21 +295,24 @@ const MyDetails = () => {
               User Detail
             </h1>
           </div>
-          <span
-            className={`inline-flex h-8 items-center gap-2 rounded-lg px-3 text-[12.5px] font-bold text-white shadow-md ring-1 ring-inset ${
-              active
-                ? "bg-emerald-600 ring-emerald-700"
-                : "bg-rose-600 ring-rose-700"
-            }`}
-          >
-            <span className="relative flex h-2 w-2">
-              {active && (
-                <span className="jp-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-70" />
-              )}
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
-            </span>
-            {user.status}
-          </span>
+          <div>
+            <button
+              type="button"
+              onClick={() =>
+                navigate(`/jobseeker/profile/1/edit`)
+              }
+              title="Edit"
+              className="group inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#16834f] to-[#2fb877] px-3 text-[15px] font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#16834f] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {/* <SquarePen /> */}
+              <SquarePen
+                size={15}
+                strokeWidth={2.2}
+                className="transition-transform group-hover:scale-110"
+              />
+              <span className="hidden sm:inline">Edit</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -489,7 +440,7 @@ const MyDetails = () => {
             {tab === "preferences" && (
               <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                 <Card title="Location" icon={MapPin} delay={0}>
-                  <Row label="Address" value={form.address} />
+                  {/* <Row label="Address" value={form.address} /> */}
                   <Row label="Current City" value={form.currentCity} />
                   <Row label="State" value={form.state} />
                   <Row
@@ -527,88 +478,7 @@ const MyDetails = () => {
               </Card>
             )}
 
-            {tab === "jobs" && (
-              <div className="space-y-4">
-                {/* Job list */}
-                <section className="rounded-2xl border border-[#e2e8ee] bg-white p-4 shadow-sm">
-                  <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                    <h2 className="text-[16px] font-bold text-[#1e2b36]">
-                      Interested & Applied Jobs
-                    </h2>
-                    <span className="rounded-full bg-[#e8f1f6] px-3 py-1 text-xs font-semibold text-[#2c6b8a]">
-                      {DUMMY_JOBS.length} Jobs
-                    </span>
-                  </div>
-
-                  <div className="space-y-3 h-[51vh] overflow-y-scroll">
-                    {DUMMY_JOBS.map((job) => (
-                      <div
-                        key={job.id}
-                        className="rounded-xl border border-[#e2e8ee] p-4 transition hover:border-[#9fc5d8] hover:shadow-sm"
-                      >
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div className="flex min-w-0 items-start gap-3">
-                            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-[#2c6b8a] to-[#5ba6bd] text-white">
-                              <Briefcase size={19} />
-                            </div>
-
-                            <div className="min-w-0">
-                              <h3 className="break-words text-[14px] font-bold text-[#1e2b36]">
-                                {job.title}
-                              </h3>
-                              <p className="mt-1 text-[13px] font-medium text-[#53677f]">
-                                {job.company}
-                              </p>
-                            </div>
-                          </div>
-
-                          <span
-                            className={`shrink-0 rounded-full px-3 py-1 text-[11px] font-bold text-white ${
-                              job.status === "Applied"
-                                ? "bg-emerald-600"
-                                : "bg-amber-500"
-                            }`}
-                          >
-                            {job.status}
-                          </span>
-                        </div>
-
-                        <div className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-[12px] font-medium text-[#6b7a88]">
-                          <span className="flex items-center gap-1.5">
-                            <MapPin size={14} />
-                            {job.location}
-                          </span>
-
-                          <span className="flex items-center gap-1.5">
-                            <Briefcase size={14} />
-                            {job.jobType}
-                          </span>
-
-                          <span className="flex items-center gap-1.5">
-                            <Wallet size={14} />
-                            {job.salary}
-                          </span>
-                        </div>
-
-                        <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-[#eef2f6] pt-3">
-                          <p className="text-[12px] text-[#6b7a88]">
-                            {job.status === "Applied"
-                              ? `Applied on: ${job.appliedAt}`
-                              : `Posted on: ${job.postedAt}`}
-                          </p>
-
-                          <span className="text-[12px] font-semibold text-[#2c6b8a]">
-                            {job.status === "Applied"
-                              ? "Application submitted"
-                              : "Job saved as interested"}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              </div>
-            )}
+           
           </div>
         </main>
       </div>

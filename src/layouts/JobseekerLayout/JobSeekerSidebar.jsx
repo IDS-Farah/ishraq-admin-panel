@@ -92,12 +92,12 @@ export const JobSeekerSidebar = () => {
       tile: "from-emerald-400 to-teal-500",
       // alert: true,
     },
-    // {
-    //   text: "Employers",
-    //   icon: Building2,
-    //   link: "/admin/employer",
-    //   tile: "from-violet-400 to-indigo-500",
-    // },
+    {
+      text: "Applied Jobs",
+      icon: Building2,
+      link: "/jobseeker/applied-jobs",
+      tile: "from-violet-400 to-indigo-500",
+    },
     // {
     //   text: "Reset Password",
     //   icon: KeyRound,

@@ -7,6 +7,9 @@ import JobSeekerLayout from "../layouts/JobseekerLayout/JobSeekerLayout";
 import JobSeekerDashboard from "../pages/jobseeker/Dashboard/JobSeekerDashboard";
 import JobSeekerJobs from "../pages/jobseeker/Jobs/Jobs";
 import MyDetails from "../pages/jobseeker/Profile/Profile"
+import JobseekerEdit from "../pages/jobseeker/Profile/EditProfile"
+import JobseekerAppliedJobs from "../pages/jobseeker/AppliedJobs/JobseekerAppliedJobs"
+
 
 const JobSeekerRoutes = (
   <Route element={<ProtectedRoute allowedRole="jobseeker" />}>
@@ -18,7 +21,9 @@ const JobSeekerRoutes = (
 
       <Route path="dashboard" element={<JobSeekerDashboard />} />
       <Route path="profile/:id" element={<MyDetails />} />
+      <Route path="profile/:id/edit" element={<JobseekerEdit />} />
       <Route path="jobs" element={<JobSeekerJobs />} />
+      <Route path="applied-jobs" element={<JobseekerAppliedJobs />} />
     </Route>
   </Route>
 );
