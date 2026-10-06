@@ -17,7 +17,7 @@ const JobSeekerLayout = () => {
         <JobSeekerHeader />
 
         {/* PAGE CONTENT */}
-        <main className="min-w-0 flex-1 overflow-auto p-3 sm:p-4 lg:p-4">
+        <main className="min-w-0 flex-1 overflow-auto p-3 ">
           <Outlet />
         </main>
 

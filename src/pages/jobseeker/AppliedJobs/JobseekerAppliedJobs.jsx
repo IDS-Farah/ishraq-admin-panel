@@ -817,7 +817,7 @@ const JobseekerAppliedJobs = () => {
                         type="button"
                         onClick={() =>
                           navigate(
-                            `/employer/job-requirements/${application.jobId}`,
+                            `/jobseeker/applications/${application.id}`,
                           )
                         }
                         title="View job"

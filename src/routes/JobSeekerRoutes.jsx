@@ -9,6 +9,7 @@ import JobSeekerJobs from "../pages/jobseeker/Jobs/Jobs";
 import MyDetails from "../pages/jobseeker/Profile/Profile"
 import JobseekerEdit from "../pages/jobseeker/Profile/EditProfile"
 import JobseekerAppliedJobs from "../pages/jobseeker/AppliedJobs/JobseekerAppliedJobs"
+import ViewJobApplication from "../pages/jobseeker/AppliedJobs/ViewAppliedJob"
 
 
 const JobSeekerRoutes = (
@@ -24,6 +25,7 @@ const JobSeekerRoutes = (
       <Route path="profile/:id/edit" element={<JobseekerEdit />} />
       <Route path="jobs" element={<JobSeekerJobs />} />
       <Route path="applied-jobs" element={<JobseekerAppliedJobs />} />
+     <Route path="applications/:applicationId" element={<ViewJobApplication />} />
     </Route>
   </Route>
 );
