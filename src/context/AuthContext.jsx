@@ -10,7 +10,12 @@ export const AuthProvider = ({ children }) => {
     const storedUser = localStorage.getItem("user");
 
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch {
+        // Ignore stale or malformed demo session data and let the user sign in again.
+        localStorage.removeItem("user");
+      }
     }
 
     setLoading(false);

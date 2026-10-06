@@ -7,6 +7,7 @@ import JobSeekerRoutes from "./JobSeekerRoutes";
 import EmployerRoutes from "./EmployerRoutes";
 
 import Unauthorized from "../pages/auth/Unauthorized";
+import NotFound from "../pages/error/NotFound";
 
 const AppRoutes = () => {
   return (
@@ -24,7 +25,7 @@ const AppRoutes = () => {
         <Route path="/" element={<Navigate to="/login" replace />} />
 
         {/* 404 */}
-        <Route path="*" element={<Unauthorized />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );

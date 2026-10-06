@@ -56,7 +56,7 @@ const AdminRoutes = (
       <Route path="employers/:id" element={<EmployerProfile />} />
 
       {/* Settings */}
-      <Route path="userList" element={<AdminUsers />} />
+      <Route path="userList" element={<Navigate to="/admin/users" replace />} />
       <Route path="reset-password" element={<ResetPassword />} />
 
       {/* Job Seeker Management */}

@@ -11,8 +11,6 @@ import {
   ClipboardList,
   MessageCircleQuestion,
   ShieldAlert,
-  Settings,
-  MessagesSquare,
   Sparkles,
   LifeBuoy,
   LogOut,
@@ -127,26 +125,10 @@ export const JobSeekerSidebar = () => {
     // },
   ];
 
-  const bottomItems = [
-    {
-      text: "Settings",
-      icon: Settings,
-      link: "/admin/settings",
-      tile: "from-slate-400 to-slate-600",
-    },
-    {
-      text: "Feedback",
-      icon: MessagesSquare,
-      link: "/admin/feedback-list",
-      tile: "from-pink-400 to-rose-500",
-    },
-  ];
-
   const matches = (item) =>
     item.text.toLowerCase().includes(search.toLowerCase());
 
   const filteredItems = menuItems.filter(matches);
-  const filteredBottomItems = bottomItems.filter(matches);
 
   const renderItem = (item, index) => {
     const Icon = item.icon;
@@ -264,7 +246,7 @@ export const JobSeekerSidebar = () => {
         <div className="flex-1 overflow-y-auto overflow-x-hidden px-2 pt-2">
           <ul className="space-y-1">{filteredItems.map(renderItem)}</ul>
 
-          {filteredItems.length === 0 && filteredBottomItems.length === 0 && expanded && (
+          {filteredItems.length === 0 && expanded && (
             <p className="px-3 py-6 text-center text-sm text-gray-400">
               No menu items match "{search}"
             </p>

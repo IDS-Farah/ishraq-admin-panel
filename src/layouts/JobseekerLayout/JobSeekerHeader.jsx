@@ -10,15 +10,16 @@ import {
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 const JobSeekerHeader = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
   const [profileOpen, setProfileOpen] = useState(false);
 
   const handleLogout = () => {
-    // Clear the token from localStorage
-    localStorage.removeItem("user"); 
-    navigate("/login"); // Redirect to the login page {}
+    logout();
+    navigate("/login");
   };
 
   return (
