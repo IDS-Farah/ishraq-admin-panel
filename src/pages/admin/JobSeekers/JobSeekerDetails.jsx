@@ -36,6 +36,8 @@ const EMPTY_FORM = {
   currentCity: "",
   state: "",
   expectedSalary: "",
+  currentEmployer: "",
+  currentSalary: "",
   preferredJobLocation: "",
   willingToRelocate: "",
   employmentPreference: "",
@@ -86,7 +88,7 @@ const TABS = [
 const Card = ({ title, icon: Icon, children, delay = 0, className = "" }) => (
   <section
     style={{ animationDelay: `${delay}ms` }}
-    className={`jp-up min-w-0 h-[63vh] rounded-2xl border border-[#e2e8ee] bg-white p-4 shadow-sm transition duration-300 hover:shadow-md ${className}`}
+    className={`jp-up min-w-0 h-[63vh] overflow-x-auto common-scrollbar rounded-2xl border border-[#e2e8ee] bg-white p-4 shadow-sm transition duration-300 hover:shadow-md ${className}`}
   >
     <h2 className="mb-2 flex items-center gap-2.5 text-[15px] font-bold text-[#1e2b36]">
       <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-[#2c6b8a] to-[#5ba6bd] text-white shadow-sm">
@@ -482,6 +484,15 @@ const JobSeekerDetails = () => {
                     label="Current Designation"
                     value={form.currentDesignation}
                   />
+                  <Row
+                    label="Current Employer"
+                    value={form.currentEmployer}
+                  />
+                  <Row
+                    label="Current Salary"
+                    value={form.currentSalary}
+                  />
+                  
                 </Card>
               </div>
             )}
