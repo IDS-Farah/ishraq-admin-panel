@@ -16,7 +16,8 @@ import {
   LogOut,
   Activity,
   ChevronsRight,
-  ChevronsLeft
+  ChevronsLeft,
+  MessagesSquare
 } from "lucide-react";
 
 // Keyframes live here so no tailwind.config changes are needed
@@ -125,6 +126,21 @@ export const JobSeekerSidebar = () => {
     // },
   ];
 
+   const bottomItems = [
+    {
+      text: "Complaints",
+      icon: ShieldAlert,
+      link: "/jobseeker/complaint-list",
+      tile: "from-rose-400 to-red-500",
+      // alert: true,
+    },
+    {
+      text: "Feedback",
+      icon: MessagesSquare,
+      link: "/jobseeker/feedback-list",
+      tile: "from-pink-400 to-rose-500",
+    },
+  ];
   const matches = (item) =>
     item.text.toLowerCase().includes(search.toLowerCase());
 
@@ -251,6 +267,14 @@ export const JobSeekerSidebar = () => {
               No menu items match "{search}"
             </p>
           )}
+        </div>
+               {/* Bottom Menu */}
+        <div className="px-2 py-3 border-t border-gray-100">
+          <ul className="space-y-1">
+            {bottomItems.map((item, i) =>
+              renderItem(item, filteredItems.length + i),
+            )}
+          </ul>
         </div>
       </nav>
     </aside>

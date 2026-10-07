@@ -16,7 +16,7 @@ import FeedbackList from "../pages/employer/Feedback/FeedbackList";
 import FeedbackDetails from "../pages/employer/Feedback/FeedbackDetails";
 import ComplaintList from "../pages/employer/Complaints/ComplaintList";
 import ComplaintDetails from "../pages/employer/Complaints/ComplaintDetails";
-import CreateComplaint from "../pages/employer/Complaints/ComplaintDetails";
+import CreateComplaint from "../pages/employer/Complaints/CreateComplaint";
 import CreateFeedback from "../pages/employer/Feedback/CreateFeedback";
 const EmployerRoutes = (
   <Route element={<ProtectedRoute allowedRole="employer" />}>
