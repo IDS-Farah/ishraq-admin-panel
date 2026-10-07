@@ -1,5 +1,5 @@
 import { useId, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import "./Login.css";
 
@@ -30,7 +30,8 @@ const ROLES = [
     key: "jobseeker",
     label: "Job seeker",
     title: "Job seeker sign in",
-    blurb: "Find roles that fit, apply in one click and follow your applications.",
+    blurb:
+      "Find roles that fit, apply in one click and follow your applications.",
     placeholder: "jobseeker@ishraqhr.com",
     redirect: "/jobseeker/dashboard",
     registerUrl: "https://ishraqhr.com/jobseekers/",
@@ -157,9 +158,19 @@ const IconCheck = () => (
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
 
-  const [roleKey, setRoleKey] = useState("admin");
+  // Roles allowed for each login URL
+  const isAdminLogin = location.pathname === "/admin/login";
+
+  const visibleRoles = isAdminLogin
+    ? ROLES.filter((r) => r.key === "admin")
+    : ROLES.filter((r) => r.key === "employer" || r.key === "jobseeker");
+
+  const defaultRole = isAdminLogin ? "admin" : "employer";
+
+  const [roleKey, setRoleKey] = useState(defaultRole);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -170,8 +181,8 @@ const Login = () => {
   const [shake, setShake] = useState(false);
   const [status, setStatus] = useState("idle"); // idle | loading | success
 
-  const roleIndex = ROLES.findIndex((r) => r.key === roleKey);
-  const role = ROLES[roleIndex];
+  const roleIndex = visibleRoles.findIndex((r) => r.key === roleKey);
+  const role = visibleRoles[roleIndex];
 
   const fail = (message) => {
     setError(message);
@@ -203,7 +214,8 @@ const Login = () => {
     // Small delay so the loading state is visible (remove with a real API)
     setTimeout(() => {
       const user = dummyUsers.find(
-        (item) => item.username === username.trim() && item.password === password
+        (item) =>
+          item.username === username.trim() && item.password === password,
       );
 
       if (!user) {
@@ -213,7 +225,9 @@ const Login = () => {
 
       if (user.role !== roleKey) {
         const actual = ROLES.find((r) => r.key === user.role)?.label;
-        fail(`This is a ${actual} account. Select "${actual}" above to sign in.`);
+        fail(
+          `This is a ${actual} account. Select "${actual}" above to sign in.`,
+        );
         return;
       }
 
@@ -263,24 +277,29 @@ const Login = () => {
 
         {/* ---------------- Form ---------------- */}
         <section className="ish-form-side">
-          <div className="ish-tabs" role="tablist" aria-label="Account type">
-            <span
-              className="ish-tab-thumb"
-              style={{ transform: `translateX(${roleIndex * 100}%)` }}
-            />
-            {ROLES.map((r) => (
-              <button
-                key={r.key}
-                type="button"
-                role="tab"
-                aria-selected={r.key === roleKey}
-                className={`ish-tab ${r.key === roleKey ? "is-active" : ""}`}
-                onClick={() => handleRoleChange(r.key)}
-              >
-                {r.label}
-              </button>
-            ))}
-          </div>
+          {visibleRoles.length > 1 && (
+            <div className="ish-tabs" role="tablist" aria-label="Account type">
+              <span
+                className="ish-tab-thumb"
+                style={{
+                  transform: `translateX(${roleIndex * 100}%)`,
+                }}
+              />
+
+              {visibleRoles.map((r) => (
+                <button
+                  key={r.key}
+                  type="button"
+                  role="tab"
+                  aria-selected={r.key === roleKey}
+                  className={`ish-tab ${r.key === roleKey ? "is-active" : ""}`}
+                  onClick={() => handleRoleChange(r.key)}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
+          )}
 
           <form
             className={`ish-form ${error ? "has-error" : ""} ${shake ? "shake" : ""}`}
@@ -371,7 +390,9 @@ const Login = () => {
               className={`ish-submit ${status}`}
               disabled={status !== "idle"}
             >
-              <span className="ish-submit-text">Sign in as {role.label.toLowerCase()}</span>
+              <span className="ish-submit-text">
+                Sign in as {role.label.toLowerCase()}
+              </span>
               <span className="ish-submit-spinner" aria-hidden="true" />
               <span className="ish-submit-done" aria-hidden="true">
                 <IconCheck />

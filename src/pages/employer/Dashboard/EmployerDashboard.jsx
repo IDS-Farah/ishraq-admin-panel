@@ -70,16 +70,6 @@ const RANGES = {
     ],
     d: { apps: "+16%", views: "+13%", sl: "+11%", jobs: "+2", hired: "+5" },
   },
-  d90: {
-    label: "90 days",
-    sub: "Last 90 days",
-    series: [
-      { label: "Jul", apps: 640, views: 4900, sl: 140 },
-      { label: "Aug", apps: 745, views: 5600, sl: 165 },
-      { label: "Sep", apps: 860, views: 6500, sl: 190 },
-    ],
-    d: { apps: "+33%", views: "+27%", sl: "+24%", jobs: "+4", hired: "+11" },
-  },
 };
 
 const JOBS_INIT = [

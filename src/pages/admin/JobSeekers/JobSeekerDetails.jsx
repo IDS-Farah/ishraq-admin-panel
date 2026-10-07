@@ -357,7 +357,7 @@ const JobSeekerDetails = () => {
           {BackBtn}
           <div className="min-w-0 flex-1">
             <h1 className="m-0 text-[22px] font-extrabold tracking-tight sm:text-[26px]">
-              User Detail
+              Jobseeker Details
             </h1>
           </div>
           <span

@@ -1,4 +1,3 @@
-
 import { Route, Navigate } from "react-router-dom";
 
 import ProtectedRoute from "../components/common/ProtectedRoute";
@@ -6,27 +5,28 @@ import JobSeekerLayout from "../layouts/JobseekerLayout/JobSeekerLayout";
 
 import JobSeekerDashboard from "../pages/jobseeker/Dashboard/JobSeekerDashboard";
 import JobSeekerJobs from "../pages/jobseeker/Jobs/Jobs";
-import MyDetails from "../pages/jobseeker/Profile/Profile"
-import JobseekerEdit from "../pages/jobseeker/Profile/EditProfile"
-import JobseekerAppliedJobs from "../pages/jobseeker/AppliedJobs/JobseekerAppliedJobs"
-import ViewJobApplication from "../pages/jobseeker/AppliedJobs/ViewAppliedJob"
-
+import MyDetails from "../pages/jobseeker/Profile/Profile";
+import JobseekerEdit from "../pages/jobseeker/Profile/EditProfile";
+import JobseekerAppliedJobs from "../pages/jobseeker/AppliedJobs/JobseekerAppliedJobs";
+import ViewJobApplication from "../pages/jobseeker/AppliedJobs/ViewAppliedJob";
 
 const JobSeekerRoutes = (
   <Route element={<ProtectedRoute allowedRole="jobseeker" />}>
     <Route path="/jobseeker" element={<JobSeekerLayout />}>
-      <Route
-        index
-        element={<Navigate to="/jobseeker/dashboard" replace />}
-      />
+      <Route index element={<Navigate to="/jobseeker/dashboard" replace />} />
 
       <Route path="dashboard" element={<JobSeekerDashboard />} />
       <Route path="profile/:id" element={<MyDetails />} />
       <Route path="profile/:id/edit" element={<JobseekerEdit />} />
       <Route path="jobs" element={<JobSeekerJobs />} />
       <Route path="applied-jobs" element={<JobseekerAppliedJobs />} />
-     <Route path="applications/:applicationId" element={<ViewJobApplication />} />
+      <Route
+        path="applications/:applicationId"
+        element={<ViewJobApplication />}
+      />
+      
     </Route>
+    
   </Route>
 );
 

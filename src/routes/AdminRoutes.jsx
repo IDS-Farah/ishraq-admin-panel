@@ -27,6 +27,11 @@ import GeneralEnquiryDetails from "../pages/admin/enquiry/GeneralEnquiryDetails"
 import ComplaintDetails from "../pages/admin/Complaints/ComplaintDetails";
 import FeedbackDetails from "../pages/admin/Feedback/FeedbackDetails";
 import MasterDataForm from "../pages/admin/Settings/MasterData/MasterDataForm";
+import JobRequirementList from "../pages/admin/JobRequirement/JobRequirementList";
+import JobRequirementView from "../pages/admin/JobRequirement/Jobrequirementview";
+import JobRequirementEdit from "../pages/admin/JobRequirement/Jobrequirementedit";
+import JobRequirementCreate from "../pages/admin/JobRequirement/Jobrequirementcreate";
+import JobApplicantsList from "../pages/admin/JobRequirement/JobApplicantsList";
 
 const AdminRoutes = (
   <Route element={<ProtectedRoute allowedRole="admin" />}>
@@ -87,6 +92,22 @@ const AdminRoutes = (
       <Route
         path="settings/master-data/:masterType/view/:id"
         element={<MasterDataForm />}
+      />
+
+      <Route path="job-requirement-list" element={<JobRequirementList />} />
+      {/* <Route path="/admin/job-requirements" element={<JobRequirementList />} /> */}
+      <Route path="job-requirements/:id" element={<JobRequirementView />} />
+      <Route
+        path="job-requirements/:id/edit"
+        element={<JobRequirementEdit />}
+      />
+      <Route
+        path="job-requirements/create"
+        element={<JobRequirementCreate />}
+      />
+      <Route
+        path="job-applicant/:jobId"
+        element={<JobApplicantsList />}
       />
     </Route>
   </Route>

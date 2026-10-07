@@ -349,7 +349,7 @@
 .ish-tabs {
   position: relative;
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   padding: 4px;
   border-radius: 16px;
   background: var(--brand-soft);
@@ -361,7 +361,7 @@
   top: 4px;
   bottom: 4px;
   left: 4px;
-  width: calc((100% - 8px) / 3);
+  width: calc((100% - 8px) / 2);
   border-radius: 12px;
   background: linear-gradient(135deg, var(--brand-light), var(--brand-deep));
   box-shadow: 0 8px 16px -6px rgba(29, 74, 99, 0.6);

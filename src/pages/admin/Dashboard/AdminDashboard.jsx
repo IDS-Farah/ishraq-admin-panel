@@ -84,24 +84,6 @@ const RANGES = {
       complaints: "-9",
     },
   },
-  d90: {
-    label: "90 days",
-    sub: "Last 90 days",
-    series: [
-      { label: "Jul", seekers: 2900, employers: 380, jobs: 1180, apps: 21000 },
-      { label: "Aug", seekers: 3350, employers: 430, jobs: 1320, apps: 24500 },
-      { label: "Sep", seekers: 3820, employers: 498, jobs: 1510, apps: 27800 },
-    ],
-    d: {
-      users: "+22%",
-      seekers: "+21%",
-      employers: "+31%",
-      jobs: "+28%",
-      apps: "+33%",
-      fresh: "+29%",
-      complaints: "-17",
-    },
-  },
 };
 
 const STATUS_MIX = [

@@ -17,6 +17,7 @@ import {
   Sparkles,
   LifeBuoy,
   LogOut,
+  NotebookDot,
 } from "lucide-react";
 
 // Keyframes live here so no tailwind.config changes are needed
@@ -96,6 +97,12 @@ export const AdminSidebar = () => {
       text: "Employers List",
       icon: Building2,
       link: "/admin/employer",
+      tile: "from-violet-400 to-indigo-500",
+    },
+    {
+      text: "Job Requirements",
+      icon: NotebookDot,
+      link: "/admin/job-requirement-list",
       tile: "from-violet-400 to-indigo-500",
     },
     {
