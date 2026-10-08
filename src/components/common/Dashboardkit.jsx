@@ -1,5 +1,4 @@
 import React, { useEffect, useId, useRef, useState } from "react";
-import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 
 export const fmt = (n) => n.toLocaleString("en-IN");
 
@@ -30,48 +29,8 @@ export function useCountUp(value, duration = 800) {
   return Math.round(v);
 }
 
-/* ---------------- Colourful animated stat cards ---------------- */
-const WhiteSpark = ({ data }) => {
-  const id = useId().replace(/:/g, "");
-  const w = 64,
-    h = 26,
-    min = Math.min(...data),
-    max = Math.max(...data);
-  const pts = data.map((d, i) => [
-    (i / (data.length - 1)) * w,
-    h - 3 - ((d - min) / (max - min || 1)) * (h - 6),
-  ]);
-  const line = pts
-    .map((p, i) => `${i ? "L" : "M"}${p[0].toFixed(1)},${p[1].toFixed(1)}`)
-    .join(" ");
-  return (
-    <svg
-      width={w}
-      height={h}
-      viewBox={`0 0 ${w} ${h}`}
-      aria-hidden="true"
-      className="shrink-0"
-    >
-      <defs>
-        <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#fff" stopOpacity="0.35" />
-          <stop offset="100%" stopColor="#fff" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <path d={`${line} L${w},${h} L0,${h} Z`} fill={`url(#${id})`} />
-      <path
-        d={line}
-        fill="none"
-        stroke="#fff"
-        strokeWidth="1.8"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-};
 
-/* item: { title, value, delta, good, note, icon, color, color2, spark, metric? } */
+/* item: { title, value,  icon, color, color2,  } */
 export const GradientStatCard = ({ item, index, selected, onSelect }) => {
   const Icon = item.icon;
   const n = useCountUp(item.value);
@@ -110,7 +69,6 @@ export const GradientStatCard = ({ item, index, selected, onSelect }) => {
             {fmt(n)}
           </span>
           <div className="mt-1.5 flex items-center gap-1.5 text-[10px]">
-       
           </div>
         </div>
       </div>

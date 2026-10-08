@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   Save,
   ChevronDown,
+  ChevronsLeft,
 } from "lucide-react";
 
 const MasterDataForm = ({
@@ -59,33 +60,25 @@ const MasterDataForm = ({
             className="grid h-8 w-8 place-items-center rounded-lg bg-[#2f6b8a] text-white transition hover:bg-[#25566f]"
             title="Back"
           >
-            <ArrowLeft size={17} />
+            <ChevronsLeft size={17} />
           </button>
 
-          <div>
+          <div className="flex gap-1 ">
             <h2 className="text-lg font-semibold text-slate-800">
-              {pageTitle}
+              {pageTitle} 
             </h2>
-
-            <p className="text-xs text-slate-500">
-              {isView
-                ? "View master data details"
-                : isEdit
-                  ? "Update master data"
-                  : "Add a new master data value"}
-            </p>
           </div>
         </div>
       </div>
 
       {/* Form */}
-      <div className="p-4">
+      <div className="p-2">
         <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
           <form onSubmit={handleSubmit} className="p-5">
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               {/* Master */}
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                <label className="mb-1 block text-sm font-medium text-slate-700">
                   Master
                 </label>
 
@@ -99,7 +92,7 @@ const MasterDataForm = ({
 
               {/* Value */}
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                <label className="mb-1 block text-sm font-medium text-slate-700">
                   Value
 
                   {!isView && (
@@ -121,7 +114,7 @@ const MasterDataForm = ({
 
               {/* Status */}
               <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                <label className="mb-1block text-sm font-medium text-slate-700">
                   Status
                 </label>
 
@@ -153,14 +146,14 @@ const MasterDataForm = ({
 
             {/* Audit */}
             {item && (
-              <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50">
+              <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50">
                 <div className="border-b border-slate-200 px-5 py-3">
                   <h3 className="text-sm font-semibold text-slate-700">
                     Audit Information
                   </h3>
                 </div>
 
-                <div className="grid grid-cols-1 gap-5 p-5 sm:grid-cols-2">
+                <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2">
                   <AuditField
                     label="Created At"
                     value="05-10-2026 10:30 AM"
@@ -185,7 +178,7 @@ const MasterDataForm = ({
             )}
 
             {/* Footer */}
-            <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-4">
+            <div className="mt-4 flex justify-end gap-3 border-t border-slate-100 pt-3">
               <button
                 type="button"
                 onClick={onBack}

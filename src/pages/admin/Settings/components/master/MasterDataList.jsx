@@ -6,6 +6,8 @@ import {
   Eye,
   UserRoundCheck,
   UserRoundX,
+  ChevronRight,
+  ChevronsRight,
 } from "lucide-react";
 
 const MasterDataList = ({
@@ -29,16 +31,12 @@ const MasterDataList = ({
   return (
     <main className="min-w-0 flex-1 bg-[#f8fafc]">
       {/* Header */}
-      <div className="border-b border-slate-200 bg-white px-5 py-3">
+      <div className="border-b border-slate-200 bg-white px-5 py-2">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold text-slate-800">
               {title}
             </h2>
-
-            <p className="mt-0.5 text-xs text-slate-500">
-              Manage {title.toLowerCase()}
-            </p>
           </div>
 
           <button
@@ -53,7 +51,7 @@ const MasterDataList = ({
       </div>
 
       {/* Table Card */}
-      <div className="p-3">
+      <div className="p-2">
         <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
           {/* Search */}
           <div className="border-b border-slate-200 p-4">
@@ -74,10 +72,10 @@ const MasterDataList = ({
           </div>
 
           {/* Table */}
-          <div className="max-h-[68vh] overflow-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-slate-200 bg-slate-50">
+          <div className="h-[60vh] overflow-auto common-scrollbar">
+            <table className="w-full relative text-left">
+              <thead className="sticky top-0 border-b z-10 border-slate-300 bg-slate-50">
+                <tr className="">
                   <th className="px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
                     #
                   </th>
@@ -142,7 +140,7 @@ const MasterDataList = ({
                           title="View"
                           className="rounded-lg border border-slate-200 p-2 text-slate-500 transition hover:border-[#2f6b8a] hover:bg-[#e9f4f7] hover:text-[#2f6b8a]"
                         >
-                          <Eye size={16} />
+                          <ChevronsRight size={16} />
                         </button>
 
                         <button
