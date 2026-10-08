@@ -121,7 +121,7 @@ export default function JobRequirementView() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1100px] space-y-4">
+      <main className="mx-auto  space-y-4">
         {/* SUMMARY */}
         <div className="grid gap-3 sm:grid-cols-3">
           <SummaryCard

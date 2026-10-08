@@ -21,11 +21,16 @@ import {
   ShieldCheck,
   UserRoundCheck,
   UserRoundX,
-  Plus
+  Plus,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { StatCardGrid } from "../../../components/common/Dashboardkit";
-import { EMPLOYMENT_TYPES, JOB_STATUSES, getJobs, saveJobs } from "./Jobrequirementdata";
+import {
+  EMPLOYMENT_TYPES,
+  JOB_STATUSES,
+  getJobs,
+  saveJobs,
+} from "./Jobrequirementdata";
 
 /* ---------------------------- CONFIG ----------------------------- */
 
@@ -39,12 +44,12 @@ const TYPE_STYLE = {
 // heading -> sort key (null = not sortable)
 const COLUMNS = [
   ["Sr.No", null],
+  ["Status", null],
   ["Position", "position"],
   ["Vacancies", "vacancies"],
   ["Location", null],
   ["Type", null],
   ["Applicants", "applicants"],
-  ["Status", null],
   ["Actions", null],
 ];
 
@@ -64,7 +69,9 @@ const StatusBadge = ({ status }) => {
       }`}
     >
       <span className="relative flex h-2 w-2">
-        {open && <span className="js-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-70" />}
+        {open && (
+          <span className="js-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-70" />
+        )}
         <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
       </span>
       {status}
@@ -73,7 +80,9 @@ const StatusBadge = ({ status }) => {
 };
 
 const TypeBadge = ({ type }) => (
-  <span className={`${BADGE_BASE} w-[160px] ${TYPE_STYLE[type] || "bg-gray-600 text-white ring-gray-700"}`}>
+  <span
+    className={`${BADGE_BASE} w-[160px] ${TYPE_STYLE[type] || "bg-gray-600 text-white ring-gray-700"}`}
+  >
     <span className="truncate">{type || "-"}</span>
   </span>
 );
@@ -103,7 +112,9 @@ const StatusSwitch = ({ job, onClick }) => {
       title={open ? "Open. Click to close" : "Closed. Click to reopen"}
       onClick={onClick}
       className={`relative h-6 w-[42px] shrink-0 cursor-pointer rounded-full p-0.5 shadow-inner transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2c6b8a] focus-visible:ring-offset-2 ${
-        open ? "bg-gradient-to-r from-[#16834f] to-[#2fc77e]" : "bg-gradient-to-r from-[#c8323f] to-[#ed626b]"
+        open
+          ? "bg-gradient-to-r from-[#16834f] to-[#2fc77e]"
+          : "bg-gradient-to-r from-[#c8323f] to-[#ed626b]"
       }`}
     >
       <span
@@ -112,7 +123,11 @@ const StatusSwitch = ({ job, onClick }) => {
         }`}
       >
         {open ? (
-          <UserRoundCheck size={13} strokeWidth={2.7} className="text-emerald-700" />
+          <UserRoundCheck
+            size={13}
+            strokeWidth={2.7}
+            className="text-emerald-700"
+          />
         ) : (
           <UserRoundX size={13} strokeWidth={2.7} className="text-rose-700" />
         )}
@@ -131,10 +146,15 @@ const Select = ({ label, value, onChange, options }) => (
     >
       <option value="All">{label}: All</option>
       {options.map((o) => (
-        <option key={o} value={o}>{o}</option>
+        <option key={o} value={o}>
+          {o}
+        </option>
       ))}
     </select>
-    <ChevronDown size={15} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9aa5b1]" />
+    <ChevronDown
+      size={15}
+      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#9aa5b1]"
+    />
   </div>
 );
 
@@ -155,12 +175,24 @@ const StatusDialog = ({ job, onCancel, onConfirm }) => {
   }, [onCancel]);
 
   const theme = reopening
-    ? { core: "from-[#16834f] to-[#2fc77e]", ring: "bg-emerald-100", Icon: ShieldCheck }
-    : { core: "from-[#c8323f] to-[#ed626b]", ring: "bg-rose-100", Icon: ShieldAlert };
+    ? {
+        core: "from-[#16834f] to-[#2fc77e]",
+        ring: "bg-emerald-100",
+        Icon: ShieldCheck,
+      }
+    : {
+        core: "from-[#c8323f] to-[#ed626b]",
+        ring: "bg-rose-100",
+        Icon: ShieldAlert,
+      };
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center p-4">
-      <div className="js-fade absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]" onClick={onCancel} aria-hidden="true" />
+      <div
+        className="js-fade absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]"
+        onClick={onCancel}
+        aria-hidden="true"
+      />
       <div
         role="dialog"
         aria-modal="true"
@@ -179,13 +211,22 @@ const StatusDialog = ({ job, onCancel, onConfirm }) => {
 
         <div className="px-6 pb-5 pt-6 text-center">
           <div className="relative mx-auto mb-4 grid h-16 w-16 place-items-center">
-            <span className={`js-halo absolute inset-0 rounded-full ${theme.ring}`} />
-            <span className={`relative grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br ${theme.core} text-white shadow-lg`}>
+            <span
+              className={`js-halo absolute inset-0 rounded-full ${theme.ring}`}
+            />
+            <span
+              className={`relative grid h-12 w-12 place-items-center rounded-full bg-gradient-to-br ${theme.core} text-white shadow-lg`}
+            >
               <theme.Icon size={22} />
             </span>
           </div>
-          <h2 id="job-dialog-title" className="text-[18px] font-bold text-[#1e2b36]">
-            {reopening ? "Reopen this job requirement?" : "Close this job requirement?"}
+          <h2
+            id="job-dialog-title"
+            className="text-[18px] font-bold text-[#1e2b36]"
+          >
+            {reopening
+              ? "Reopen this job requirement?"
+              : "Close this job requirement?"}
           </h2>
           <p className="mx-auto mt-1.5 max-w-[320px] text-[13.5px] leading-relaxed text-[#6b7a88]">
             {reopening
@@ -193,8 +234,12 @@ const StatusDialog = ({ job, onCancel, onConfirm }) => {
               : "It will stop accepting new applicants. Existing applicants are kept."}
           </p>
           <div className="mt-4 rounded-xl border border-[#e2e8ee] bg-[#f9fbfc] p-3 text-left">
-            <p className="truncate text-[14px] font-semibold text-[#1e2b36]">{job.position}</p>
-            <p className="truncate text-[12px] text-[#6b7a88]">{job.organizationName}</p>
+            <p className="truncate text-[14px] font-semibold text-[#1e2b36]">
+              {job.position}
+            </p>
+            <p className="truncate text-[12px] text-[#6b7a88]">
+              {job.organizationName}
+            </p>
           </div>
         </div>
 
@@ -244,16 +289,53 @@ const JobRequirementList = () => {
   /* STATS (computed from data) */
   const stats = useMemo(
     () => [
-      { title: "Job requirements posted", value: jobs.length, note: "All time", icon: BriefcaseBusiness, color: "#6366f1", color2: "#8b5cf6", from: "#6366f1", to: "#8b5cf6" },
-      { title: "Open jobs", value: jobs.filter((j) => j.status === "Open").length, note: "Accepting applicants", icon: BadgeCheck, color: "#10b981", color2: "#34d399", from: "#10b981", to: "#059669" },
-      { title: "Total vacancies", value: jobs.reduce((s, j) => s + Number(j.vacancies || 0), 0), note: "Across all jobs", icon: UserPlus, color: "#f59e0b", color2: "#fb923c", from: "#f59e0b", to: "#ef4444" },
-      { title: "Total applicants", value: jobs.reduce((s, j) => s + Number(j.applicants || 0), 0), note: "Interested across all jobs", icon: Users, color: "#0ea5e9", color2: "#38bdf8", from: "#0ea5e9", to: "#2563eb" },
+      {
+        title: "Job requirements posted",
+        value: jobs.length,
+        note: "All time",
+        icon: BriefcaseBusiness,
+        color: "#6366f1",
+        color2: "#8b5cf6",
+        from: "#6366f1",
+        to: "#8b5cf6",
+      },
+      {
+        title: "Open jobs",
+        value: jobs.filter((j) => j.status === "Open").length,
+        note: "Accepting applicants",
+        icon: BadgeCheck,
+        color: "#10b981",
+        color2: "#34d399",
+        from: "#10b981",
+        to: "#059669",
+      },
+      {
+        title: "Total vacancies",
+        value: jobs.reduce((s, j) => s + Number(j.vacancies || 0), 0),
+        note: "Across all jobs",
+        icon: UserPlus,
+        color: "#f59e0b",
+        color2: "#fb923c",
+        from: "#f59e0b",
+        to: "#ef4444",
+      },
+      {
+        title: "Total applicants",
+        value: jobs.reduce((s, j) => s + Number(j.applicants || 0), 0),
+        note: "Interested across all jobs",
+        icon: Users,
+        color: "#0ea5e9",
+        color2: "#38bdf8",
+        from: "#0ea5e9",
+        to: "#2563eb",
+      },
     ],
-    [jobs]
+    [jobs],
   );
 
   /* FILTERS */
-  const isFiltered = search.trim() !== "" || statusFilter !== "All" || typeFilter !== "All";
+  const isFiltered =
+    search.trim() !== "" || statusFilter !== "All" || typeFilter !== "All";
 
   const resetFilters = () => {
     setSearch("");
@@ -265,7 +347,13 @@ const JobRequirementList = () => {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     const rows = jobs.filter((j) => {
-      const text = [j.organizationName, j.mobile, j.position, j.department, j.location]
+      const text = [
+        j.organizationName,
+        j.mobile,
+        j.position,
+        j.department,
+        j.location,
+      ]
         .filter(Boolean)
         .join(" ")
         .toLowerCase();
@@ -279,7 +367,8 @@ const JobRequirementList = () => {
       rows.sort((a, b) => {
         const x = a[sort.key] ?? "";
         const y = b[sort.key] ?? "";
-        const c = typeof x === "number" ? x - y : String(x).localeCompare(String(y));
+        const c =
+          typeof x === "number" ? x - y : String(x).localeCompare(String(y));
         return sort.dir === "asc" ? c : -c;
       });
     }
@@ -288,7 +377,11 @@ const JobRequirementList = () => {
 
   const toggleSort = (key) =>
     setSort((s) =>
-      s.key !== key ? { key, dir: "asc" } : s.dir === "asc" ? { key, dir: "desc" } : { key: null, dir: null }
+      s.key !== key
+        ? { key, dir: "asc" }
+        : s.dir === "asc"
+          ? { key, dir: "desc" }
+          : { key: null, dir: null },
     );
 
   /* PAGINATION */
@@ -326,7 +419,11 @@ const JobRequirementList = () => {
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Job Requirements");
     XLSX.writeFile(wb, "ishraq-job-requirements.xlsx");
-    setToast({ id: Date.now(), tone: "ok", msg: `Exported ${filtered.length} job requirements` });
+    setToast({
+      id: Date.now(),
+      tone: "ok",
+      msg: `Exported ${filtered.length} job requirements`,
+    });
   };
 
   /* STATUS CHANGE */
@@ -334,7 +431,13 @@ const JobRequirementList = () => {
     const target = confirmJob;
     if (!target) return;
     const reopening = target.status !== "Open";
-    persist(jobs.map((j) => (j.id === target.id ? { ...j, status: reopening ? "Open" : "Closed" } : j)));
+    persist(
+      jobs.map((j) =>
+        j.id === target.id
+          ? { ...j, status: reopening ? "Open" : "Closed" }
+          : j,
+      ),
+    );
     setConfirmJob(null);
     setFlashId(target.id);
     setToast({
@@ -358,7 +461,8 @@ const JobRequirementList = () => {
 
   const pageBtn =
     "grid h-8 min-w-8 cursor-pointer place-items-center rounded-lg px-2.5 text-[12.5px] font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2c6b8a]";
-  const td = "border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900";
+  const td =
+    "border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900";
 
   return (
     <div>
@@ -374,7 +478,10 @@ const JobRequirementList = () => {
 
             <div className="flex w-full flex-wrap items-center gap-2.5 xl:w-auto">
               <div className="relative min-w-[260px] flex-1 xl:flex-none">
-                <SearchIcon size={15} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9aa5b1]" />
+                <SearchIcon
+                  size={15}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9aa5b1]"
+                />
                 <input
                   type="search"
                   aria-label="Search job requirements"
@@ -388,8 +495,24 @@ const JobRequirementList = () => {
                 />
               </div>
 
-              <Select label="Status" value={statusFilter} options={JOB_STATUSES} onChange={(v) => { setStatusFilter(v); setPage(1); }} />
-              <Select label="Type" value={typeFilter} options={EMPLOYMENT_TYPES} onChange={(v) => { setTypeFilter(v); setPage(1); }} />
+              <Select
+                label="Status"
+                value={statusFilter}
+                options={JOB_STATUSES}
+                onChange={(v) => {
+                  setStatusFilter(v);
+                  setPage(1);
+                }}
+              />
+              <Select
+                label="Type"
+                value={typeFilter}
+                options={EMPLOYMENT_TYPES}
+                onChange={(v) => {
+                  setTypeFilter(v);
+                  setPage(1);
+                }}
+              />
 
               <button
                 type="button"
@@ -398,7 +521,10 @@ const JobRequirementList = () => {
                 title="Reset filters"
                 className="group inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 text-[15px] font-medium text-[#d64545] transition hover:bg-[#fbe9e9] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d64545] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
               >
-                <RotateCcw size={14} className="transition-transform duration-300 group-enabled:group-hover:-rotate-180" />
+                <RotateCcw
+                  size={14}
+                  className="transition-transform duration-300 group-enabled:group-hover:-rotate-180"
+                />
                 Reset
               </button>
 
@@ -408,7 +534,11 @@ const JobRequirementList = () => {
                 className="group inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#16834f] to-[#2fb877] px-3 text-[15px] font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#16834f] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {/* <Plus /> */}
-                <Plus size={15} strokeWidth={2.2} className="transition-transform group-hover:scale-110" />
+                <Plus
+                  size={15}
+                  strokeWidth={2.2}
+                  className="transition-transform group-hover:scale-110"
+                />
                 <span className="hidden sm:inline">Add</span>
               </button>
             </div>
@@ -424,7 +554,13 @@ const JobRequirementList = () => {
                     <th
                       key={heading}
                       scope="col"
-                      aria-sort={key && sort.key === key ? (sort.dir === "asc" ? "ascending" : "descending") : undefined}
+                      aria-sort={
+                        key && sort.key === key
+                          ? sort.dir === "asc"
+                            ? "ascending"
+                            : "descending"
+                          : undefined
+                      }
                       className="whitespace-nowrap bg-gradient-to-r from-[#2c6b8a] to-[#3b86a6] px-3.5 py-3 text-left text-[15px] font-bold text-white"
                     >
                       {key ? (
@@ -435,8 +571,22 @@ const JobRequirementList = () => {
                         >
                           {heading}
                           <span className="flex flex-col leading-none">
-                            <ChevronUp size={10} className={sort.key === key && sort.dir === "asc" ? "opacity-100" : "opacity-40"} />
-                            <ChevronDown size={10} className={sort.key === key && sort.dir === "desc" ? "opacity-100" : "opacity-40"} />
+                            <ChevronUp
+                              size={10}
+                              className={
+                                sort.key === key && sort.dir === "asc"
+                                  ? "opacity-100"
+                                  : "opacity-40"
+                              }
+                            />
+                            <ChevronDown
+                              size={10}
+                              className={
+                                sort.key === key && sort.dir === "desc"
+                                  ? "opacity-100"
+                                  : "opacity-40"
+                              }
+                            />
                           </span>
                         </button>
                       ) : (
@@ -450,15 +600,22 @@ const JobRequirementList = () => {
               <tbody>
                 {pageRows.length === 0 ? (
                   <tr>
-                    <td colSpan={COLUMNS.length} className="border-t border-[#e2e8ee] px-4 py-12 text-center">
+                    <td
+                      colSpan={COLUMNS.length}
+                      className="border-t border-[#e2e8ee] px-4 py-12 text-center"
+                    >
                       <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#e8f1f6] text-[#2c6b8a]">
                         <BriefcaseBusiness size={22} />
                       </div>
                       <p className="mt-3 text-[15px] text-[#1e2b36]">
-                        {isFiltered ? "No job requirements match these filters" : "No job requirements yet"}
+                        {isFiltered
+                          ? "No job requirements match these filters"
+                          : "No job requirements yet"}
                       </p>
                       <p className="mt-0.5 text-[15px] text-[#6b7a88]">
-                        {isFiltered ? "Try a different search or clear the filters." : "Submitted requirements will appear here."}
+                        {isFiltered
+                          ? "Try a different search or clear the filters."
+                          : "Submitted requirements will appear here."}
                       </p>
                       {isFiltered && (
                         <button
@@ -475,16 +632,25 @@ const JobRequirementList = () => {
                   pageRows.map((job, index) => (
                     <tr
                       key={job.id}
-                      style={{ animationDelay: `${Math.min(index, 12) * 35}ms` }}
+                      style={{
+                        animationDelay: `${Math.min(index, 12) * 35}ms`,
+                      }}
                       className={`js-row group transition-colors even:bg-[#f9fbfc] hover:bg-[#e8f1f6] ${flashId === job.id ? "js-flash" : ""}`}
                     >
-                      <td className={`${td} tabular-nums`}>{start + index + 1}</td>
-
-                    
+                      <td className={`${td} tabular-nums`}>
+                        {start + index + 1}
+                      </td>
+                      <td className={td}>
+                        <StatusBadge status={job.status} />
+                      </td>
 
                       <td className={td}>
                         <span className="font-medium">{job.position}</span>
-                        {job.department && <span className="block text-[12px] text-[#6b7a88]">{job.department}</span>}
+                        {job.department && (
+                          <span className="block text-[12px] text-[#6b7a88]">
+                            {job.department}
+                          </span>
+                        )}
                       </td>
 
                       <td className={`${td} tabular-nums`}>{job.vacancies}</td>
@@ -496,15 +662,20 @@ const JobRequirementList = () => {
                         </span>
                       </td>
 
-                      <td className={td}><TypeBadge type={job.employmentType} /></td>
-                      <td className={td}><ApplicantsBadge count={Number(job.applicants || 0)} /></td>
-                      <td className={td}><StatusBadge status={job.status} /></td>
+                      <td className={td}>
+                        <TypeBadge type={job.employmentType} />
+                      </td>
+                      <td className={td}>
+                        <ApplicantsBadge count={Number(job.applicants || 0)} />
+                      </td>
 
                       <td className={td}>
                         <div className="flex items-center gap-2">
                           <button
                             type="button"
-                            onClick={() => navigate(`/employer/job-requirements/${job.id}`)}
+                            onClick={() =>
+                              navigate(`/employer/job-requirements/${job.id}`)
+                            }
                             title="View job requirement"
                             aria-label={`View ${job.position}`}
                             className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-gradient-to-br from-[#168fa1] to-[#35b8c4] text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a9aa8] focus-visible:ring-offset-2"
@@ -513,14 +684,17 @@ const JobRequirementList = () => {
                           </button>
                           <button
                             type="button"
-                            onClick={() => navigate(`/employer/job-requirements/${job.id}/edit`)}
+                            onClick={() =>
+                              navigate(
+                                `/employer/job-requirements/${job.id}/edit`,
+                              )
+                            }
                             title="Edit job requirement"
                             aria-label={`Edit ${job.position}`}
                             className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-gradient-to-br from-[#2c6b8a] to-[#4a9bb3] text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2c6b8a] focus-visible:ring-offset-2"
                           >
                             <Pencil size={14} strokeWidth={2.2} />
                           </button>
-                          
                         </div>
                       </td>
                     </tr>
@@ -534,9 +708,19 @@ const JobRequirementList = () => {
           <div className="mt-3.5 flex flex-col gap-3 border-t border-[#e2e8ee] pt-3.5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex flex-wrap items-center gap-3.5 text-[12.5px] text-[#60738a]">
               <span>
-                Showing <strong className="font-semibold text-[#53677f]">{filtered.length ? start + 1 : 0}</strong> to{" "}
-                <strong className="font-semibold text-[#53677f]">{Math.min(start + pageSize, filtered.length)}</strong> of{" "}
-                <strong className="font-semibold text-[#53677f]">{filtered.length}</strong> entries
+                Showing{" "}
+                <strong className="font-semibold text-[#53677f]">
+                  {filtered.length ? start + 1 : 0}
+                </strong>{" "}
+                to{" "}
+                <strong className="font-semibold text-[#53677f]">
+                  {Math.min(start + pageSize, filtered.length)}
+                </strong>{" "}
+                of{" "}
+                <strong className="font-semibold text-[#53677f]">
+                  {filtered.length}
+                </strong>{" "}
+                entries
               </span>
               <label className="flex items-center gap-1.5">
                 <span>Show:</span>
@@ -549,13 +733,18 @@ const JobRequirementList = () => {
                   className="h-8 cursor-pointer rounded-lg border border-[#dce3eb] bg-white px-2 text-[12.5px] text-[#34445a] hover:border-[#2c6b8a] focus:border-[#2c6b8a] focus:outline-none focus:ring-2 focus:ring-[#2c6b8a]/30"
                 >
                   {[10, 25, 50, 100].map((n) => (
-                    <option key={n} value={n}>{n}</option>
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
                   ))}
                 </select>
               </label>
             </div>
 
-            <nav aria-label="Pagination" className="flex flex-wrap items-center gap-1">
+            <nav
+              aria-label="Pagination"
+              className="flex flex-wrap items-center gap-1"
+            >
               <button
                 type="button"
                 onClick={() => setPage(currentPage - 1)}
@@ -591,7 +780,13 @@ const JobRequirementList = () => {
           </div>
         </div>
 
-        {confirmJob && <StatusDialog job={confirmJob} onCancel={() => setConfirmJob(null)} onConfirm={confirmToggle} />}
+        {confirmJob && (
+          <StatusDialog
+            job={confirmJob}
+            onCancel={() => setConfirmJob(null)}
+            onConfirm={confirmToggle}
+          />
+        )}
 
         {toast && (
           <div
@@ -600,7 +795,9 @@ const JobRequirementList = () => {
             aria-live="polite"
             className="js-toast fixed bottom-5 right-5 z-[60] flex items-center gap-2.5 rounded-xl bg-[#1e2b36] px-4 py-2.5 text-[15px] font-medium text-white shadow-xl"
           >
-            <span className={`grid h-5 w-5 place-items-center rounded-full ${toast.tone === "ok" ? "bg-emerald-500" : "bg-amber-500"}`}>
+            <span
+              className={`grid h-5 w-5 place-items-center rounded-full ${toast.tone === "ok" ? "bg-emerald-500" : "bg-amber-500"}`}
+            >
               <CheckIcon size={12} strokeWidth={3.4} />
             </span>
             {toast.msg}

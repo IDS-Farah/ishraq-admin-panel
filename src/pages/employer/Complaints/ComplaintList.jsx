@@ -43,6 +43,7 @@ const SEED_COMPLAINTS = [
     email: "ayesha.khan@gmail.com",
     youAre: "Jobseeker",
     complaintCategory: "Service Related",
+    createdAt : "08-10-2026",
   },
   {
     id: 2,
@@ -51,6 +52,7 @@ const SEED_COMPLAINTS = [
     email: "imran.shaikh@gmail.com",
     youAre: "Employer",
     complaintCategory: "Technical Issue",
+    createdAt : "07-10-2026",
   },
   {
     id: 3,
@@ -59,6 +61,7 @@ const SEED_COMPLAINTS = [
     email: "sana.pathan@gmail.com",
     youAre: "Jobseeker",
     complaintCategory: "Website Related",
+    createdAt : "06-10-2026",
   },
 ];
 
@@ -335,6 +338,7 @@ const HEADINGS = [
   "Email",
   "You Are",
   "Complaint Category",
+  "Submit Date",
   "Actions",
 ];
 
@@ -468,11 +472,11 @@ const ComplaintList = () => {
     "grid h-8 min-w-8 cursor-pointer place-items-center rounded-lg px-2.5 text-[12.5px] font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2c6b8a]";
 
   return (
-    <div className="js-page min-h-full bg-[#f7f9fb] p-0 text-[#1e2b36]">
-      <div className="mx-auto max-w-[1400px] rounded-[12px] border border-[#e2e8ee] bg-white p-2 shadow-sm sm:px-[18px] sm:pb-4 sm:pt-5">
+    <div className="js-page  bg-[#f7f9fb] p-0 text-[#1e2b36]">
+      <div className="mx-auto  rounded-[12px] border border-[#e2e8ee] bg-white p-2 shadow-sm sm:px-[18px]">
         {/* TITLE + FILTERS */}
 
-        <div className="mb-4 flex flex-col items-start justify-between gap-3 xl:flex-row xl:items-center">
+        <div className="mb-2 flex flex-col items-start justify-between gap-3 xl:flex-row xl:items-center">
           <div>
             <h1 className="m-0 text-[22px] font-extrabold tracking-tight text-[#2c6b8a] sm:text-[26px]">
               Complaints / Grievances
@@ -524,7 +528,7 @@ const ComplaintList = () => {
 
         {/* TABLE */}
 
-        <div className="mt-6 h-[56vh] overflow-x-auto overflow-y-auto rounded-lg border border-[#cbe1f4] common-scrollbar">
+        <div className="mt-4 h-[62vh] overflow-x-auto overflow-y-auto rounded-lg border border-[#cbe1f4] common-scrollbar">
           <table className="w-full min-w-[1050px] border-collapse text-[15px]">
             <thead className="sticky top-0 z-10">
               <tr>
@@ -649,6 +653,9 @@ const ComplaintList = () => {
 
                       <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
                         {user.complaintCategory || "-"}
+                      </td>
+                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
+                        {user.createdAt || "-"}
                       </td>
 
                       <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]">

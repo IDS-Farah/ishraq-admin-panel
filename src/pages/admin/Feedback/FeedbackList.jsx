@@ -70,6 +70,7 @@ const SEED_USERS = [
     email: "ayesha.khan@gmail.com",
     youAre: "Jobseeker",
     overallExperience: 5,
+    createdAt: "08-10-2026",
   },
   {
     id: 2,
@@ -78,6 +79,7 @@ const SEED_USERS = [
     email: "imran.shaikh@gmail.com",
     youAre: "Employer",
     overallExperience: 4,
+    createdAt: "21-10-2026",
   },
   {
     id: 3,
@@ -86,6 +88,7 @@ const SEED_USERS = [
     email: "sana.pathan@gmail.com",
     youAre: "Visitor",
     overallExperience: 3,
+    createdAt: "04-10-2026",
   },
 ];
 
@@ -511,6 +514,7 @@ const HEADINGS = [
   "Contact Number / Email",
   "You Are",
   "Overall Experience",
+  "Submitted Date",
   "Action",
 ];
 
@@ -874,6 +878,9 @@ const FeedbackList = () => {
                             />
                           ))}
                         </div>
+                      </td>
+                        <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
+                        {user.createdAt || "-"}
                       </td>
 
                       <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]">

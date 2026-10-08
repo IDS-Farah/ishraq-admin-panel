@@ -689,10 +689,10 @@ const FeedbackList = () => {
 
   return (
     <div className="js-page min-h-full bg-[#f7f9fb] p-0 text-[#1e2b36]">
-      <div className="mx-auto max-w-[1400px] rounded-[12px] border border-[#e2e8ee] bg-white p-4 shadow-sm sm:px-[18px] sm:pb-4 sm:pt-5">
+      <div className="mx-auto  rounded-[12px] border border-[#e2e8ee] bg-white p-4 shadow-sm sm:px-[18px]">
         {/* TITLE + FILTERS */}
 
-        <div className="mb-4 flex flex-col items-start justify-between gap-3 xl:flex-row xl:items-center">
+        <div className="mb-2 flex flex-col items-start justify-between gap-3 xl:flex-row xl:items-center">
           <div>
             <h1 className="m-0 text-[22px] font-extrabold tracking-tight text-[#2c6b8a] sm:text-[26px]">
               Feedback List
@@ -744,7 +744,7 @@ const FeedbackList = () => {
 
         {/* TABLE */}
 
-        <div className="mt-6 h-[56vh] overflow-x-auto overflow-y-auto rounded-lg border border-[#cbe1f4] common-scrollbar">
+        <div className="mt-4 h-[60vh] overflow-x-auto overflow-y-auto rounded-lg border border-[#cbe1f4] common-scrollbar">
           <table className="w-full min-w-[1050px] border-collapse text-[15px]">
             <thead className="sticky top-0 z-10">
               <tr>

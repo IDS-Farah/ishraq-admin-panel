@@ -128,7 +128,7 @@ const TYPE_STYLE = {
 };
 
 const BADGE_BASE =
-  "inline-flex h-7 w-[150px] overflow-hidden items-center justify-center gap-1.5 rounded-md px-2.5 text-[13px] font-medium ring-1 ring-inset whitespace-nowrap";
+  "inline-flex h-7 w-[100px] overflow-hidden items-center justify-center gap-1.5 rounded-md px-2.5 text-[13px] font-medium ring-1 ring-inset whitespace-nowrap";
 
 /* ============================================================
    APPLICATION STATUS BADGE
@@ -192,7 +192,7 @@ const TypeBadge = ({ type }) => (
 ============================================================ */
 
 const Select = ({ label, value, onChange, options }) => (
-  <div className="relative min-w-[160px] flex-1 xl:flex-none">
+  <div className="relative min-w-[200px] flex-1 xl:flex-none">
     <select
       aria-label={label}
       value={value}
@@ -498,26 +498,6 @@ const JobseekerAppliedJobs = () => {
     <div className="isharq-dash min-h-full text-[#1e2b36]">
       {Styles}
 
-      {/* HERO HEADER */}
-      <header
-        className="jp-hero relative mb-4 overflow-hidden rounded-2xl p-4 text-white shadow-sm sm:px-4 sm:py-2"
-        style={{
-          backgroundImage:
-            "linear-gradient(110deg,#17405a 0%,#2f6b8a 40%,#4a9bb3 70%,#2f6b8a 100%)",
-        }}
-      >
-        <span className="jp-orb jp-orb-a !h-40 !w-40" />
-        <span className="jp-orb jp-orb-b !h-24 !w-24" />
-        <div className="relative flex flex-wrap items-center gap-3.5">
-          {/* {BackBtn} */}
-          <div className="min-w-0 flex-1">
-            <h1 className="m-0 text-[22px] font-extrabold tracking-tight sm:text-[26px]">
-              Jobs You've Applied For
-            </h1>
-          </div>
-        </div>
-      </header>
-
       {/* ======================================================
           SUMMARY (shared StatCardGrid — same colors/icons as
           the dashboards)
@@ -539,17 +519,12 @@ const JobseekerAppliedJobs = () => {
             <h2 className="m-0 text-[20px] font-extrabold text-[#2c6b8a]">
               Application History
             </h2>
-
-            <p className="mt-0.5 text-[12px] text-[#6b7a88]">
-              {filtered.length} application
-              {filtered.length === 1 ? "" : "s"} found
-            </p>
           </div>
 
           <div className="flex w-full flex-wrap items-center gap-2.5 xl:w-auto">
             {/* SEARCH */}
 
-            <div className="relative min-w-[260px] flex-1 xl:flex-none">
+            <div className="relative min-w-[320px] flex-1 xl:flex-none">
               <SearchIcon
                 size={15}
                 className="
@@ -649,15 +624,14 @@ const JobseekerAppliedJobs = () => {
         ==================================================== */}
 
         <div className="common-scrollbar mt-4 overflow-auto rounded-lg border border-[#cbe1f4]">
-          <table className="w-full min-w-[1100px] border-collapse text-[14px]">
+          <table className="w-full border-collapse text-[14px]">
             <thead className="sticky top-0 z-10">
               <tr>
                 <th className="bg-gradient-to-r from-[#2c6b8a] to-[#3b86a6] px-3.5 py-3 text-left text-[14px] font-bold text-white">
                   Sr.No
                 </th>
-
                 <th className="bg-gradient-to-r from-[#2c6b8a] to-[#3b86a6] px-3.5 py-3 text-left text-[14px] font-bold text-white">
-                  Job
+                  Job Status
                 </th>
 
                 <th className="bg-gradient-to-r from-[#2c6b8a] to-[#3b86a6] px-3.5 py-3 text-left text-[14px] font-bold text-white">
@@ -665,7 +639,7 @@ const JobseekerAppliedJobs = () => {
                 </th>
 
                 <th className="bg-gradient-to-r from-[#2c6b8a] to-[#3b86a6] px-3.5 py-3 text-left text-[14px] font-bold text-white">
-                  Location
+                  Job
                 </th>
 
                 <th className="bg-gradient-to-r from-[#2c6b8a] to-[#3b86a6] px-3.5 py-3 text-left text-[14px] font-bold text-white">
@@ -674,14 +648,6 @@ const JobseekerAppliedJobs = () => {
 
                 <th className="bg-gradient-to-r from-[#2c6b8a] to-[#3b86a6] px-3.5 py-3 text-left text-[14px] font-bold text-white">
                   Applied On
-                </th>
-
-                <th className="bg-gradient-to-r from-[#2c6b8a] to-[#3b86a6] px-3.5 py-3 text-left text-[14px] font-bold text-white">
-                  Application Status
-                </th>
-
-                <th className="bg-gradient-to-r from-[#2c6b8a] to-[#3b86a6] px-3.5 py-3 text-left text-[14px] font-bold text-white">
-                  Job Status
                 </th>
 
                 <th className="bg-gradient-to-r from-[#2c6b8a] to-[#3b86a6] px-3.5 py-3 text-left text-[14px] font-bold text-white">
@@ -741,6 +707,30 @@ const JobseekerAppliedJobs = () => {
                       {start + index + 1}
                     </td>
 
+                    {/* JOB STATUS */}
+
+                    <td className={td}>
+                      <JobStatusBadge status={application.status} />
+                    </td>
+
+                    {/* ORGANIZATION */}
+
+                    <td className={`${td} whitespace-nowrap`}>
+                      <div className="flex flex-col">
+                        <span className="inline-flex items-center gap-1.5 font-medium">
+                          <Building2
+                            size={13}
+                            className="shrink-0 text-[#2c6b8a]"
+                          />
+                          {application.organizationName || "-"}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5">
+                          <MapPin size={13} className="shrink-0 text-[#6b7a88]" />
+                          {application.location || "-"}
+                        </span>
+                      </div>
+                    </td>
+
                     {/* JOB */}
 
                     <td className={td}>
@@ -755,29 +745,6 @@ const JobseekerAppliedJobs = () => {
                           </p>
                         )}
                       </div>
-                    </td>
-
-                    {/* ORGANIZATION */}
-
-                    <td className={`${td} whitespace-nowrap`}>
-                      <span className="inline-flex items-center gap-1.5 font-medium">
-                        <Building2
-                          size={13}
-                          className="shrink-0 text-[#2c6b8a]"
-                        />
-
-                        {application.organizationName || "-"}
-                      </span>
-                    </td>
-
-                    {/* LOCATION */}
-
-                    <td className={`${td} whitespace-nowrap`}>
-                      <span className="inline-flex items-center gap-1.5">
-                        <MapPin size={13} className="shrink-0 text-[#6b7a88]" />
-
-                        {application.location || "-"}
-                      </span>
                     </td>
 
                     {/* TYPE */}
@@ -796,29 +763,13 @@ const JobseekerAppliedJobs = () => {
                       </span>
                     </td>
 
-                    {/* APPLICATION STATUS */}
-
-                    <td className={td}>
-                      <ApplicationStatusBadge
-                        status={application.applicationStatus}
-                      />
-                    </td>
-
-                    {/* JOB STATUS */}
-
-                    <td className={td}>
-                      <JobStatusBadge status={application.status} />
-                    </td>
-
                     {/* ACTIONS */}
 
                     <td className={td}>
                       <button
                         type="button"
                         onClick={() =>
-                          navigate(
-                            `/jobseeker/applications/${application.id}`,
-                          )
+                          navigate(`/jobseeker/applications/${application.id}`)
                         }
                         title="View job"
                         aria-label={`View ${application.position}`}

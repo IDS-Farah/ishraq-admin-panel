@@ -254,9 +254,9 @@ const EmployerProfile = () => {
       onClick={() => navigate(-1)}
       title="Back"
       aria-label="Back"
-      className="grid h-11 w-11 shrink-0 cursor-pointer place-items-center rounded-xl bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+      className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-xl bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
     >
-      <ChevronsLeft size={20} />
+      <ChevronsLeft size={18} />
     </button>
   );
 

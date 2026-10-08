@@ -81,7 +81,7 @@ const TABS = [
   { id: "overview", label: "Overview" },
   { id: "preferences", label: "Location & Preferences" },
   { id: "resume", label: "Documents" },
-  { id: "jobs", label: "Interested / Applied Jobs" },
+  { id: "jobs", label: "Applied Jobs" },
 ];
 
 /* ------------------------------------------------------------------ */
@@ -91,7 +91,7 @@ const TABS = [
 const Card = ({ title, icon: Icon, children, delay = 0, className = "" }) => (
   <section
     style={{ animationDelay: `${delay}ms` }}
-    className={`jp-up min-w-0 h-[63vh] overflow-x-auto common-scrollbar rounded-2xl border border-[#e2e8ee] bg-white p-4 shadow-sm transition duration-300 hover:shadow-md ${className}`}
+    className={`jp-up min-w-0 h-[63vh]  rounded-2xl border border-[#e2e8ee] bg-white p-4 shadow-sm transition duration-300 hover:shadow-md ${className}`}
   >
     <h2 className="mb-2 flex items-center gap-2.5 text-[15px] font-bold text-[#1e2b36]">
       <span className="grid h-8 w-8 place-items-center rounded-lg bg-gradient-to-br from-[#2c6b8a] to-[#5ba6bd] text-white shadow-sm">
@@ -99,7 +99,7 @@ const Card = ({ title, icon: Icon, children, delay = 0, className = "" }) => (
       </span>
       {title}
     </h2>
-    <div className="divide-y divide-[#eef2f6]">{children}</div>
+    <div className="divide-y divide-[#eef2f6] h-[50vh] overflow-x-auto common-scrollbar">{children}</div>
   </section>
 );
 
@@ -299,9 +299,9 @@ const JobSeekerDetails = () => {
       onClick={() => navigate(-1)}
       title="Back"
       aria-label="Back"
-      className="grid h-11 w-11 shrink-0 cursor-pointer place-items-center rounded-xl bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+      className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-xl bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
     >
-      <ChevronsLeft size={20} strokeWidth={2} />
+      <ChevronsLeft size={18} strokeWidth={2} />
     </button>
   );
 
@@ -552,7 +552,7 @@ const JobSeekerDetails = () => {
                 <section className="rounded-2xl border border-[#e2e8ee] bg-white p-4 shadow-sm">
                   <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
                     <h2 className="text-[16px] font-bold text-[#1e2b36]">
-                      Interested & Applied Jobs
+                      Applied Jobs
                     </h2>
                     <span className="rounded-full bg-[#e8f1f6] px-3 py-1 text-xs font-semibold text-[#2c6b8a]">
                       {DUMMY_JOBS.length} Jobs

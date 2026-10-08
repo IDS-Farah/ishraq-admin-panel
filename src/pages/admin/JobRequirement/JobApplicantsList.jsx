@@ -17,7 +17,8 @@ import {
   ShieldCheck,
   UserRoundCheck,
   UserRoundX,
-  Paperclip
+  Paperclip,
+  ChevronsLeft,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
@@ -757,7 +758,17 @@ const JobApplicantsList = () => {
         {/* TITLE + FILTERS */}
 
         <div className="mb-2 flex flex-col items-start justify-between gap-3 xl:flex-row xl:items-center">
-          <div>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              title="Back"
+              aria-label="Back"
+              className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-xl bg-[#2c6b8a]  mt-1 text-white  transition hover:bg-[#2c6b8a]/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            >
+              <ChevronsLeft size={18} />
+            </button>
+            
             <h1 className="m-0 text-[22px] font-extrabold tracking-tight text-[#2c6b8a] sm:text-[26px]">
               Applicant List
             </h1>

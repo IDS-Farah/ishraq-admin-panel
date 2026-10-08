@@ -541,31 +541,34 @@ const EnquiryDetails = ({
 
   return (
     <div className=" bg-[#f4f7f9]">
-      {/* Header */}
-      <div className="border-b border-slate-200 bg-white">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-2 sm:px-6">
-          <div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => navigate(-1)}
-                title="Back"
-                aria-label="Back"
-                className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-xl bg-[#2f6b8a] text-white  transition hover:bg-[#2f6b8a]/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-              >
-                <ChevronsLeft size={18} strokeWidth={2} />
-              </button>
-              <h1 className="text-xl font-bold text-[#2f6b8a]">{form.title}</h1>
+       {/* HERO */}
+      <header
+        className="ep-hero relative  overflow-hidden rounded-2xl p-4 text-white shadow-sm sm:px-4 sm:py-2"
+        style={{
+          backgroundImage:
+            "linear-gradient(110deg,#17405a 0%,#2f6b8a 40%,#4a9bb3 70%,#2f6b8a 100%)",
+        }}
+      >
+        <span className="ep-orb ep-orb-a !h-40 !w-40" />
+        <span className="ep-orb ep-orb-b !h-24 !w-24" />
+        <div className="relative flex flex-wrap items-center gap-3.5">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            title="Back"
+            aria-label="Back"
+            className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-xl bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          >
+            <ChevronsLeft size={18} />
+          </button>
 
-              {record.referenceNo && (
-                <span className="text-sm font-medium text-slate-500">
-                  · {record.referenceNo}
-                </span>
-              )}
-            </div>
+          <div className="min-w-0 flex-1">
+            <h1 className="m-0 truncate text-[22px] font-extrabold tracking-tight sm:text-[26px]">
+              {form.title}
+            </h1>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Main */}
       <main className="mx-auto py-4">
