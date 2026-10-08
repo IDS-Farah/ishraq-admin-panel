@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   UserRoundCheck,
   UserRoundX,
+  Paperclip
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
@@ -70,6 +71,7 @@ const SEED_USERS = [
     jobCategory: "Nurse",
     address: "Roshan Gate, Aurangabad, Maharashtra",
     document: { name: "ayesha-cv.pdf", url: "" },
+    totalYearsExpirence: 2,
   },
   {
     id: 2,
@@ -80,6 +82,7 @@ const SEED_USERS = [
     jobCategory: "Lab Technician",
     address: "CIDCO N-4, Aurangabad",
     document: { name: "imran-certificate.jpg", url: "" },
+    totalYearsExpirence: 4,
   },
   {
     id: 3,
@@ -90,6 +93,7 @@ const SEED_USERS = [
     jobCategory: "Pharmacist",
     address: "Jalna Road, Aurangabad",
     document: { name: "sana-resume.pdf", url: "" },
+    totalYearsExpirence: 5,
   },
   {
     id: 4,
@@ -100,6 +104,7 @@ const SEED_USERS = [
     jobCategory: "Doctor",
     address: "Garkheda, Aurangabad",
     document: { name: "rohit-degree.pdf", url: "" },
+    totalYearsExpirence: 8,
   },
   {
     id: 5,
@@ -110,6 +115,7 @@ const SEED_USERS = [
     jobCategory: "Caregiver",
     address: "Satara Parisar, Aurangabad",
     document: null,
+    totalYearsExpirence: 6,
   },
   {
     id: 6,
@@ -120,6 +126,7 @@ const SEED_USERS = [
     jobCategory: "Admin / Office Staff",
     address: "Kranti Chowk, Aurangabad",
     document: { name: "farhan-id.jpg", url: "" },
+    totalYearsExpirence: 3,
   },
   {
     id: 7,
@@ -130,6 +137,7 @@ const SEED_USERS = [
     jobCategory: "Nurse",
     address: "Waluj MIDC, Aurangabad",
     document: { name: "pooja-cv.pdf", url: "" },
+    totalYearsExpirence: 0.5,
   },
   {
     id: 8,
@@ -140,6 +148,7 @@ const SEED_USERS = [
     jobCategory: "Other",
     address: "Harsul, Aurangabad",
     document: { name: "zaid-resume.pdf", url: "" },
+    totalYearsExpirence: 1,
   },
 ];
 
@@ -562,9 +571,11 @@ const StatusDialog = ({ user, onCancel, onConfirm }) => {
 const HEADINGS = [
   "Sr.No",
   "Full Name",
-  "Email",
-  "Mobile",
   "Job Category",
+  // "Email",
+  "Mobile",
+  "Experience",
+  "Resume",
   "Actions",
 ];
 
@@ -742,10 +753,10 @@ const JobApplicantsList = () => {
 
   return (
     <div className="js-page min-h-full bg-[#f7f9fb] p-0 text-[#1e2b36]">
-      <div className="mx-auto max-w-[1400px] rounded-[12px] border border-[#e2e8ee] bg-white p-2 shadow-sm sm:px-[18px] sm:pb-4 sm:pt-5">
+      <div className="mx-auto rounded-[12px] border border-[#e2e8ee] bg-white p-2 shadow-sm sm:px-[18px]">
         {/* TITLE + FILTERS */}
 
-        <div className="mb-4 flex flex-col items-start justify-between gap-3 xl:flex-row xl:items-center">
+        <div className="mb-2 flex flex-col items-start justify-between gap-3 xl:flex-row xl:items-center">
           <div>
             <h1 className="m-0 text-[22px] font-extrabold tracking-tight text-[#2c6b8a] sm:text-[26px]">
               Applicant List
@@ -797,8 +808,8 @@ const JobApplicantsList = () => {
 
         {/* TABLE */}
 
-        <div className="mt-6 h-[56vh] overflow-x-auto overflow-y-auto rounded-lg border border-[#cbe1f4] common-scrollbar">
-          <table className="w-full min-w-[1050px] border-collapse text-[15px]">
+        <div className="mt-4 h-[63vh] overflow-x-auto overflow-y-auto rounded-lg border border-[#cbe1f4] common-scrollbar">
+          <table className="w-full  border-collapse text-[15px]">
             <thead className="sticky top-0 z-10">
               <tr>
                 {HEADINGS.map((heading) => (
@@ -915,28 +926,31 @@ const JobApplicantsList = () => {
                           <Avatar user={user} />
 
                           <span
-                            className={` transition-colors ${
+                            className={` transition-colors flex flex-col ${
                               inactive ? "text-[#6b7a88]" : "text-slate-900"
                             }`}
                           >
-                            {user.fullName}
+                            <div>{user.fullName}</div>
+                            <div>
+                              {user.email ? (
+                                <span className="inline-flex w-[220px] items-center gap-1">
+                                  <Mail
+                                    size={13}
+                                    className="shrink-0 text-slate-900 mt-1"
+                                  />
+                                  {user.email}
+                                </span>
+                              ) : (
+                                <span className="text-[#9aa5b1]">-</span>
+                              )}
+                            </div>
                           </span>
                         </div>
                       </td>
-                      {/* EMAIL */}
+                      {/* JOB CATEGORY */}
 
-                      <td className="break-all border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
-                        {user.email ? (
-                          <span className="inline-flex w-[220px] items-center gap-1">
-                            <Mail
-                              size={13}
-                              className="shrink-0 text-slate-900 mt-1"
-                            />
-                            {user.email}
-                          </span>
-                        ) : (
-                          <span className="text-[#9aa5b1]">-</span>
-                        )}
+                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]">
+                        <CategoryBadge category={user.jobCategory} />
                       </td>
 
                       {/* MOBILE */}
@@ -951,16 +965,27 @@ const JobApplicantsList = () => {
                         </span>
                       </td>
 
-                      {/* JOB CATEGORY */}
+                      {/* Experience */}
 
-                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]">
-                        <CategoryBadge category={user.jobCategory} />
+                      <td className="break-all border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
+                        {user.totalYearsExpirence} Years
+                      </td>
+                      {/* Document */}
+
+                      <td className="break-all border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
+                        <span className="inline-flex items-center gap-1">
+                          <Paperclip
+                            size={13}
+                            className="shrink-0 text-slate-900"
+                          />
+                          {user.document?.name || "-"}
+                        </span>
                       </td>
 
                       {/* ACTIONS */}
 
                       <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]">
-                        <div className="flex items-center gap-2">
+                        <div className="flex justify-center items-center gap-2">
                           <button
                             type="button"
                             onClick={() =>

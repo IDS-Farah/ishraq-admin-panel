@@ -158,6 +158,7 @@
 .ish-card {
   position: relative;
   z-index: 1;
+  height: 90vh;
   width: min(1000px, 100%);
   /* min-height: 640px; */
   display: grid;

@@ -44,12 +44,12 @@ const TYPE_STYLE = {
 // heading -> sort key (null = not sortable)
 const COLUMNS = [
   ["Sr.No", null],
+  ["Status", null],
   ["Organization", "organizationName"],
   ["Position", "position"],
   ["Vacancies", "vacancies"],
   ["Location", null],
   ["Applicants", "applicants"],
-  ["Status", null],
   ["Actions", null],
 ];
 
@@ -137,7 +137,7 @@ const StatusSwitch = ({ job, onClick }) => {
 };
 
 const Select = ({ label, value, onChange, options }) => (
-  <div className="relative min-w-[150px] flex-1 xl:flex-none">
+  <div className="relative min-w-[200px] flex-1 xl:flex-none">
     <select
       aria-label={label}
       value={value}
@@ -477,7 +477,7 @@ const JobRequirementList = () => {
             </h1>
 
             <div className="flex w-full flex-wrap items-center gap-2.5 xl:w-auto">
-              <div className="relative min-w-[260px] flex-1 xl:flex-none">
+              <div className="relative min-w-[320px] flex-1 xl:flex-none">
                 <SearchIcon
                   size={15}
                   className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9aa5b1]"
@@ -525,11 +525,12 @@ const JobRequirementList = () => {
                   size={14}
                   className="transition-transform duration-300 group-enabled:group-hover:-rotate-180"
                 />
-                Reset
+                {/* Reset */}
               </button>
 
               <button
                 type="button"
+                title="Add Job Requirement"
                 onClick={() => navigate("/admin/job-requirements/create")}
                 className="group inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#16834f] to-[#2fb877] px-3 text-[15px] font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#16834f] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
               >
@@ -539,7 +540,7 @@ const JobRequirementList = () => {
                   strokeWidth={2.2}
                   className="transition-transform group-hover:scale-110"
                 />
-                <span className="hidden sm:inline">Add</span>
+                {/* <span className="hidden sm:inline">Add</span> */}
               </button>
             </div>
           </div>
@@ -640,6 +641,9 @@ const JobRequirementList = () => {
                       <td className={`${td} tabular-nums`}>
                         {start + index + 1}
                       </td>
+                      <td className={td}>
+                        <StatusBadge status={job.status} />
+                      </td>
 
                       <td className={`${td} whitespace-nowrap`}>
                         <span className="inline-flex items-center gap-1.5">
@@ -678,9 +682,6 @@ const JobRequirementList = () => {
                             count={Number(job.applicants || 0)}
                           />
                         </Link>
-                      </td>
-                      <td className={td}>
-                        <StatusBadge status={job.status} />
                       </td>
 
                       <td className={td}>

@@ -21,7 +21,7 @@ import {
   BriefcaseBusiness,
   BadgeCheck,
   UserPlus,
-  Users
+  Users,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { StatCardGrid } from "../../../components/common/Dashboardkit";
@@ -576,10 +576,10 @@ const StatusDialog = ({ user, onCancel, onConfirm }) => {
 
 const HEADINGS = [
   "Sr.No",
+  "Status",
   "Organization Name",
   "Contact Person",
-  "Status",
-  "Mobile",
+  // "Mobile",
   "Organization Type",
   "Actions",
 ];
@@ -808,9 +808,9 @@ const EmployerList = () => {
     <div className="">
       <StatCardGrid items={stats} />
       <div className="js-page min-h-full bg-[#f7f9fb] p-0 text-[#1e2b36]">
-        <div className="mx-auto max-w-[1400px] rounded-[12px] border border-[#e2e8ee] bg-white p-2 shadow-sm sm:px-[18px] sm:pb-4 sm:pt-5">
+        <div className="mx-auto max-w-[1400px] rounded-[12px] border border-[#e2e8ee] bg-white p-2 shadow-sm sm:px-[18px]">
           {/* TITLE + FILTERS */}
-          <div className="mb-4 flex flex-col items-start justify-between gap-3 xl:flex-row xl:items-center">
+          <div className="mb-2 flex flex-col items-start justify-between gap-3 xl:flex-row xl:items-center">
             <div>
               <h1 className="m-0 text-[22px] font-extrabold tracking-tight text-[#2c6b8a] sm:text-[26px]">
                 Employer List
@@ -836,7 +836,7 @@ const EmployerList = () => {
                 />
               </div>
               {/* STATUS FILTER */}
-              <div className="relative w-full sm:w-[150px]">
+              <div className="relative w-full sm:w-[200px]">
                 <select
                   aria-label="Filter by status"
                   value={statusFilter}
@@ -856,7 +856,7 @@ const EmployerList = () => {
                 />
               </div>
               {/* CATEGORY FILTER */}
-              <div className="relative w-full sm:w-[190px]">
+              <div className="relative w-full sm:w-[200px]">
                 <select
                   aria-label="Filter by Organization Type"
                   value={categoryFilter}
@@ -890,7 +890,7 @@ const EmployerList = () => {
                   size={14}
                   className="transition-transform duration-300 group-enabled:group-hover:-rotate-180"
                 />
-                Reset
+                {/* Reset */}
               </button>
               {/* EXPORT */}
               <button
@@ -906,14 +906,14 @@ const EmployerList = () => {
                   strokeWidth={2.2}
                   className="transition-transform group-hover:scale-110"
                 />
-                <span className="hidden sm:inline">Export</span>
+                {/* <span className="hidden sm:inline">Export</span> */}
               </button>
             </div>
           </div>
           <hr />
           {/* TABLE */}
-          <div className="mt-6 h-[56vh] overflow-x-auto overflow-y-auto rounded-lg border border-[#cbe1f4] common-scrollbar">
-            <table className="w-full min-w-[1050px] border-collapse text-[15px]">
+          <div className="mt-4 h-[45vh] overflow-x-auto overflow-y-auto rounded-lg border border-[#cbe1f4] common-scrollbar">
+            <table className="w-full  border-collapse text-[15px]">
               <thead className="sticky top-0 z-10">
                 <tr>
                   {HEADINGS.map((heading) => (
@@ -1016,6 +1016,17 @@ const EmployerList = () => {
                         <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] tabular-nums text-slate-900">
                           {start + index + 1}
                         </td>
+                        {/* STATUS */}
+                        <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]">
+                          <StatusBadge
+                            status={user.status}
+                            title={
+                              inactive && user.inactiveReason
+                                ? `Reason: ${user.inactiveReason}`
+                                : undefined
+                            }
+                          />
+                        </td>
                         {/* Organization Name */}
                         <td className="whitespace-nowrap border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]  text-slate-900">
                           <span className="inline-flex items-center gap-1">
@@ -1030,35 +1041,16 @@ const EmployerList = () => {
                           <div className="flex items-center gap-2.5">
                             <Avatar user={user} />
                             <span
-                              className={` transition-colors ${
+                              className={` transition-colors flex flex-col ${
                                 inactive ? "text-[#6b7a88]" : "text-slate-900"
                               }`}
                             >
                               {user.fullName}
+                              <span>{user.email}</span>
                             </span>
                           </div>
                         </td>
-                        {/* STATUS */}
-                        <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]">
-                          <StatusBadge
-                            status={user.status}
-                            title={
-                              inactive && user.inactiveReason
-                                ? `Reason: ${user.inactiveReason}`
-                                : undefined
-                            }
-                          />
-                        </td>
-                        {/* MOBILE */}
-                        <td className="whitespace-nowrap border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]  text-slate-900">
-                          <span className="inline-flex items-center gap-1">
-                            <Phone
-                              size={13}
-                              className="shrink-0 text-slate-900"
-                            />
-                            {user.mobile || "-"}
-                          </span>
-                        </td>
+
                         {/* Organization Type */}
                         <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]">
                           <CategoryBadge category={user.jobCategory} />

@@ -16,9 +16,14 @@ import {
   ShieldAlert,
   ShieldCheck,
   UserRoundCheck,
+  BriefcaseBusiness,
+  BadgeCheck,
+  UserPlus,
+  Users,
   UserRoundX,
 } from "lucide-react";
 import * as XLSX from "xlsx";
+import { StatCardGrid } from "../../../components/common/Dashboardkit";
 
 /* ------------------------------------------------------------------ */
 /* CONFIG + DEMO DATA                                                  */
@@ -561,11 +566,11 @@ const StatusDialog = ({ user, onCancel, onConfirm }) => {
 
 const HEADINGS = [
   "Sr.No",
-  "Full Name",
   "Status",
+  "Full Name",
+  "Job Category",
   "Email",
   "Mobile",
-  "Job Category",
   "Actions",
 ];
 
@@ -741,442 +746,435 @@ const JobSeekerList = () => {
   const pageBtn =
     "grid h-8 min-w-8 cursor-pointer place-items-center rounded-lg px-2.5 text-[12.5px] font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2c6b8a]";
 
+  const stats = [
+    {
+      title: "Total User",
+      value: 450,
+      icon: Users,
+      color: "#0ea5e9",
+      color2: "#38bdf8",
+      from: "#0ea5e9",
+      to: "#2563eb",
+    },
+    {
+      title: "Active Users",
+      value: 20,
+      icon: UserRoundCheck,
+      color: "#6366f1",
+      color2: "#8b5cf6",
+      from: "#6366f1",
+      to: "#8b5cf6",
+    },
+    {
+      title: "Inactive Users",
+      value: 150,
+      icon: UserRoundX,
+      color: "#10b981",
+      color2: "#34d399",
+      from: "#10b981",
+      to: "#059669",
+    },
+    {
+      title: "New Users",
+      value: 300,
+      icon: UserPlus,
+      color: "#f59e0b",
+      color2: "#fb923c",
+      from: "#f59e0b",
+      to: "#ef4444",
+    },
+  ];
   return (
-    <div className="js-page min-h-full bg-[#f7f9fb] p-0 text-[#1e2b36]">
-      <div className="mx-auto max-w-[1400px] rounded-[12px] border border-[#e2e8ee] bg-white p-2 shadow-sm sm:px-[18px] sm:pb-4 sm:pt-5">
-        {/* TITLE + FILTERS */}
-
-        <div className="mb-4 flex flex-col items-start justify-between gap-3 xl:flex-row xl:items-center">
-          <div>
-            <h1 className="m-0 text-[22px] font-extrabold tracking-tight text-[#2c6b8a] sm:text-[26px]">
-              Jobseeker List
-            </h1>
-          </div>
-
-          <div className="flex w-full flex-wrap items-center gap-2.5 xl:w-auto">
-            {/* SEARCH */}
-
-            <div className="relative min-w-[320px] flex-1 xl:flex-none">
-              <SearchIcon
-                size={15}
-                className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9aa5b1]"
-              />
-
-              <input
-                type="search"
-                aria-label="Search jobseekers"
-                placeholder="Search by email, name or mobile"
-                value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setPage(1);
-                }}
-                className="h-9 w-full rounded-lg border border-[#c9d5dd] bg-white pl-9 pr-3 text-[15px] text-[#1e2b36] outline-none transition placeholder:text-[#9aa5b1] hover:border-[#2c6b8a] focus:border-[#2c6b8a] focus:ring-2 focus:ring-[#2c6b8a]/30"
-              />
+    <div className="">
+      <StatCardGrid items={stats} />
+      <div className="js-page min-h-full bg-[#f7f9fb] p-0 text-[#1e2b36]">
+        <div className="mx-auto max-w-[1400px] rounded-[12px] border border-[#e2e8ee] bg-white p-2 shadow-sm sm:px-[18px]">
+          {/* TITLE + FILTERS */}
+          <div className="mb-2 flex flex-col items-start justify-between gap-3 xl:flex-row xl:items-center">
+            <div>
+              <h1 className="m-0 text-[22px] font-extrabold tracking-tight text-[#2c6b8a] sm:text-[26px]">
+                Jobseeker List
+              </h1>
             </div>
-
-            {/* STATUS FILTER */}
-
-            <div className="relative w-full sm:w-[150px]">
-              <select
-                aria-label="Filter by status"
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value);
-                  setPage(1);
-                }}
-                className={selectCls}
-              >
-                <option value="All">Status: All</option>
-                <option value="Active">Status: Active</option>
-                <option value="Inactive">Status: Inactive</option>
-              </select>
-
-              <ChevronDown
-                size={14}
-                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#2c6b8a]"
-              />
-            </div>
-
-            {/* CATEGORY FILTER */}
-
-            <div className="relative w-full sm:w-[190px]">
-              <select
-                aria-label="Filter by profession"
-                value={categoryFilter}
-                onChange={(e) => {
-                  setCategoryFilter(e.target.value);
-                  setPage(1);
-                }}
-                className={selectCls}
-              >
-                <option value="All">Profession: All</option>
-
-                {JOB_CATEGORIES.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
-
-              <ChevronDown
-                size={14}
-                className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#2c6b8a]"
-              />
-            </div>
-
-            {/* RESET */}
-
-            <button
-              type="button"
-              onClick={resetFilters}
-              disabled={!isFiltered}
-              title="Reset filters"
-              className="group inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 text-[15px] font-medium text-[#d64545] transition hover:bg-[#fbe9e9] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d64545] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
-            >
-              <RotateCcw
-                size={14}
-                className="transition-transform duration-300 group-enabled:group-hover:-rotate-180"
-              />
-              Reset
-            </button>
-
-            {/* EXPORT */}
-
-            <button
-              type="button"
-              onClick={exportToExcel}
-              disabled={!filtered.length}
-              title="Export to Excel"
-              aria-label="Export to Excel"
-              className="group inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#16834f] to-[#2fb877] px-3 text-[15px] font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#16834f] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <ExcelIcon
-                size={15}
-                strokeWidth={2.2}
-                className="transition-transform group-hover:scale-110"
-              />
-              <span className="hidden sm:inline">Export</span>
-            </button>
-          </div>
-        </div>
-        <hr />
-
-        {/* TABLE */}
-
-        <div className="mt-6 h-[56vh] overflow-x-auto overflow-y-auto rounded-lg border border-[#cbe1f4] common-scrollbar">
-          <table className="w-full min-w-[1050px] border-collapse text-[15px]">
-            <thead className="sticky top-0 z-10">
-              <tr>
-                {HEADINGS.map((heading) => (
-                  <th
-                    key={heading}
-                    scope="col"
-                    aria-sort={
-                      heading === "Full Name" && sortDir
-                        ? sortDir === "asc"
-                          ? "ascending"
-                          : "descending"
-                        : undefined
-                    }
-                    className="whitespace-nowrap bg-gradient-to-r from-[#2c6b8a] to-[#3b86a6] px-3.5 py-3 text-left text-[15px] font-bold text-white"
-                  >
-                    {heading === "Full Name" ? (
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setSortDir((direction) =>
-                            direction === null
-                              ? "asc"
-                              : direction === "asc"
-                                ? "desc"
-                                : null,
-                          )
-                        }
-                        className="inline-flex cursor-pointer items-center gap-1 rounded font-bold hover:text-white/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-                      >
-                        {heading}
-
-                        <span className="flex flex-col leading-none">
-                          <ChevronUp
-                            size={10}
-                            className={
-                              sortDir === "asc" ? "opacity-100" : "opacity-40"
-                            }
-                          />
-
-                          <ChevronDown
-                            size={10}
-                            className={
-                              sortDir === "desc" ? "opacity-100" : "opacity-40"
-                            }
-                          />
-                        </span>
-                      </button>
-                    ) : (
-                      heading
-                    )}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-
-            <tbody>
-              {pageRows.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={HEADINGS.length}
-                    className="border-t border-[#e2e8ee] px-4 py-12 text-center"
-                  >
-                    <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#e8f1f6] text-[#2c6b8a]">
-                      <UsersIcon size={22} />
-                    </div>
-
-                    <p className="mt-3 text-[15px] text-[#1e2b36]">
-                      {isFiltered
-                        ? "No jobseekers match these filters"
-                        : "No jobseekers yet"}
-                    </p>
-
-                    <p className="mt-0.5 text-[15px] text-[#6b7a88]">
-                      {isFiltered
-                        ? "Try a different search or clear the filters."
-                        : "New registrations will appear here."}
-                    </p>
-
-                    {isFiltered && (
-                      <button
-                        type="button"
-                        onClick={resetFilters}
-                        className="mt-3 cursor-pointer rounded-lg bg-[#2c6b8a] px-3.5 py-2 text-[15px] font-semibold text-white transition hover:bg-[#245a75] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2c6b8a] focus-visible:ring-offset-2"
-                      >
-                        Reset filters
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ) : (
-                pageRows.map((user, index) => {
-                  const inactive = user.status !== "Active";
-
-                  return (
-                    <tr
-                      key={user.id}
-                      style={{
-                        animationDelay: `${Math.min(index, 12) * 35}ms`,
-                      }}
-                      className={`js-row group transition-colors even:bg-[#f9fbfc] hover:bg-[#e8f1f6] ${
-                        flashId === user.id ? "js-flash" : ""
-                      }`}
-                    >
-                      {/* SR NO */}
-
-                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] tabular-nums text-slate-900">
-                        {start + index + 1}
-                      </td>
-
-                      {/* FULL NAME */}
-
-                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]">
-                        <div className="flex items-center gap-2.5">
-                          <Avatar user={user} />
-
-                          <span
-                            className={` transition-colors ${
-                              inactive ? "text-[#6b7a88]" : "text-slate-900"
-                            }`}
-                          >
-                            {user.fullName}
-                          </span>
-                        </div>
-                      </td>
-                      {/* STATUS */}
-
-                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]">
-                        <StatusBadge
-                          status={user.status}
-                          title={
-                            inactive && user.inactiveReason
-                              ? `Reason: ${user.inactiveReason}`
-                              : undefined
-                          }
-                        />
-                      </td>
-
-                      {/* EMAIL */}
-
-                      <td className="break-all border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
-                        {user.email ? (
-                          <span className="inline-flex w-[220px] items-center gap-1">
-                            <Mail
-                              size={13}
-                              className="shrink-0 text-slate-900 mt-1"
-                            />
-                            {user.email}
-                          </span>
-                        ) : (
-                          <span className="text-[#9aa5b1]">-</span>
-                        )}
-                      </td>
-
-                      {/* MOBILE */}
-
-                      <td className="whitespace-nowrap border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]  text-slate-900">
-                        <span className="inline-flex items-center gap-1">
-                          <Phone
-                            size={13}
-                            className="shrink-0 text-slate-900"
-                          />
-                          {user.mobile || "-"}
-                        </span>
-                      </td>
-
-                      {/* JOB CATEGORY */}
-
-                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]">
-                        <CategoryBadge category={user.jobCategory} />
-                      </td>
-
-                      {/* ACTIONS */}
-
-                      <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]">
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              navigate(`/admin/jobseekers/${user.id}`)
-                            }
-                            title="View jobseeker"
-                            aria-label={`View ${user.fullName}`}
-                            className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-gradient-to-br from-[#168fa1] to-[#35b8c4] text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a9aa8] focus-visible:ring-offset-2"
-                          >
-                            <ChevronsRight size={14} strokeWidth={2.2} />
-                          </button>
-
-                          <StatusSwitch
-                            user={user}
-                            onClick={() => setConfirmUser(user)}
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* PAGINATION */}
-
-        <div className="mt-3.5 flex flex-col gap-3 border-t border-[#e2e8ee] pt-3.5 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-wrap items-center gap-3.5 text-[12.5px] text-[#60738a]">
-            <span>
-              Showing{" "}
-              <strong className="font-semibold text-[#53677f]">
-                {filtered.length ? start + 1 : 0}
-              </strong>{" "}
-              to{" "}
-              <strong className="font-semibold text-[#53677f]">
-                {Math.min(start + pageSize, filtered.length)}
-              </strong>{" "}
-              of{" "}
-              <strong className="font-semibold text-[#53677f]">
-                {filtered.length}
-              </strong>{" "}
-              entries
-            </span>
-
-            <label className="flex items-center gap-1.5">
-              <span>Show:</span>
-
-              <select
-                value={pageSize}
-                onChange={(e) => {
-                  setPage(1);
-                }}
-                className="h-8 cursor-pointer rounded-lg border border-[#dce3eb] bg-white px-2 text-[12.5px] text-[#34445a] transition hover:border-[#2c6b8a] focus:border-[#2c6b8a] focus:outline-none focus:ring-2 focus:ring-[#2c6b8a]/30"
-              >
-                {[10, 25, 50, 100].map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <nav
-            aria-label="Pagination"
-            className="flex flex-wrap items-center gap-1"
-          >
-            <button
-              type="button"
-              onClick={() => setPage(currentPage - 1)}
-              disabled={currentPage === 1}
-              className={`${pageBtn} border border-[#dce3eb] bg-white text-[#34445a] hover:bg-[#e8f1f6] disabled:cursor-not-allowed disabled:text-[#b8c4d3] disabled:hover:bg-white`}
-            >
-              Previous
-            </button>
-
-            {pageNumbers.map((n) => (
+            <div className="flex w-full flex-wrap items-center gap-2.5 xl:w-auto">
+              {/* SEARCH */}
+              <div className="relative min-w-[320px] flex-1 xl:flex-none">
+                <SearchIcon
+                  size={15}
+                  className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[#9aa5b1]"
+                />
+                <input
+                  type="search"
+                  aria-label="Search jobseekers"
+                  placeholder="Search by email, name or mobile"
+                  value={search}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setPage(1);
+                  }}
+                  className="h-9 w-full rounded-lg border border-[#c9d5dd] bg-white pl-9 pr-3 text-[15px] text-[#1e2b36] outline-none transition placeholder:text-[#9aa5b1] hover:border-[#2c6b8a] focus:border-[#2c6b8a] focus:ring-2 focus:ring-[#2c6b8a]/30"
+                />
+              </div>
+              {/* STATUS FILTER */}
+              <div className="relative w-full sm:w-[200px]">
+                <select
+                  aria-label="Filter by status"
+                  value={statusFilter}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  className={selectCls}
+                >
+                  <option value="All">Status: All</option>
+                  <option value="Active">Status: Active</option>
+                  <option value="Inactive">Status: Inactive</option>
+                </select>
+                <ChevronDown
+                  size={14}
+                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#2c6b8a]"
+                />
+              </div>
+              {/* CATEGORY FILTER */}
+              <div className="relative w-full sm:w-[200px]">
+                <select
+                  aria-label="Filter by profession"
+                  value={categoryFilter}
+                  onChange={(e) => {
+                    setCategoryFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  className={selectCls}
+                >
+                  <option value="All">Profession: All</option>
+                  {JOB_CATEGORIES.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  size={14}
+                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#2c6b8a]"
+                />
+              </div>
+              {/* RESET */}
               <button
-                key={n}
                 type="button"
-                onClick={() => setPage(n)}
-                aria-current={n === currentPage ? "page" : undefined}
-                className={`${pageBtn} ${
-                  n === currentPage
-                    ? "bg-gradient-to-br from-[#2c6b8a] to-[#3b86a6] font-semibold text-white shadow-sm"
-                    : "border border-[#dce3eb] bg-white text-[#34445a] hover:bg-[#e8f1f6]"
-                }`}
+                onClick={resetFilters}
+                disabled={!isFiltered}
+                title="Reset filters"
+                className="group inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 text-[15px] font-medium text-[#d64545] transition hover:bg-[#fbe9e9] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d64545] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
               >
-                {n}
+                <RotateCcw
+                  size={14}
+                  className="transition-transform duration-300 group-enabled:group-hover:-rotate-180"
+                />
+                {/* Reset */}
               </button>
-            ))}
-
-            <button
-              type="button"
-              onClick={() => setPage(currentPage + 1)}
-              disabled={currentPage === totalPages}
-              className={`${pageBtn} border border-[#dce3eb] bg-white text-[#34445a] hover:bg-[#e8f1f6] disabled:cursor-not-allowed disabled:text-[#b8c4d3] disabled:hover:bg-white`}
+              {/* EXPORT */}
+              <button
+                type="button"
+                onClick={exportToExcel}
+                disabled={!filtered.length}
+                title="Export to Excel"
+                aria-label="Export to Excel"
+                className="group inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#16834f] to-[#2fb877] px-3 text-[15px] font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#16834f] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <ExcelIcon
+                  size={15}
+                  strokeWidth={2.2}
+                  className="transition-transform group-hover:scale-110"
+                />
+                {/* <span className="hidden sm:inline"></span> */}
+              </button>
+            </div>
+          </div>
+          <hr />
+          {/* TABLE */}
+          <div className="mt-4 h-[45vh] overflow-x-auto overflow-y-auto rounded-lg border border-[#cbe1f4] common-scrollbar">
+            <table className="w-full min-w-[1050px] border-collapse text-[15px]">
+              <thead className="sticky top-0 z-10">
+                <tr>
+                  {HEADINGS.map((heading) => (
+                    <th
+                      key={heading}
+                      scope="col"
+                      aria-sort={
+                        heading === "Full Name" && sortDir
+                          ? sortDir === "asc"
+                            ? "ascending"
+                            : "descending"
+                          : undefined
+                      }
+                      className="whitespace-nowrap bg-gradient-to-r from-[#2c6b8a] to-[#3b86a6] px-3.5 py-3 text-left text-[15px] font-bold text-white"
+                    >
+                      {heading === "Full Name" ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSortDir((direction) =>
+                              direction === null
+                                ? "asc"
+                                : direction === "asc"
+                                  ? "desc"
+                                  : null,
+                            )
+                          }
+                          className="inline-flex cursor-pointer items-center gap-1 rounded font-bold hover:text-white/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                        >
+                          {heading}
+                          <span className="flex flex-col leading-none">
+                            <ChevronUp
+                              size={10}
+                              className={
+                                sortDir === "asc" ? "opacity-100" : "opacity-40"
+                              }
+                            />
+                            <ChevronDown
+                              size={10}
+                              className={
+                                sortDir === "desc"
+                                  ? "opacity-100"
+                                  : "opacity-40"
+                              }
+                            />
+                          </span>
+                        </button>
+                      ) : (
+                        heading
+                      )}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {pageRows.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={HEADINGS.length}
+                      className="border-t border-[#e2e8ee] px-4 py-12 text-center"
+                    >
+                      <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#e8f1f6] text-[#2c6b8a]">
+                        <UsersIcon size={22} />
+                      </div>
+                      <p className="mt-3 text-[15px] text-[#1e2b36]">
+                        {isFiltered
+                          ? "No jobseekers match these filters"
+                          : "No jobseekers yet"}
+                      </p>
+                      <p className="mt-0.5 text-[15px] text-[#6b7a88]">
+                        {isFiltered
+                          ? "Try a different search or clear the filters."
+                          : "New registrations will appear here."}
+                      </p>
+                      {isFiltered && (
+                        <button
+                          type="button"
+                          onClick={resetFilters}
+                          className="mt-3 cursor-pointer rounded-lg bg-[#2c6b8a] px-3.5 py-2 text-[15px] font-semibold text-white transition hover:bg-[#245a75] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2c6b8a] focus-visible:ring-offset-2"
+                        >
+                          Reset filters
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                ) : (
+                  pageRows.map((user, index) => {
+                    const inactive = user.status !== "Active";
+                    return (
+                      <tr
+                        key={user.id}
+                        style={{
+                          animationDelay: `${Math.min(index, 12) * 35}ms`,
+                        }}
+                        className={`js-row group transition-colors even:bg-[#f9fbfc] hover:bg-[#e8f1f6] ${
+                          flashId === user.id ? "js-flash" : ""
+                        }`}
+                      >
+                        {/* SR NO */}
+                        <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] tabular-nums text-slate-900">
+                          {start + index + 1}
+                        </td>
+                        {/* STATUS */}
+                        <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]">
+                          <StatusBadge
+                            status={user.status}
+                            title={
+                              inactive && user.inactiveReason
+                                ? `Reason: ${user.inactiveReason}`
+                                : undefined
+                            }
+                          />
+                        </td>
+                        {/* FULL NAME */}
+                        <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]">
+                          <div className="flex items-center gap-2.5">
+                            <Avatar user={user} />
+                            <span
+                              className={` transition-colors ${
+                                inactive ? "text-[#6b7a88]" : "text-slate-900"
+                              }`}
+                            >
+                              {user.fullName}
+                            </span>
+                          </div>
+                        </td>
+                        {/* JOB CATEGORY */}
+                        <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]">
+                          <CategoryBadge category={user.jobCategory} />
+                        </td>
+                        {/* EMAIL */}
+                        <td className="break-all border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900">
+                          {user.email ? (
+                            <span className="inline-flex w-[220px] items-center gap-1">
+                              <Mail
+                                size={13}
+                                className="shrink-0 text-slate-900 mt-1"
+                              />
+                              {user.email}
+                            </span>
+                          ) : (
+                            <span className="text-[#9aa5b1]">-</span>
+                          )}
+                        </td>
+                        {/* MOBILE */}
+                        <td className="whitespace-nowrap border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]  text-slate-900">
+                          <span className="inline-flex items-center gap-1">
+                            <Phone
+                              size={13}
+                              className="shrink-0 text-slate-900"
+                            />
+                            {user.mobile || "-"}
+                          </span>
+                        </td>
+                        {/* ACTIONS */}
+                        <td className="border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px]">
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                navigate(`/admin/jobseekers/${user.id}`)
+                              }
+                              title="View jobseeker"
+                              aria-label={`View ${user.fullName}`}
+                              className="grid h-7 w-7 cursor-pointer place-items-center rounded-md bg-gradient-to-br from-[#168fa1] to-[#35b8c4] text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#1a9aa8] focus-visible:ring-offset-2"
+                            >
+                              <ChevronsRight size={14} strokeWidth={2.2} />
+                            </button>
+                            <StatusSwitch
+                              user={user}
+                              onClick={() => setConfirmUser(user)}
+                            />
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+          {/* PAGINATION */}
+          <div className="mt-3.5 flex flex-col gap-3 border-t border-[#e2e8ee] pt-3.5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-3.5 text-[12.5px] text-[#60738a]">
+              <span>
+                Showing{" "}
+                <strong className="font-semibold text-[#53677f]">
+                  {filtered.length ? start + 1 : 0}
+                </strong>{" "}
+                to{" "}
+                <strong className="font-semibold text-[#53677f]">
+                  {Math.min(start + pageSize, filtered.length)}
+                </strong>{" "}
+                of{" "}
+                <strong className="font-semibold text-[#53677f]">
+                  {filtered.length}
+                </strong>{" "}
+                entries
+              </span>
+              <label className="flex items-center gap-1.5">
+                <span>Show:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => {
+                    setPage(1);
+                  }}
+                  className="h-8 cursor-pointer rounded-lg border border-[#dce3eb] bg-white px-2 text-[12.5px] text-[#34445a] transition hover:border-[#2c6b8a] focus:border-[#2c6b8a] focus:outline-none focus:ring-2 focus:ring-[#2c6b8a]/30"
+                >
+                  {[10, 25, 50, 100].map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <nav
+              aria-label="Pagination"
+              className="flex flex-wrap items-center gap-1"
             >
-              Next
-            </button>
-          </nav>
+              <button
+                type="button"
+                onClick={() => setPage(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`${pageBtn} border border-[#dce3eb] bg-white text-[#34445a] hover:bg-[#e8f1f6] disabled:cursor-not-allowed disabled:text-[#b8c4d3] disabled:hover:bg-white`}
+              >
+                Previous
+              </button>
+              {pageNumbers.map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setPage(n)}
+                  aria-current={n === currentPage ? "page" : undefined}
+                  className={`${pageBtn} ${
+                    n === currentPage
+                      ? "bg-gradient-to-br from-[#2c6b8a] to-[#3b86a6] font-semibold text-white shadow-sm"
+                      : "border border-[#dce3eb] bg-white text-[#34445a] hover:bg-[#e8f1f6]"
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setPage(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={`${pageBtn} border border-[#dce3eb] bg-white text-[#34445a] hover:bg-[#e8f1f6] disabled:cursor-not-allowed disabled:text-[#b8c4d3] disabled:hover:bg-white`}
+              >
+                Next
+              </button>
+            </nav>
+          </div>
         </div>
-      </div>
-
-      {/* STATUS CONFIRMATION */}
-
-      {confirmUser && (
-        <StatusDialog
-          user={confirmUser}
-          onCancel={() => setConfirmUser(null)}
-          onConfirm={confirmToggle}
-        />
-      )}
-
-      {/* TOAST */}
-
-      {toast && (
-        <div
-          key={toast.id}
-          role="status"
-          aria-live="polite"
-          className="js-toast fixed bottom-5 right-5 z-[60] flex items-center gap-2.5 rounded-xl bg-[#1e2b36] px-4 py-2.5 text-[15px] font-medium text-white shadow-xl"
-        >
-          <span
-            className={`grid h-5 w-5 place-items-center rounded-full ${
-              toast.tone === "ok" ? "bg-emerald-500" : "bg-amber-500"
-            }`}
+        {/* STATUS CONFIRMATION */}
+        {confirmUser && (
+          <StatusDialog
+            user={confirmUser}
+            onCancel={() => setConfirmUser(null)}
+            onConfirm={confirmToggle}
+          />
+        )}
+        {/* TOAST */}
+        {toast && (
+          <div
+            key={toast.id}
+            role="status"
+            aria-live="polite"
+            className="js-toast fixed bottom-5 right-5 z-[60] flex items-center gap-2.5 rounded-xl bg-[#1e2b36] px-4 py-2.5 text-[15px] font-medium text-white shadow-xl"
           >
-            <CheckIcon size={12} strokeWidth={3.4} />
-          </span>
-
-          {toast.msg}
-        </div>
-      )}
+            <span
+              className={`grid h-5 w-5 place-items-center rounded-full ${
+                toast.tone === "ok" ? "bg-emerald-500" : "bg-amber-500"
+              }`}
+            >
+              <CheckIcon size={12} strokeWidth={3.4} />
+            </span>
+            {toast.msg}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
