@@ -623,7 +623,7 @@ const JobseekerAppliedJobs = () => {
             TABLE
         ==================================================== */}
 
-        <div className="common-scrollbar mt-4 overflow-auto rounded-lg border border-[#cbe1f4]">
+        <div className="common-scrollbar h-[46vh] mt-4 overflow-auto rounded-lg border border-[#cbe1f4]">
           <table className="w-full border-collapse text-[14px]">
             <thead className="sticky top-0 z-10">
               <tr>
