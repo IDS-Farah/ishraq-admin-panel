@@ -18,6 +18,10 @@ import {
   LifeBuoy,
   LogOut,
   NotebookDot,
+  ChevronDown,
+  ChevronRight,
+  Database,
+  MapPin,
 } from "lucide-react";
 
 // Keyframes live here so no tailwind.config changes are needed
@@ -77,6 +81,9 @@ const styles = `
 export const AdminSidebar = () => {
   const [expanded, setExpanded] = useState(true);
   const [search, setSearch] = useState("");
+  const [masterDataOpen, setMasterDataOpen] = useState(
+    window.location.pathname.startsWith("/admin/master-data"),
+  );
 
   // `tile` = icon background gradient used when the item is idle/hovered
   const menuItems = [
@@ -130,15 +137,68 @@ export const AdminSidebar = () => {
       tile: "from-rose-400 to-red-500",
       // alert: true,
     },
+    {
+      text: "Master Data",
+      icon: Database,
+      link: "/admin/master-data",
+      tile: "from-teal-400 to-cyan-600",
+      children: [
+        {
+          text: "Institute Type",
+          link: "/admin/settings/master/instituteType",
+          icon: Building2,
+        },
+        {
+          text: "Job Category",
+          link: "/admin/settings/master/jobCategory",
+          icon: ClipboardList,
+        },
+        {
+          text: "Job Role",
+          link: "/admin/settings/master/jobRole",
+          icon: BookUser,
+        },
+        // {
+        //   text: "State",
+        //   link: "/admin/master-data/state",
+        //   icon: MapPin,
+        // },
+        // {
+        //   text: "City",
+        //   link: "/admin/master-data/city",
+        //   icon: MapPin,
+        // },
+        {
+          text: "Employment Preference",
+          link: "/admin/settings/master/employmentType",
+          icon: ClipboardList,
+        },
+        {
+          text: "You Are",
+          link: "/admin/settings/master/userType",
+          icon: BookUser,
+        },
+        {
+          text: "Complaint Category",
+          link: "/admin/settings/master/complaintCategory",
+          icon: ShieldAlert,
+        },
+        {
+          text: "Job Status",
+          link: "/admin/settings/master/jobStatus",
+          icon: Activity,
+        },
+      ],
+    },
   ];
 
   const bottomItems = [
-    {
-      text: "Settings",
-      icon: Settings,
-      link: "/admin/settings",
-      tile: "from-slate-400 to-slate-600",
-    },
+    // {
+    //   text: "Settings",
+    //   icon: Settings,
+    //   link: "/admin/settings",
+    //   tile: "from-slate-400 to-slate-600",
+    // },
     {
       text: "Feedback",
       icon: MessagesSquare,
@@ -154,6 +214,85 @@ export const AdminSidebar = () => {
   const filteredBottomItems = bottomItems.filter(matches);
 
   const renderItem = (item, index) => {
+    if (item.children) {
+      const Icon = item.icon;
+
+      return (
+        <li key={item.text} className="list-none sb-item">
+          <button
+            type="button"
+            title={!expanded ? item.text : undefined}
+            onClick={() => {
+              if (!expanded) {
+                setExpanded(true);
+                setMasterDataOpen(true);
+              } else {
+                setMasterDataOpen((prev) => !prev);
+              }
+            }}
+            className={`sb-link relative flex h-11 w-full items-center rounded-xl px-2
+          transition-all duration-300 group
+          ${
+            item.children.some((child) =>
+              window.location.pathname.startsWith(child.link),
+            )
+              ? "bg-gradient-to-r from-[#2f6b8a] to-[#4aa3c0] text-white shadow-md"
+              : "text-gray-600 hover:bg-blue-50 hover:text-[#2f6b8a]"
+          }
+          ${expanded ? "justify-start" : "justify-center"}`}
+          >
+            <span
+              className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg
+            bg-gradient-to-br ${item.tile} shadow-sm`}
+            >
+              <Icon size={17} className="text-white" />
+            </span>
+
+            {expanded && (
+              <>
+                <span className="ml-3 flex-1 text-left text-sm font-medium">
+                  {item.text}
+                </span>
+                {masterDataOpen ? (
+                  <ChevronDown size={16} />
+                ) : (
+                  <ChevronRight size={16} />
+                )}
+              </>
+            )}
+          </button>
+
+          {expanded && masterDataOpen && (
+            <ul className="ml-5 mt-1 space-y-1 border-l-2 border-[#d8e8ef] pl-3">
+              {item.children.filter(matches).map((child) => {
+                const ChildIcon = child.icon;
+
+                return (
+                  <li key={child.link} className="list-none">
+                    <NavLink
+                      to={child.link}
+                      className={({ isActive }) =>
+                        `flex min-h-9 items-center gap-2 rounded-lg px-2.5 py-2
+                      text-xs font-medium transition-all
+                      ${
+                        isActive
+                          ? "bg-[#e5f2f7] text-[#2f6b8a] ring-1 ring-[#c8e1eb]"
+                          : "text-gray-600 hover:bg-white hover:text-[#2f6b8a]"
+                      }`
+                      }
+                    >
+                      <ChildIcon size={14} />
+                      <span>{child.text}</span>
+                    </NavLink>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </li>
+      );
+    }
+
     const Icon = item.icon;
 
     return (
@@ -212,7 +351,9 @@ export const AdminSidebar = () => {
               {item.alert && (
                 <span
                   className={`absolute z-10 ${
-                    expanded ? "right-3 top-1/2 -translate-y-1/2" : "right-1.5 top-1.5"
+                    expanded
+                      ? "right-3 top-1/2 -translate-y-1/2"
+                      : "right-1.5 top-1.5"
                   }`}
                 >
                   <span className="sb-ping absolute inline-flex h-2.5 w-2.5 rounded-full bg-red-400" />
@@ -244,7 +385,7 @@ export const AdminSidebar = () => {
           {expanded && (
             <div className="flex items-center gap-2 min-w-0">
               <span className="sb-logo-badge grid place-items-center w-9 h-9 rounded-xl bg-gradient-to-br from-[#2f6b8a] to-[#38b2ac] shadow-md shadow-[#2f6b8a]/30">
-                <Activity  size={18} className="text-white" />
+                <Activity size={18} className="text-white" />
               </span>
               <h2 className="sb-brand font-bold text-xl tracking-wide whitespace-nowrap">
                 Ishraq HR
@@ -259,21 +400,25 @@ export const AdminSidebar = () => {
             className="p-2 rounded-full text-white bg-gradient-to-br from-[#2f6b8a] to-[#4aa3c0]
               shadow-md hover:shadow-lg hover:scale-110 active:scale-95 transition-all duration-200"
           >
-            {expanded ? <ChevronsLeft size={14} /> : <ChevronsRight size={14} />}
+            {expanded ? (
+              <ChevronsLeft size={14} />
+            ) : (
+              <ChevronsRight size={14} />
+            )}
           </button>
         </div>
 
-       
-
         {/* Main Menu */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden px-2 pt-2">
+        <div className="flex-1 overflow-y-auto common-scrollbar overflow-x-hidden px-2 pt-2">
           <ul className="space-y-1">{filteredItems.map(renderItem)}</ul>
 
-          {filteredItems.length === 0 && filteredBottomItems.length === 0 && expanded && (
-            <p className="px-3 py-6 text-center text-sm text-gray-400">
-              No menu items match "{search}"
-            </p>
-          )}
+          {filteredItems.length === 0 &&
+            filteredBottomItems.length === 0 &&
+            expanded && (
+              <p className="px-3 py-6 text-center text-sm text-gray-400">
+                No menu items match "{search}"
+              </p>
+            )}
         </div>
 
         {/* Bottom Menu */}
@@ -283,8 +428,6 @@ export const AdminSidebar = () => {
               renderItem(item, filteredItems.length + i),
             )}
           </ul>
-
-        
         </div>
       </nav>
     </aside>

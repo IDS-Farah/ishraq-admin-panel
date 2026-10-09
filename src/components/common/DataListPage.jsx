@@ -572,7 +572,7 @@ const DataListPage = ({
       {/* TABLE */}
       <div
         className={`common-scrollbar mt-4 overflow-auto rounded-lg border border-[#cbe1f4] ${
-          hasStats ? "h-[45vh]" : "h-[63vh]"
+          hasStats ? "h-[45vh]" : "h-[62vh]"
         }`}
       >
         <table className="w-full border-collapse text-[15px]">
