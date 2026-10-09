@@ -135,10 +135,10 @@ const JobApplicantsList = () => {
       rows={users}
       searchPlaceholder="Search by email, name or mobile"
       searchKeys={["fullName", "email", "mobile"]}
-      statuses={[
-        { value: "Active", tone: "success" },
-        { value: "Inactive", tone: "danger" },
-      ]}
+      // statuses={[
+      //   { value: "Active", tone: "success" },
+      //   { value: "Inactive", tone: "danger" },
+      // ]}
       activeValue="Active"
       inactiveValue="Inactive"
       categoryLabel="Job Category"

@@ -16,6 +16,8 @@ import {
   ShieldAlert,
   UserRoundCheck,
   UserRoundX,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react";
 
 /* ------------------------------ TONES ----------------------------- */
@@ -458,7 +460,7 @@ const DataListPage = ({
               onClick={() => onView(row)}
               gradient="from-[#168fa1] to-[#35b8c4]"
             >
-              <Eye size={14} strokeWidth={2.2} />
+              <ChevronsRight size={14} strokeWidth={2.2} />
             </ActionButton>
           )}
           {onEdit && (
