@@ -8,6 +8,7 @@
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.20.0",
+    "dayjs": "^1.11.23",
     "install": "^0.13.0",
     "lucide-react": "^1.47.0",
     "npm": "^12.2.0",

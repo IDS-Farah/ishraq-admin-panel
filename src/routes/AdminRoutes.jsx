@@ -34,10 +34,13 @@ import JobRequirementCreate from "../pages/admin/JobRequirement/Jobrequirementcr
 import JobApplicantsList from "../pages/admin/JobRequirement/JobApplicantsList";
 
 // master data imports
-
 import ComplaintCategoryList from "../pages/admin/MasterData/ComplaintCategoryList";
 import MasterDataList from "../pages/admin/MasterData/MasterDataList";
 import MasterDataForm from "../pages/admin/MasterData/MasterDataForm";
+
+// admin enquiry imports 
+import EnquiryListPage from "../pages/admin/EnquiryListPage"
+import EnquiryDetails from "../components/form/EnquiryDetails"
 
 const AdminRoutes = (
   <Route element={<ProtectedRoute allowedRole="admin" />}>
@@ -103,7 +106,6 @@ const AdminRoutes = (
         path="master-data/complaint-category"
         element={<ComplaintCategoryList />}
       />
-
       <Route path="settings/master/:masterKey" element={<MasterDataList />} />
       <Route
         path="settings/master/:masterKey/add"
@@ -117,21 +119,40 @@ const AdminRoutes = (
         path="settings/master/:masterKey/:id/view"
         element={<MasterDataForm mode="view" />}
       />
-      {/* <Route
-        path="master-data/institute-type"
-        element={<InstituteTypeList />}
-      />
-      <Route path="master-data/job-category" element={<JobCategoryList />} />
-      <Route path="master-data/job-role" element={<JobRoleList />} />
-      <Route path="master-data/state" element={<StateList />} />
-      <Route path="master-data/city" element={<CityList />} />
+      {/* Admin Enquiry routes  */}
+      
       <Route
-        path="master-data/employment-preference"
-        element={<EmploymentPreferenceList />}
+        path="complaints"
+        element={<EnquiryListPage formType="complaint" />}
       />
-      <Route path="master-data/user-type" element={<UserTypeList />} />
-    
-      <Route path="master-data/job-status" element={<JobStatusList />} /> */}
+      <Route
+        path="complaints/:id"
+        element={<EnquiryDetails formType="complaint" />}
+      />
+      <Route
+        path="career"
+        element={<EnquiryListPage formType="career" />}
+      />
+      <Route
+        path="career/:id"
+        element={<EnquiryDetails formType="career" />}
+      />
+      <Route
+        path="contact"
+        element={<EnquiryListPage formType="contact" />}
+      />
+      <Route
+        path="contact/:id"
+        element={<EnquiryDetails formType="contact" />}
+      />
+      <Route
+        path="feedback"
+        element={<EnquiryListPage formType="feedback" />}
+      />
+      <Route
+        path="feedback/:id"
+        element={<EnquiryDetails formType="feedback" />}
+      />
     </Route>
   </Route>
 );

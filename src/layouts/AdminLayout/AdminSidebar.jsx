@@ -121,19 +121,19 @@ export const AdminSidebar = () => {
     {
       text: "Ask Expert Enquiry",
       icon: ClipboardList,
-      link: "/admin/simple-enquiry",
+      link: "/admin/career",
       tile: "from-cyan-400 to-sky-500",
     },
     {
       text: "Contact Us Enquiry",
       icon: MessageCircleQuestion,
-      link: "/admin/general-enquiry",
+      link: "/admin/contact",
       tile: "from-fuchsia-400 to-purple-500",
     },
     {
       text: "Complaints",
       icon: ShieldAlert,
-      link: "/admin/complaint-list",
+      link: "/admin/complaints",
       tile: "from-rose-400 to-red-500",
       // alert: true,
     },
@@ -202,7 +202,7 @@ export const AdminSidebar = () => {
     {
       text: "Feedback",
       icon: MessagesSquare,
-      link: "/admin/feedback-list",
+      link: "/admin/feedback",
       tile: "from-pink-400 to-rose-500",
     },
   ];
