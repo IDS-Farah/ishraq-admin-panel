@@ -1,4 +1,3 @@
-
 import complaintCategoryApi from "../api/Services/complaintCategoryApi";
 import employmentTypeApi from "../api/Services/employmentTypeApi";
 import instituteTypeApi from "../api/Services/instituteTypeApi";
@@ -6,6 +5,9 @@ import jobRoleApi from "../api/Services/jobRoleApi";
 import jobCategoryApi from "../api/Services/jobCategoryApi";
 import jobStatusApi from "../api/Services/jobStatusApi";
 import userTypeApi from "../api/Services/userTypeApi";
+import countryMasterApi from "../api/Services/countryMasterApi";
+import stateMasterApi from "../api/Services/stateMasterApi";
+import cityMasterApi from "../api/Services/cityMasterApi";
 
 const masterConfig = {
   complaintCategory: {
@@ -62,53 +64,51 @@ const masterConfig = {
     ],
   },
 
+  jobRole: {
+    title: "Job Roles",
+    singular: "Job Role",
+    api: jobRoleApi,
+    idField: "jR_job_role_id",
+    nameField: "jR_name",
+    activeField: "jR_is_active",
+    createdAtField: "jR_created_at",
+    updatedAtField: "jR_updated_at",
+    createdByField: "jR_created_by",
+    updatedByField: "jR_updated_by",
 
-jobRole: {
-  title: "Job Roles",
-  singular: "Job Role",
-  api: jobRoleApi,
-  idField: "jR_job_role_id",
-  nameField: "jR_name",
-  activeField: "jR_is_active",
-  createdAtField: "jR_created_at",
-  updatedAtField: "jR_updated_at",
-  createdByField: "jR_created_by",
-  updatedByField: "jR_updated_by",
+    formType: "jobRole",
+    instituteTypeField: "jR_institute_type_id",
 
-  formType: "jobRole",
-  instituteTypeField: "jR_institute_type_id",
+    columns: [
+      { key: "jR_name", label: "Job Role", sortable: true },
+      { key: "jR_created_at", label: "Created At", sortable: true },
+      { key: "jR_updated_at", label: "Updated At" },
+    ],
+  },
 
-  columns: [
-    { key: "jR_name", label: "Job Role", sortable: true },
-    { key: "jR_created_at", label: "Created At", sortable: true },
-    { key: "jR_updated_at", label: "Updated At" },
-  ],
-},
+  jobCategory: {
+    title: "Job Categories",
+    singular: "Job Category",
+    api: jobCategoryApi,
+    idField: "jC_job_category_id",
+    nameField: "jC_name",
+    activeField: "jC_is_active",
+    createdAtField: "jC_created_at",
+    updatedAtField: "jC_updated_at",
+    createdByField: "jC_created_by",
+    updatedByField: "jC_updated_by",
 
-jobCategory: {
-  title: "Job Categories",
-  singular: "Job Category",
-  api: jobCategoryApi,
-  idField: "jC_job_category_id",
-  nameField: "jC_name",
-  activeField: "jC_is_active",
-  createdAtField: "jC_created_at",
-  updatedAtField: "jC_updated_at",
-  createdByField: "jC_created_by",
-  updatedByField: "jC_updated_by",
+    formType: "jobCategory",
+    jobRoleField: "jC_job_role_id",
+    responsibilityField: "jC_job_responsibility",
 
-  formType: "jobCategory",
-  jobRoleField: "jC_job_role_id",
-  responsibilityField: "jC_job_responsibility",
-
-  columns: [
-    { key: "jC_name", label: "Job Category", sortable: true },
-    { key: "jC_job_responsibility", label: "Job Responsibility" },
-    { key: "jC_created_at", label: "Created At", sortable: true },
-    { key: "jC_updated_at", label: "Updated At" },
-  ],
-},
-
+    columns: [
+      { key: "jC_name", label: "Job Category", sortable: true },
+      { key: "jC_job_responsibility", label: "Job Responsibility" },
+      { key: "jC_created_at", label: "Created At", sortable: true },
+      { key: "jC_updated_at", label: "Updated At" },
+    ],
+  },
 
   jobStatus: {
     title: "Job Statuses",
@@ -143,6 +143,119 @@ jobCategory: {
       { key: "uT_name", label: "User Type", sortable: true },
       { key: "uT_created_at", label: "Created At", sortable: true },
       { key: "uT_updated_at", label: "Updated At" },
+    ],
+  },
+
+  countryMaster: {
+    title: "Countries",
+    singular: "Country",
+    api: countryMasterApi,
+
+    idField: "CM_Id",
+    nameField: "CM_CountryName",
+    activeField: "CM_IsActive",
+    createdAtField: "CM_CreatedAt",
+    updatedAtField: "CM_UpdatedAt",
+    createdByField: "CM_CreatedBy",
+    updatedByField: "CM_UpdatedBy",
+
+    columns: [
+      {
+        key: "CM_CountryName",
+        label: "Country Name",
+        sortable: true,
+      },
+      {
+        key: "CM_CreatedAt",
+        label: "Created At",
+        sortable: true,
+      },
+      {
+        key: "CM_UpdatedAt",
+        label: "Updated At",
+      },
+    ],
+  },
+
+  stateMaster: {
+    title: "States",
+    singular: "State",
+    api: stateMasterApi,
+
+    idField: "SM_Id",
+    nameField: "SM_StateName",
+    activeField: "SM_IsActive",
+    createdAtField: "SM_CreatedAt",
+    updatedAtField: "SM_UpdatedAt",
+    createdByField: "SM_CreatedBy",
+    updatedByField: "SM_UpdatedBy",
+
+    formType: "stateMaster",
+    countryField: "SM_CountryId",
+
+    columns: [
+      {
+        key: "SM_StateName",
+        label: "State Name",
+        sortable: true,
+      },
+      {
+        key: "CountryName",
+        label: "Country",
+        sortable: true,
+      },
+      {
+        key: "SM_CreatedAt",
+        label: "Created At",
+        sortable: true,
+      },
+      {
+        key: "SM_UpdatedAt",
+        label: "Updated At",
+      },
+    ],
+  },
+
+  cityMaster: {
+    title: "Cities",
+    singular: "City",
+    api: cityMasterApi,
+
+    idField: "CTM_Id",
+    nameField: "CTM_CityName",
+    activeField: "CTM_IsActive",
+    createdAtField: "CTM_CreatedAt",
+    updatedAtField: "CTM_UpdatedAt",
+    createdByField: "CTM_CreatedBy",
+    updatedByField: "CTM_UpdatedBy",
+
+    formType: "cityMaster",
+    stateField: "CTM_StateId",
+
+    columns: [
+      {
+        key: "CTM_CityName",
+        label: "City Name",
+        sortable: true,
+      },
+      {
+        key: "StateName",
+        label: "State",
+        sortable: true,
+      },
+      {
+        key: "CTM_PostalCode",
+        label: "Postal Code",
+      },
+      {
+        key: "CTM_CreatedAt",
+        label: "Created At",
+        sortable: true,
+      },
+      {
+        key: "CTM_UpdatedAt",
+        label: "Updated At",
+      },
     ],
   },
 };
