@@ -147,7 +147,7 @@ const EnquiryListPage = ({ formType }) => {
         columns={columns}
         rowTitle={(row) => row[cfg.titleField] || "Record"}
         onView={(row) => navigate(`${cfg.detailPath}/${row.id}`)}
-        onToggleStatus={cfg.canToggle ? handleToggle : undefined}
+        onToggleStatus={undefined}
         exportConfig={{
           fileName: cfg.exportFileName,
           sheetName: cfg.title,
