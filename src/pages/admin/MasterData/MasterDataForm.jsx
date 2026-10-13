@@ -14,13 +14,38 @@ const selectClass =
 const inputClass =
   "w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#2f6b8a] focus:ring-2 focus:ring-[#2f6b8a]/10 disabled:bg-slate-50 disabled:text-slate-500";
 
-const formatDate = (value) => {
-  if (!value || value.startsWith?.("0001-01-01")) return "";
+/* --------------------------- DATE HELPERS ------------------------- */
 
-  return new Date(value).toLocaleString("en-IN", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
+/**
+ * Format a date value into dd-mm-yyyy HH:mm.
+ * Empty / invalid / .NET default (0001-01-01) → "".
+ */
+const formatDate = (value) => {
+  if (value === null || value === undefined || value === "") return "";
+
+  const s = String(value).trim();
+
+  // .NET default / unset date
+  if (s.startsWith("0001-01-01")) return "";
+
+  let d;
+  const plain = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+  if (plain) {
+    // Treat plain "yyyy-mm-dd" as local date (avoid UTC shift)
+    d = new Date(Number(plain[1]), Number(plain[2]) - 1, Number(plain[3]));
+  } else {
+    d = value instanceof Date ? value : new Date(s);
+  }
+
+  if (Number.isNaN(d.getTime())) return "";
+
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yyyy = d.getFullYear();
+  const hh = String(d.getHours()).padStart(2, "0");
+  const mi = String(d.getMinutes()).padStart(2, "0");
+
+  return `${dd}-${mm}-${yyyy} ${hh}:${mi}`;
 };
 
 // Supports Axios responses and ApiResponseDto<T> responses.

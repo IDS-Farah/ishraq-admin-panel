@@ -5,13 +5,39 @@ import DataListPage from "../../../components/common/DataListPage";
 import masterConfig from "../../../config/masterConfig";
 import { getApiErrorMessage } from "../../../api/utils/apiHelpers";
 
-const formatDate = (value) => {
-  if (!value) return "-";
+/* --------------------------- DATE HELPERS ------------------------- */
 
-  const date = new Date(value);
+/**
+ * Format any date value into dd-mm-yyyy.
+ * Accepts: Date | number (epoch) | ISO string | "yyyy-mm-dd" | null/undefined.
+ * Returns "-" for invalid/missing values.
+ */
+const formatDate = (value, fallback = "-") => {
+  if (value === null || value === undefined || value === "") return fallback;
 
-  return Number.isNaN(date.getTime()) ? "-" : date.toLocaleDateString("en-GB");
+  let date;
+  if (value instanceof Date) {
+    date = value;
+  } else if (typeof value === "number") {
+    date = new Date(value);
+  } else {
+    const s = String(value).trim();
+    // Treat plain "yyyy-mm-dd" as local date (avoid UTC shift)
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
+    date = m
+      ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
+      : new Date(s);
+  }
+
+  if (Number.isNaN(date.getTime())) return fallback;
+
+  const dd = String(date.getDate()).padStart(2, "0");
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const yyyy = date.getFullYear();
+  return `${dd}-${mm}-${yyyy}`;
 };
+
+/* --------------------------- NORMALIZE ---------------------------- */
 
 const normalizeRows = (records, config) =>
   records.map((record) => ({
@@ -153,7 +179,7 @@ export default function MasterDataList() {
         column.key === config.createdAtField ||
         column.key === config.updatedAtField
       ) {
-        return formatDate(value);
+        return formatDate(value); // → dd-mm-yyyy
       }
 
       return value || "-";
@@ -168,8 +194,8 @@ export default function MasterDataList() {
       "Sr. No.": index + 1,
       Status: row.status,
       Name: row.name,
-      "Created At": formatDate(row[config.createdAtField]),
-      "Updated At": formatDate(row[config.updatedAtField]),
+      "Created At": formatDate(row[config.createdAtField]), // dd-mm-yyyy
+      "Updated At": formatDate(row[config.updatedAtField]), // dd-mm-yyyy
     }),
   };
 
