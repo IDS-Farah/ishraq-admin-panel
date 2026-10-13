@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 import * as XLSX from "xlsx";
 import {
   ChevronDown,
@@ -19,6 +20,8 @@ import {
   ChevronsLeft,
   ChevronsRight,
 } from "lucide-react";
+
+const DEFAULT_PAGE_SIZES = [10, 25, 50, 100];
 
 /* ------------------------------ TONES ----------------------------- */
 
@@ -107,7 +110,9 @@ const StatusSwitch = ({ label, active, onClick }) => (
     role="switch"
     aria-checked={active}
     aria-label={active ? `Deactivate ${label}` : `Activate ${label}`}
-    title={active ? "Active. Click to deactivate" : "Not active. Click to activate"}
+    title={
+      active ? "Active. Click to deactivate" : "Not active. Click to activate"
+    }
     onClick={onClick}
     className={`relative h-6 w-[42px] shrink-0 cursor-pointer rounded-full p-0.5 shadow-inner transition-colors duration-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2c6b8a] focus-visible:ring-offset-2 ${
       active
@@ -121,7 +126,11 @@ const StatusSwitch = ({ label, active, onClick }) => (
       }`}
     >
       {active ? (
-        <UserRoundCheck size={13} strokeWidth={2.7} className="text-emerald-700" />
+        <UserRoundCheck
+          size={13}
+          strokeWidth={2.7}
+          className="text-emerald-700"
+        />
       ) : (
         <UserRoundX size={13} strokeWidth={2.7} className="text-rose-700" />
       )}
@@ -153,7 +162,15 @@ const Select = ({ label, value, onChange, options }) => (
 
 /* ------------------------- CONFIRM DIALOG ------------------------- */
 
-const StatusConfirmDialog = ({ label, next, tone, entityName, busy, onCancel, onConfirm }) => {
+const StatusConfirmDialog = ({
+  label,
+  next,
+  tone,
+  entityName,
+  busy,
+  onCancel,
+  onConfirm,
+}) => {
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -199,14 +216,20 @@ const StatusConfirmDialog = ({ label, next, tone, entityName, busy, onCancel, on
               <Icon size={22} />
             </span>
           </div>
-          <h2 id="list-dialog-title" className="text-[18px] font-bold text-[#1e2b36]">
+          <h2
+            id="list-dialog-title"
+            className="text-[18px] font-bold text-[#1e2b36]"
+          >
             Set {entityName.toLowerCase()} to {next}?
           </h2>
           <p className="mx-auto mt-1.5 max-w-[320px] text-[13.5px] leading-relaxed text-[#6b7a88]">
-            This {entityName.toLowerCase()} will be marked as {next.toLowerCase()}.
+            This {entityName.toLowerCase()} will be marked as{" "}
+            {next.toLowerCase()}.
           </p>
           <div className="mt-4 rounded-xl border border-[#e2e8ee] bg-[#f9fbfc] p-3 text-left">
-            <p className="truncate text-[14px] font-semibold text-[#1e2b36]">{label}</p>
+            <p className="truncate text-[14px] font-semibold text-[#1e2b36]">
+              {label}
+            </p>
           </div>
         </div>
 
@@ -286,8 +309,9 @@ const DataListPage = ({
   onEdit,
   onToggleStatus, // async (row, nextStatus) => {}
 
-  pageSizes = [10, 25, 50, 100],
+  pageSizes = DEFAULT_PAGE_SIZES,
 }) => {
+  const location = useLocation();
   const serverMode = typeof onQueryChange === "function";
   const hasStatus = Array.isArray(statuses) && statuses.length > 0;
   const hasCategory = Array.isArray(categories) && categories.length > 0;
@@ -302,9 +326,21 @@ const DataListPage = ({
     page: 1,
     pageSize: pageSizes[0],
   });
+
   const [confirm, setConfirm] = useState(null); // { row, next }
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState(null);
+
+  useEffect(() => {
+    setQuery({
+      search: "",
+      status: "All",
+      category: "All",
+      sort: { key: null, dir: null },
+      page: 1,
+      pageSize: pageSizes[0],
+    });
+  }, [location.pathname, pageSizes]);
 
   /* query helpers */
   const patchFilter = (patch) => setQuery((q) => ({ ...q, page: 1, ...patch }));
@@ -321,10 +357,18 @@ const DataListPage = ({
             : { key: null, dir: null },
     }));
   const resetFilters = () =>
-    setQuery((q) => ({ ...q, search: "", status: "All", category: "All", page: 1 }));
+    setQuery((q) => ({
+      ...q,
+      search: "",
+      status: "All",
+      category: "All",
+      page: 1,
+    }));
 
   const isFiltered =
-    query.search.trim() !== "" || query.status !== "All" || query.category !== "All";
+    query.search.trim() !== "" ||
+    query.status !== "All" ||
+    query.category !== "All";
 
   /* server mode: notify parent on every query change */
   useEffect(() => {
@@ -340,9 +384,27 @@ const DataListPage = ({
     const keys = searchKeys ?? columns.map((c) => c.key).filter(Boolean);
 
     let out = rows.filter((r) => {
-      if (q && !keys.some((k) => String(r[k] ?? "").toLowerCase().includes(q))) return false;
-      if (hasStatus && query.status !== "All" && r[statusField] !== query.status) return false;
-      if (hasCategory && query.category !== "All" && r[categoryField] !== query.category) return false;
+      if (
+        q &&
+        !keys.some((k) =>
+          String(r[k] ?? "")
+            .toLowerCase()
+            .includes(q),
+        )
+      )
+        return false;
+      if (
+        hasStatus &&
+        query.status !== "All" &&
+        r[statusField] !== query.status
+      )
+        return false;
+      if (
+        hasCategory &&
+        query.category !== "All" &&
+        r[categoryField] !== query.category
+      )
+        return false;
       return true;
     });
 
@@ -378,7 +440,9 @@ const DataListPage = ({
   const totalPages = Math.max(1, Math.ceil(count / query.pageSize));
   const currentPage = Math.min(query.page, totalPages);
   const start = (currentPage - 1) * query.pageSize;
-  const pageRows = serverMode ? rows : localRows.slice(start, start + query.pageSize);
+  const pageRows = serverMode
+    ? rows
+    : localRows.slice(start, start + query.pageSize);
 
   const pageNumbers = useMemo(() => {
     const win = 5;
@@ -416,7 +480,11 @@ const DataListPage = ({
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, exportConfig.sheetName ?? "Sheet1");
     XLSX.writeFile(wb, exportConfig.fileName ?? "export.xlsx");
-    setToast({ id: Date.now(), tone: "ok", msg: `Exported ${data.length} records` });
+    setToast({
+      id: Date.now(),
+      tone: "ok",
+      msg: `Exported ${data.length} records`,
+    });
   };
 
   /* status toggle */
@@ -437,7 +505,11 @@ const DataListPage = ({
         msg: `${rowTitle(row)} is now ${next.toLowerCase()}`,
       });
     } catch (err) {
-      setToast({ id: Date.now(), tone: "err", msg: err?.message || "Could not update status" });
+      setToast({
+        id: Date.now(),
+        tone: "err",
+        msg: err?.message || "Could not update status",
+      });
     } finally {
       setBusy(false);
       setConfirm(null);
@@ -446,11 +518,13 @@ const DataListPage = ({
 
   const pageBtn =
     "grid h-8 min-w-8 cursor-pointer place-items-center rounded-lg px-2.5 text-[12.5px] font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2c6b8a]";
-  const td = "border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900";
+  const td =
+    "border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900";
 
   const renderCell = (col, row, index) => {
     if (col.sr) return start + index + 1;
-    if (col.status) return <StatusBadge value={row[statusField]} statuses={statuses} />;
+    if (col.status)
+      return <StatusBadge value={row[statusField]} statuses={statuses} />;
     if (col.actions)
       return (
         <div className="flex items-center gap-2">
@@ -561,7 +635,11 @@ const DataListPage = ({
               onClick={onAdd}
               className="group inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#16834f] to-[#2fb877] px-3 text-[15px] font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#16834f] focus-visible:ring-offset-2"
             >
-              <Plus size={15} strokeWidth={2.2} className="transition-transform group-hover:scale-110" />
+              <Plus
+                size={15}
+                strokeWidth={2.2}
+                className="transition-transform group-hover:scale-110"
+              />
               <span className="hidden sm:inline">{addLabel}</span>
             </button>
           )}
@@ -604,11 +682,19 @@ const DataListPage = ({
                         <span className="flex flex-col leading-none">
                           <ChevronUp
                             size={10}
-                            className={active && query.sort.dir === "asc" ? "opacity-100" : "opacity-40"}
+                            className={
+                              active && query.sort.dir === "asc"
+                                ? "opacity-100"
+                                : "opacity-40"
+                            }
                           />
                           <ChevronDown
                             size={10}
-                            className={active && query.sort.dir === "desc" ? "opacity-100" : "opacity-40"}
+                            className={
+                              active && query.sort.dir === "desc"
+                                ? "opacity-100"
+                                : "opacity-40"
+                            }
                           />
                         </span>
                       </button>
@@ -624,18 +710,26 @@ const DataListPage = ({
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan={headCols.length} className="px-4 py-12 text-center text-[15px] text-[#6b7a88]">
+                <td
+                  colSpan={headCols.length}
+                  className="px-4 py-12 text-center text-[15px] text-[#6b7a88]"
+                >
                   Loading...
                 </td>
               </tr>
             ) : pageRows.length === 0 ? (
               <tr>
-                <td colSpan={headCols.length} className="border-t border-[#e2e8ee] px-4 py-12 text-center">
+                <td
+                  colSpan={headCols.length}
+                  className="border-t border-[#e2e8ee] px-4 py-12 text-center"
+                >
                   <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#e8f1f6] text-[#2c6b8a]">
                     <Inbox size={22} />
                   </div>
                   <p className="mt-3 text-[15px] text-[#1e2b36]">
-                    {isFiltered ? "No records match these filters" : `No ${title.toLowerCase()} yet`}
+                    {isFiltered
+                      ? "No records match these filters"
+                      : `No ${title.toLowerCase()} yet`}
                   </p>
                   {isFiltered && (
                     <button
@@ -658,9 +752,24 @@ const DataListPage = ({
                   {headCols.map((col) => (
                     <td
                       key={col.label}
-                      className={`${td} ${col.sr ? "tabular-nums" : ""} ${col.actions ? "" : "whitespace-nowrap"}`}
+                      className={`${td} ${col.sr ? "tabular-nums" : ""} ${
+                        col.actions ? "" : "whitespace-nowrap"
+                      }`}
                     >
-                      {renderCell(col, row, index)}
+                      <div
+                        className={`max-w-[200px] min-w-0 ${
+                          col.actions
+                            ? "inline-flex items-center gap-2"
+                            : "truncate"
+                        }`}
+                        title={
+                          !col.sr && !col.status && !col.actions
+                            ? String(row[col.key] ?? "")
+                            : undefined
+                        }
+                      >
+                        {renderCell(col, row, index)}
+                      </div>
                     </td>
                   ))}
                 </tr>
@@ -675,17 +784,27 @@ const DataListPage = ({
         <div className="flex flex-wrap items-center gap-3.5 text-[12.5px] text-[#60738a]">
           <span>
             Showing{" "}
-            <strong className="font-semibold text-[#53677f]">{count ? start + 1 : 0}</strong> to{" "}
+            <strong className="font-semibold text-[#53677f]">
+              {count ? start + 1 : 0}
+            </strong>{" "}
+            to{" "}
             <strong className="font-semibold text-[#53677f]">
               {Math.min(start + query.pageSize, count)}
             </strong>{" "}
-            of <strong className="font-semibold text-[#53677f]">{count}</strong> entries
+            of <strong className="font-semibold text-[#53677f]">{count}</strong>{" "}
+            entries
           </span>
           <label className="flex items-center gap-1.5">
             <span>Show:</span>
             <select
               value={query.pageSize}
-              onChange={(e) => setQuery((q) => ({ ...q, pageSize: Number(e.target.value), page: 1 }))}
+              onChange={(e) =>
+                setQuery((q) => ({
+                  ...q,
+                  pageSize: Number(e.target.value),
+                  page: 1,
+                }))
+              }
               className="h-8 cursor-pointer rounded-lg border border-[#dce3eb] bg-white px-2 text-[12.5px] text-[#34445a] hover:border-[#2c6b8a] focus:border-[#2c6b8a] focus:outline-none focus:ring-2 focus:ring-[#2c6b8a]/30"
             >
               {pageSizes.map((n) => (
@@ -697,7 +816,10 @@ const DataListPage = ({
           </label>
         </div>
 
-        <nav aria-label="Pagination" className="flex flex-wrap items-center gap-1">
+        <nav
+          aria-label="Pagination"
+          className="flex flex-wrap items-center gap-1"
+        >
           <button
             type="button"
             onClick={() => setPage(currentPage - 1)}
@@ -755,7 +877,11 @@ const DataListPage = ({
         >
           <span
             className={`grid h-5 w-5 place-items-center rounded-full ${
-              toast.tone === "ok" ? "bg-emerald-500" : toast.tone === "warn" ? "bg-amber-500" : "bg-rose-500"
+              toast.tone === "ok"
+                ? "bg-emerald-500"
+                : toast.tone === "warn"
+                  ? "bg-amber-500"
+                  : "bg-rose-500"
             }`}
           >
             <CheckIcon size={12} strokeWidth={3.4} />

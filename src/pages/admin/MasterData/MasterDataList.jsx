@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 
 import DataListPage from "../../../components/common/DataListPage";
 import masterConfig from "../../../config/masterConfig";
 import { getApiErrorMessage } from "../../../api/utils/apiHelpers";
+import dayjs from "dayjs";
 
 /* --------------------------- DATE HELPERS ------------------------- */
 
@@ -12,31 +13,22 @@ import { getApiErrorMessage } from "../../../api/utils/apiHelpers";
  * Accepts: Date | number (epoch) | ISO string | "yyyy-mm-dd" | null/undefined.
  * Returns "-" for invalid/missing values.
  */
-const formatDate = (value, fallback = "-") => {
-  if (value === null || value === undefined || value === "") return fallback;
 
-  let date;
-  if (value instanceof Date) {
-    date = value;
-  } else if (typeof value === "number") {
-    date = new Date(value);
-  } else {
-    const s = String(value).trim();
-    // Treat plain "yyyy-mm-dd" as local date (avoid UTC shift)
-    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
-    date = m
-      ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]))
-      : new Date(s);
+const formatDate = (value) => {
+  if (!value) return "-";
+
+  const dateString = String(value).trim();
+
+  if (dateString.startsWith("0001-01-01T00:00:00")) {
+    return "01-01-2001";
   }
 
-  if (Number.isNaN(date.getTime())) return fallback;
+  const date = dayjs(value);
 
-  const dd = String(date.getDate()).padStart(2, "0");
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const yyyy = date.getFullYear();
-  return `${dd}-${mm}-${yyyy}`;
+  if (!date.isValid()) return "-";
+
+  return date.format("DD-MM-YYYY");
 };
-
 /* --------------------------- NORMALIZE ---------------------------- */
 
 const normalizeRows = (records, config) =>
@@ -50,6 +42,7 @@ const normalizeRows = (records, config) =>
 export default function MasterDataList() {
   const { masterKey } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const config = masterConfig[masterKey];
 
@@ -113,10 +106,10 @@ export default function MasterDataList() {
     loadRows(initialQuery);
 
     return () => {
-      // Invalidate pending requests when switching master pages.
+      // Invalidate pending requests when navigating away.
       requestId.current += 1;
     };
-  }, [masterKey, config, loadRows]);
+  }, [masterKey, location.pathname, config, loadRows]);
 
   const handleQueryChange = useCallback(
     (query) => {

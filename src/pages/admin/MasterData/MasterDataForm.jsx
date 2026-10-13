@@ -45,7 +45,7 @@ const formatDate = (value) => {
   const hh = String(d.getHours()).padStart(2, "0");
   const mi = String(d.getMinutes()).padStart(2, "0");
 
-  return `${dd}-${mm}-${yyyy} ${hh}:${mi}`;
+  return `${dd}-${mm}-${yyyy}`;
 };
 
 // Supports Axios responses and ApiResponseDto<T> responses.
@@ -555,17 +555,7 @@ const MasterDataForm = ({ mode }) => {
 
           <form onSubmit={handleSubmit} className="p-4">
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                  Master Type
-                </label>
-                <input
-                  type="text"
-                  value={config.title}
-                  disabled
-                  className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-500"
-                />
-              </div>
+             
 
               {needsInstituteType && (
                 <div>
