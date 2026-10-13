@@ -5,6 +5,8 @@ import { useNavigate, useParams, useLocation } from "react-router-dom";
 import masterConfig from "../../../config/masterConfig";
 import instituteTypeApi from "../../../api/Services/instituteTypeApi";
 import jobRoleApi from "../../../api/Services/jobRoleApi";
+import countryMasterApi from "../../../api/Services/countryMasterApi";
+import stateMasterApi from "../../../api/Services/stateMasterApi";
 
 const selectClass =
   "w-full appearance-none rounded-lg border border-slate-300 bg-white px-3 py-2.5 pr-10 text-sm text-slate-700 outline-none transition focus:border-[#2f6b8a] focus:ring-2 focus:ring-[#2f6b8a]/10 disabled:bg-slate-50 disabled:text-slate-500";
@@ -96,6 +98,21 @@ const MasterDataForm = ({ mode }) => {
   const [jobRoleId, setJobRoleId] = useState("");
   const [responsibility, setResponsibility] = useState("");
 
+  const [countries, setCountries] = useState([]);
+  const [states, setStates] = useState([]);
+
+  const [countryId, setCountryId] = useState("");
+  const [stateId, setStateId] = useState("");
+
+  const [loadingCountries, setLoadingCountries] = useState(false);
+  const [loadingStates, setLoadingStates] = useState(false);
+
+  const isStateMaster = masterKey === "stateMaster";
+  const isCityMaster = masterKey === "cityMaster";
+
+  const needsCountry = isStateMaster || isCityMaster;
+  const [postalCode, setPostalCode] = useState("");
+
   const [audit, setAudit] = useState({
     createdAt: "",
     createdBy: "",
@@ -160,6 +177,9 @@ const MasterDataForm = ({ mode }) => {
       setJobRoleId("");
       setResponsibility("");
       setJobRoles([]);
+      setCountryId("");
+      setStateId("");
+      setPostalCode("");
 
       setAudit({
         createdAt: "",
@@ -198,6 +218,26 @@ const MasterDataForm = ({ mode }) => {
 
         setName(item[config.nameField] ?? "");
         setStatus(item[config.activeField] ? "Active" : "Inactive");
+
+        if (isStateMaster) {
+          setCountryId(String(item.sM_CountryId ?? ""));
+        }
+
+        if (isCityMaster) {
+          const savedStateId = String(item.ctM_StateId ?? "");
+
+          setStateId(savedStateId);
+
+          // Resolve the city's country from its saved state.
+          if (savedStateId) {
+            const stateResponse = await stateMasterApi.getById(savedStateId);
+            const stateRecord = extractRecord(stateResponse);
+
+            if (!cancelled) {
+              setCountryId(String(stateRecord?.sM_CountryId ?? ""));
+            }
+          }
+        }
 
         setAudit({
           createdAt: formatDate(item[config.createdAtField]),
@@ -242,41 +282,120 @@ const MasterDataForm = ({ mode }) => {
     return () => {
       cancelled = true;
     };
-  }, [config, id, isCreate, isJobRole, isJobCategory]);
+  }, [
+    config,
+    id,
+    isCreate,
+    isJobRole,
+    isJobCategory,
+    isStateMaster,
+    isCityMaster,
+  ]);
 
   // 3. Fetch Job Roles from the backend using the selected institute ID.
- useEffect(() => {
-  if (!isJobCategory || !instituteTypeId) {
-    setJobRoles([]);
-    return;
-  }
-
-  let cancelled = false;
-
-  const loadJobRoles = async () => {
-    try {
-      const response = await jobRoleApi.getByInstituteType(
-        Number(instituteTypeId)
-      );
-
-      if (!cancelled) {
-        setJobRoles(extractList(response));
-      }
-    } catch (err) {
-      if (!cancelled) {
-        console.error("Failed to load job roles:", err);
-        setJobRoles([]);
-        setError("Failed to load job roles.");
-      }
+  useEffect(() => {
+    if (!isJobCategory || !instituteTypeId) {
+      setJobRoles([]);
+      return;
     }
-  };
 
-  loadJobRoles();
+    let cancelled = false;
 
-  return () => {
-    cancelled = true;
-  };
-}, [instituteTypeId, isJobCategory]);
+    const loadJobRoles = async () => {
+      try {
+        const response = await jobRoleApi.getByInstituteType(
+          Number(instituteTypeId),
+        );
+
+        if (!cancelled) {
+          setJobRoles(extractList(response));
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Failed to load job roles:", err);
+          setJobRoles([]);
+          setError("Failed to load job roles.");
+        }
+      }
+    };
+
+    loadJobRoles();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [instituteTypeId, isJobCategory]);
+
+  // Load countries for State and City forms.
+  useEffect(() => {
+    if (!needsCountry) return;
+
+    let cancelled = false;
+
+    const loadCountries = async () => {
+      setLoadingCountries(true);
+
+      try {
+        const response = await countryMasterApi.getAllList();
+        const result = extractList(response);
+
+        if (!cancelled) {
+          setCountries(result);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Failed to load countries:", err);
+          setError("Failed to load countries.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingCountries(false);
+        }
+      }
+    };
+
+    loadCountries();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [needsCountry]);
+
+  // Load states for the City form.
+  useEffect(() => {
+    if (!isCityMaster) return;
+
+    let cancelled = false;
+
+    const loadStates = async () => {
+      setLoadingStates(true);
+
+      try {
+        const response = await stateMasterApi.getAllList();
+        const result = extractList(response);
+
+        if (!cancelled) {
+          setStates(result);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Failed to load states:", err);
+          setStates([]);
+          setError("Failed to load states.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadingStates(false);
+        }
+      }
+    };
+
+    loadStates();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isCityMaster]);
 
   if (!config) {
     return (
@@ -316,6 +435,21 @@ const MasterDataForm = ({ mode }) => {
       return;
     }
 
+    if (isStateMaster && !countryId) {
+      setError("Please select a country.");
+      return;
+    }
+
+    if (isCityMaster && !countryId) {
+      setError("Please select a country.");
+      return;
+    }
+
+    if (isCityMaster && !stateId) {
+      setError("Please select a state.");
+      return;
+    }
+
     const payload = {
       [config.nameField]: trimmed,
       [config.activeField]: status === "Active",
@@ -328,6 +462,17 @@ const MasterDataForm = ({ mode }) => {
     if (isJobCategory) {
       payload.JC_job_role_id = Number(jobRoleId);
       payload.JC_job_responsibility = responsibility.trim() || null;
+    }
+
+    if (isStateMaster) {
+      payload.SM_CountryId = Number(countryId);
+    }
+
+    if (isCityMaster) {
+      payload.CTM_StateId = Number(stateId);
+    }
+    if (isCityMaster) {
+      payload.CTM_PostalCode = postalCode.trim() || null;
     }
 
     setSaving(true);
@@ -491,6 +636,109 @@ const MasterDataForm = ({ mode }) => {
                     disabled={disabled}
                     rows={3}
                     placeholder="Enter job responsibility"
+                    className={inputClass}
+                  />
+                </div>
+              )}
+
+              {/* Country dropdown for State and City masters */}
+              {needsCountry && (
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Country {!isView && <span className="text-red-500">*</span>}
+                  </label>
+
+                  <div className="relative">
+                    <select
+                      value={countryId}
+                      onChange={(event) => {
+                        setCountryId(event.target.value);
+                        setStateId("");
+                        setError("");
+                      }}
+                      disabled={disabled || loadingCountries}
+                      required={!isView}
+                      className={selectClass}
+                    >
+                      <option value="">
+                        {loadingCountries
+                          ? "Loading countries..."
+                          : "Select Country"}
+                      </option>
+
+                      {countries.map((country) => (
+                        <option
+                          key={country.cM_Id}
+                          value={String(country.cM_Id)}
+                        >
+                          {country.cM_CountryName}
+                        </option>
+                      ))}
+                    </select>
+
+                    <ChevronDown
+                      size={17}
+                      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* State dropdown for City master */}
+              {isCityMaster && (
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    State {!isView && <span className="text-red-500">*</span>}
+                  </label>
+
+                  <div className="relative">
+                    <select
+                      value={stateId}
+                      onChange={(event) => setStateId(event.target.value)}
+                      disabled={disabled || !countryId || loadingStates}
+                      required={!isView}
+                      className={selectClass}
+                    >
+                      <option value="">
+                        {!countryId
+                          ? "Select Country first"
+                          : loadingStates
+                            ? "Loading states..."
+                            : "Select State"}
+                      </option>
+
+                      {states
+                        .filter(
+                          (state) =>
+                            String(state.sM_CountryId) === String(countryId),
+                        )
+                        .map((state) => (
+                          <option key={state.sM_Id} value={String(state.sM_Id)}>
+                            {state.sM_StateName}
+                          </option>
+                        ))}
+                    </select>
+
+                    <ChevronDown
+                      size={17}
+                      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {isCityMaster && (
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Postal Code
+                  </label>
+
+                  <input
+                    type="text"
+                    value={postalCode}
+                    onChange={(event) => setPostalCode(event.target.value)}
+                    disabled={disabled}
+                    placeholder="Enter postal code"
                     className={inputClass}
                   />
                 </div>

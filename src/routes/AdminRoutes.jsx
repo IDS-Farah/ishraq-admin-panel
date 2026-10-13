@@ -23,7 +23,6 @@ import JobRequirementCreate from "../pages/admin/JobRequirement/Jobrequirementcr
 import JobApplicantsList from "../pages/admin/JobRequirement/JobApplicantsList";
 
 // master data imports
-import ComplaintCategoryList from "../pages/admin/MasterData/ComplaintCategoryList";
 import MasterDataList from "../pages/admin/MasterData/MasterDataList";
 import MasterDataForm from "../pages/admin/MasterData/MasterDataForm";
 
@@ -61,10 +60,6 @@ const AdminRoutes = (
       />
       <Route path="job-applicant/:jobId" element={<JobApplicantsList />} />
       {/* master data routes  */}
-      <Route
-        path="master-data/complaint-category"
-        element={<ComplaintCategoryList />}
-      />
       <Route path="settings/master/:masterKey" element={<MasterDataList />} />
       <Route
         path="settings/master/:masterKey/add"

@@ -151,29 +151,18 @@ const masterConfig = {
     singular: "Country",
     api: countryMasterApi,
 
-    idField: "CM_Id",
-    nameField: "CM_CountryName",
-    activeField: "CM_IsActive",
-    createdAtField: "CM_CreatedAt",
-    updatedAtField: "CM_UpdatedAt",
-    createdByField: "CM_CreatedBy",
-    updatedByField: "CM_UpdatedBy",
+    idField: "cM_Id",
+    nameField: "cM_CountryName",
+    activeField: "cM_IsActive",
+    createdAtField: "cM_CreatedAt",
+    updatedAtField: "cM_UpdatedAt",
+    createdByField: "cM_CreatedBy",
+    updatedByField: "cM_UpdatedBy",
 
     columns: [
-      {
-        key: "CM_CountryName",
-        label: "Country Name",
-        sortable: true,
-      },
-      {
-        key: "CM_CreatedAt",
-        label: "Created At",
-        sortable: true,
-      },
-      {
-        key: "CM_UpdatedAt",
-        label: "Updated At",
-      },
+      { key: "cM_CountryName", label: "Country Name", sortable: true },
+      { key: "cM_CreatedAt", label: "Created At", sortable: true },
+      { key: "cM_UpdatedAt", label: "Updated At" },
     ],
   },
 
@@ -182,37 +171,22 @@ const masterConfig = {
     singular: "State",
     api: stateMasterApi,
 
-    idField: "SM_Id",
-    nameField: "SM_StateName",
-    activeField: "SM_IsActive",
-    createdAtField: "SM_CreatedAt",
-    updatedAtField: "SM_UpdatedAt",
-    createdByField: "SM_CreatedBy",
-    updatedByField: "SM_UpdatedBy",
+    idField: "sM_Id",
+    nameField: "sM_StateName",
+    activeField: "sM_IsActive",
+    createdAtField: "sM_CreatedAt",
+    updatedAtField: "sM_UpdatedAt",
+    createdByField: "sM_CreatedBy",
+    updatedByField: "sM_UpdatedBy",
 
     formType: "stateMaster",
-    countryField: "SM_CountryId",
+    countryField: "sM_CountryId",
 
     columns: [
-      {
-        key: "SM_StateName",
-        label: "State Name",
-        sortable: true,
-      },
-      {
-        key: "CountryName",
-        label: "Country",
-        sortable: true,
-      },
-      {
-        key: "SM_CreatedAt",
-        label: "Created At",
-        sortable: true,
-      },
-      {
-        key: "SM_UpdatedAt",
-        label: "Updated At",
-      },
+      { key: "sM_StateName", label: "State Name", sortable: true },
+      { key: "countryName", label: "Country", sortable: true },
+      { key: "sM_CreatedAt", label: "Created At", sortable: true },
+      { key: "sM_UpdatedAt", label: "Updated At" },
     ],
   },
 
@@ -221,41 +195,23 @@ const masterConfig = {
     singular: "City",
     api: cityMasterApi,
 
-    idField: "CTM_Id",
-    nameField: "CTM_CityName",
-    activeField: "CTM_IsActive",
-    createdAtField: "CTM_CreatedAt",
-    updatedAtField: "CTM_UpdatedAt",
-    createdByField: "CTM_CreatedBy",
-    updatedByField: "CTM_UpdatedBy",
+    idField: "ctM_Id",
+    nameField: "ctM_CityName",
+    activeField: "ctM_IsActive",
+    createdAtField: "ctM_CreatedAt",
+    updatedAtField: "ctM_UpdatedAt",
+    createdByField: "ctM_CreatedBy",
+    updatedByField: "ctM_UpdatedBy",
 
     formType: "cityMaster",
-    stateField: "CTM_StateId",
+    stateField: "ctM_StateId",
 
     columns: [
-      {
-        key: "CTM_CityName",
-        label: "City Name",
-        sortable: true,
-      },
-      {
-        key: "StateName",
-        label: "State",
-        sortable: true,
-      },
-      {
-        key: "CTM_PostalCode",
-        label: "Postal Code",
-      },
-      {
-        key: "CTM_CreatedAt",
-        label: "Created At",
-        sortable: true,
-      },
-      {
-        key: "CTM_UpdatedAt",
-        label: "Updated At",
-      },
+      { key: "ctM_CityName", label: "City Name", sortable: true },
+      { key: "stateName", label: "State", sortable: true },
+      { key: "ctM_PostalCode", label: "Postal Code" },
+      { key: "ctM_CreatedAt", label: "Created At", sortable: true },
+      { key: "ctM_UpdatedAt", label: "Updated At" },
     ],
   },
 };

@@ -21,7 +21,7 @@ export const createMasterApi = (
     // Full list for dropdowns
     ...(supportsAll && {
       getAllList: (params = {}) =>
-        axiosInstance.get(`${baseUrl}`, { params }),
+        axiosInstance.get(`${baseUrl}/all`, { params }),
     }),
 
     // Single record

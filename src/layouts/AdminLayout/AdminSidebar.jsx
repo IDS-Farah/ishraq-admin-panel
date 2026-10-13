@@ -158,16 +158,21 @@ export const AdminSidebar = () => {
           link: "/admin/settings/master/jobRole",
           icon: BookUser,
         },
-        // {
-        //   text: "State",
-        //   link: "/admin/master-data/state",
-        //   icon: MapPin,
-        // },
-        // {
-        //   text: "City",
-        //   link: "/admin/master-data/city",
-        //   icon: MapPin,
-        // },
+        {
+          text: "Country",
+          link: "/admin/settings/master/countryMaster",
+          icon: MapPin,
+        },
+        {
+          text: "State",
+          link: "/admin/settings/master/stateMaster",
+          icon: MapPin,
+        },
+        {
+          text: "City",
+          link: "/admin/settings/master/cityMaster",
+          icon: MapPin,
+        },
         {
           text: "Employment Preference",
           link: "/admin/settings/master/employmentType",
