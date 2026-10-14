@@ -1,10 +1,11 @@
 import { useId, useState } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { loginApi } from "../../api/authApi";
 import "./Login.css";
 
 /* ------------------------------------------------------------------ */
-/*  Config                                                             */
+/* Role configuration                                                  */
 /* ------------------------------------------------------------------ */
 
 const ROLES = [
@@ -12,7 +13,8 @@ const ROLES = [
     key: "admin",
     label: "Admin",
     title: "Admin sign in",
-    blurb: "Review listings, approve employers and keep the portal healthy.",
+    blurb:
+      "Review listings, approve employers and keep the portal healthy.",
     placeholder: "admin@ishraqhr.com",
     redirect: "/admin/dashboard",
     registerUrl: null,
@@ -21,7 +23,8 @@ const ROLES = [
     key: "employer",
     label: "Employer",
     title: "Employer sign in",
-    blurb: "Post openings, shortlist candidates and track every hire.",
+    blurb:
+      "Post openings, shortlist candidates and track every hire.",
     placeholder: "employer@ishraqhr.com",
     redirect: "/employer/dashboard",
     registerUrl: "https://ishraqhr.com/employers/",
@@ -38,43 +41,52 @@ const ROLES = [
   },
 ];
 
-// Dummy login credentials (replace with your API later)
-const dummyUsers = [
-  {
-    id: 1,
-    username: "admin@ishraqhr.com",
-    password: "Admin@123",
-    name: "Admin",
-    role: "admin",
-  },
-  {
-    id: 2,
-    username: "jobseeker@ishraqhr.com",
-    password: "Job@123",
-    name: "Jobseeker",
-    role: "jobseeker",
-  },
-  {
-    id: 3,
-    username: "employer@ishraqhr.com",
-    password: "Employer@123",
-    name: "employer",
-    role: "employer",
-  },
-];
-
 /* ------------------------------------------------------------------ */
-/*  Heartbeat line (same shape as the reference image)                 */
+/* Dashboard routes                                                    */
+/* ------------------------------------------------------------------ */
+
+const DASHBOARD_ROUTES = {
+  admin: "/admin/dashboard",
+  employer: "/employer/dashboard",
+  jobseeker: "/jobseeker/dashboard",
+};
+
+/**
+ * Normalize roles returned by the backend.
+ * Supports Admin, Employer, JobSeeker, Job Seeker, and Job-Seeker.
+ */
+const normalizeRole = (role) => {
+  const normalized = String(role ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]/g, "");
+
+  if (normalized === "admin") return "admin";
+
+  // Employer accounts use the Recruiter role in the API.
+  if (normalized === "recruiter" || normalized === "employer") {
+    return "employer";
+  }
+
+  if (normalized === "jobseeker") return "jobseeker";
+
+  return null;
+};
+/* ------------------------------------------------------------------ */
+/* Heartbeat line                                                      */
 /* ------------------------------------------------------------------ */
 
 const PERIOD = 380;
 
 const buildPulsePath = (beats) => {
   let d = "M0 60";
+
   for (let i = 0; i < beats; i++) {
     const x = i * PERIOD + 40;
+
     d += ` H${x} l22 -4 l30 7 l16 -53 l16 76 l15 -26 l23 -6 l15 8 l15 -8 l16 6`;
   }
+
   return d + ` H${beats * PERIOD}`;
 };
 
@@ -90,15 +102,18 @@ const Pulse = ({ beats = 3, className = "" }) => {
       preserveAspectRatio="xMidYMid meet"
       aria-hidden="true"
     >
-      {/* faint ghost line that is always there */}
       <path className="pulse-ghost" d={d} />
-      {/* the line that draws itself */}
-      <path id={id} className="pulse-line" d={d} pathLength="1" />
+      <path
+        id={id}
+        className="pulse-line"
+        d={d}
+        pathLength="1"
+      />
 
-      {/* the dot that rides the line */}
       <g className="pulse-dot">
         <circle r="11" className="pulse-halo" />
         <circle r="5" className="pulse-core" />
+
         <animateMotion
           dur="6s"
           repeatCount="indefinite"
@@ -108,6 +123,7 @@ const Pulse = ({ beats = 3, className = "" }) => {
         >
           <mpath href={`#${id}`} />
         </animateMotion>
+
         <animate
           attributeName="opacity"
           dur="6s"
@@ -121,7 +137,7 @@ const Pulse = ({ beats = 3, className = "" }) => {
 };
 
 /* ------------------------------------------------------------------ */
-/*  Small inline icons                                                 */
+/* Inline icons                                                         */
 /* ------------------------------------------------------------------ */
 
 const IconUser = () => (
@@ -147,13 +163,17 @@ const IconEye = ({ off }) => (
 );
 
 const IconCheck = () => (
-  <svg viewBox="0 0 24 24" className="ico ico-check" aria-hidden="true">
+  <svg
+    viewBox="0 0 24 24"
+    className="ico ico-check"
+    aria-hidden="true"
+  >
     <path d="M5 12.5l4.5 4.5L19 7.5" />
   </svg>
 );
 
 /* ------------------------------------------------------------------ */
-/*  Login                                                              */
+/* Login                                                               */
 /* ------------------------------------------------------------------ */
 
 const Login = () => {
@@ -161,12 +181,15 @@ const Login = () => {
   const location = useLocation();
   const { login } = useAuth();
 
-  // Roles allowed for each login URL
+  // Admin login is separate from employer/job seeker login.
   const isAdminLogin = location.pathname === "/admin/login";
 
   const visibleRoles = isAdminLogin
-    ? ROLES.filter((r) => r.key === "admin")
-    : ROLES.filter((r) => r.key === "employer" || r.key === "jobseeker");
+    ? ROLES.filter((role) => role.key === "admin")
+    : ROLES.filter(
+        (role) =>
+          role.key === "employer" || role.key === "jobseeker"
+      );
 
   const defaultRole = isAdminLogin ? "admin" : "employer";
 
@@ -179,10 +202,13 @@ const Login = () => {
 
   const [error, setError] = useState("");
   const [shake, setShake] = useState(false);
-  const [status, setStatus] = useState("idle"); // idle | loading | success
+  const [status, setStatus] = useState("idle");
 
-  const roleIndex = visibleRoles.findIndex((r) => r.key === roleKey);
-  const role = visibleRoles[roleIndex];
+  const roleIndex = visibleRoles.findIndex(
+    (role) => role.key === roleKey
+  );
+
+  const role = visibleRoles[roleIndex] ?? visibleRoles[0];
 
   const fail = (message) => {
     setError(message);
@@ -193,65 +219,108 @@ const Login = () => {
   const handleRoleChange = (key) => {
     setRoleKey(key);
     setError("");
+    setShake(false);
   };
 
-  const fillDemo = () => {
-    const demo = dummyUsers.find((u) => u.role === roleKey);
-    if (demo) {
-      setUsername(demo.username);
-      setPassword(demo.password);
-      setError("");
-    }
-  };
+  /* ---------------------------------------------------------------- */
+  /* Real API login                                                    */
+  /* ---------------------------------------------------------------- */
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+
     if (status !== "idle") return;
 
     setError("");
     setStatus("loading");
 
-    // Small delay so the loading state is visible (remove with a real API)
-    setTimeout(() => {
-      const user = dummyUsers.find(
-        (item) =>
-          item.username === username.trim() && item.password === password,
+    try {
+      // Call the .NET authentication API.
+      const data = await loginApi({
+        email: username.trim(),
+        password,
+      });
+
+      // Validate the API response.
+      if (!data?.token) {
+        throw new Error(
+          "The server did not return an authentication token."
+        );
+      }
+
+      if (!Array.isArray(data.roles) || data.roles.length === 0) {
+        throw new Error(
+          "No role is assigned to this account. Please contact the administrator."
+        );
+      }
+
+      // Match the backend role to a supported dashboard.
+      const normalizedRoles = data.roles
+        .map(normalizeRole)
+        .filter(Boolean);
+
+      const actualRole = normalizedRoles.find(
+        (item) => DASHBOARD_ROUTES[item]
       );
 
-      if (!user) {
-        fail("Username or password is incorrect. Check both and try again.");
-        return;
-      }
-
-      if (user.role !== roleKey) {
-        const actual = ROLES.find((r) => r.key === user.role)?.label;
-        fail(
-          `This is a ${actual} account. Select "${actual}" above to sign in.`,
+      if (!actualRole) {
+        throw new Error(
+          "Your account role is not recognized. Please contact the administrator."
         );
+      }
+
+      // Prevent users from signing in through the wrong login page/tab.
+      if (actualRole !== roleKey) {
+        const actualLabel =
+          ROLES.find((item) => item.key === actualRole)?.label ??
+          actualRole;
+
+        fail(
+          `This is a ${actualLabel} account. Select "${actualLabel}" above to sign in.`
+        );
+
         return;
       }
 
+      // Save the real authenticated user through AuthContext.
       const userData = {
-        id: user.id,
-        name: user.name,
-        role: user.role,
-        username: user.username,
+        id: data.userId,
+        name: data.fullName,
+        username: data.email,
+        email: data.email,
+        role: actualRole,
+        roles: data.roles,
+        token: data.token,
       };
 
-      login(userData);
+      login(userData, { remember });
+
+      // Redirect based on the role returned by the backend.
       setStatus("success");
 
-      setTimeout(() => navigate(role.redirect), 650);
-    }, 700);
+      navigate(DASHBOARD_ROUTES[actualRole], {
+        replace: true,
+      });
+    } catch (err) {
+      fail(
+        err.response?.data?.message ||
+          err.response?.data?.Message ||
+          err.message ||
+          "Login failed. Please try again."
+      );
+    }
   };
+
+  /* ---------------------------------------------------------------- */
+  /* UI                                                                */
+  /* ---------------------------------------------------------------- */
 
   return (
     <div className="ish-page">
-      {/* Full-width heartbeat running behind the card */}
       <Pulse beats={6} className="pulse-page" />
 
       <main className="ish-card" data-status={status}>
-        {/* ---------------- Brand panel ---------------- */}
+        {/* Brand panel */}
         <aside className="ish-panel">
           <span className="blob blob-a" />
           <span className="blob blob-b" />
@@ -262,11 +331,13 @@ const Login = () => {
                 <path d="M2 17h7l3-9 5 17 3-8h10" />
               </svg>
             </span>
+
             <span className="ish-brand-name">Ishraq HR</span>
           </div>
 
           <div className="ish-panel-copy">
             <h2>Where hiring finds its rhythm.</h2>
+
             <p key={role.key} className="ish-blurb">
               {role.blurb}
             </p>
@@ -275,10 +346,14 @@ const Login = () => {
           <Pulse beats={3} className="pulse-panel" />
         </aside>
 
-        {/* ---------------- Form ---------------- */}
+        {/* Login form */}
         <section className="ish-form-side">
           {visibleRoles.length > 1 && (
-            <div className="ish-tabs" role="tablist" aria-label="Account type">
+            <div
+              className="ish-tabs"
+              role="tablist"
+              aria-label="Account type"
+            >
               <span
                 className="ish-tab-thumb"
                 style={{
@@ -286,26 +361,32 @@ const Login = () => {
                 }}
               />
 
-              {visibleRoles.map((r) => (
+              {visibleRoles.map((item) => (
                 <button
-                  key={r.key}
+                  key={item.key}
                   type="button"
                   role="tab"
-                  aria-selected={r.key === roleKey}
-                  className={`ish-tab ${r.key === roleKey ? "is-active" : ""}`}
-                  onClick={() => handleRoleChange(r.key)}
+                  aria-selected={item.key === roleKey}
+                  className={`ish-tab ${
+                    item.key === roleKey ? "is-active" : ""
+                  }`}
+                  onClick={() => handleRoleChange(item.key)}
                 >
-                  {r.label}
+                  {item.label}
                 </button>
               ))}
             </div>
           )}
 
           <form
-            className={`ish-form ${error ? "has-error" : ""} ${shake ? "shake" : ""}`}
+            className={`ish-form ${error ? "has-error" : ""} ${
+              shake ? "shake" : ""
+            }`}
             onSubmit={handleLogin}
             onAnimationEnd={(e) => {
-              if (e.animationName === "ish-shake") setShake(false);
+              if (e.animationName === "ish-shake") {
+                setShake(false);
+              }
             }}
           >
             <header key={role.key} className="ish-form-head">
@@ -313,12 +394,14 @@ const Login = () => {
               <p>Enter your details to continue.</p>
             </header>
 
+            {/* Email */}
             <label className="ish-field">
               <span className="ish-field-icon">
                 <IconUser />
               </span>
+
               <input
-                type="text"
+                type="email"
                 value={username}
                 placeholder=" "
                 autoComplete="username"
@@ -328,13 +411,16 @@ const Login = () => {
                 }}
                 required
               />
-              <span className="ish-field-label">Email or username</span>
+
+              <span className="ish-field-label">Email</span>
             </label>
 
+            {/* Password */}
             <label className="ish-field">
               <span className="ish-field-icon">
                 <IconLock />
               </span>
+
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
@@ -344,22 +430,30 @@ const Login = () => {
                   setPassword(e.target.value);
                   setError("");
                 }}
-                onKeyUp={(e) => setCapsOn(e.getModifierState("CapsLock"))}
+                onKeyUp={(e) =>
+                  setCapsOn(e.getModifierState("CapsLock"))
+                }
                 onBlur={() => setCapsOn(false)}
                 required
               />
+
               <span className="ish-field-label">Password</span>
+
               <button
                 type="button"
                 className="ish-eye"
-                onClick={() => setShowPassword((s) => !s)}
-                aria-label={showPassword ? "Hide password" : "Show password"}
+                onClick={() => setShowPassword((value) => !value)}
+                aria-label={
+                  showPassword ? "Hide password" : "Show password"
+                }
               >
                 <IconEye off={showPassword} />
               </button>
             </label>
 
-            {capsOn && <p className="ish-hint">Caps Lock is on.</p>}
+            {capsOn && (
+              <p className="ish-hint">Caps Lock is on.</p>
+            )}
 
             <div className="ish-row">
               <label className="ish-check">
@@ -368,9 +462,11 @@ const Login = () => {
                   checked={remember}
                   onChange={(e) => setRemember(e.target.checked)}
                 />
+
                 <span className="ish-box">
                   <IconCheck />
                 </span>
+
                 Keep me signed in
               </label>
 
@@ -391,22 +487,29 @@ const Login = () => {
               disabled={status !== "idle"}
             >
               <span className="ish-submit-text">
-                Sign in as {role.label.toLowerCase()}
+                {status === "loading"
+                  ? "Signing in..."
+                  : `Sign in as ${role.label.toLowerCase()}`}
               </span>
-              <span className="ish-submit-spinner" aria-hidden="true" />
+
+              <span
+                className="ish-submit-spinner"
+                aria-hidden="true"
+              />
+
               <span className="ish-submit-done" aria-hidden="true">
                 <IconCheck />
               </span>
             </button>
 
-            <button type="button" className="ish-demo" onClick={fillDemo}>
-              Fill {role.label.toLowerCase()} demo login
-            </button>
-
             {role.registerUrl && (
               <p className="ish-register">
                 New to Ishraq HR?{" "}
-                <a href={role.registerUrl} target="_blank" rel="noreferrer">
+                <a
+                  href={role.registerUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                >
                   Create a {role.label.toLowerCase()} account
                 </a>
               </p>
