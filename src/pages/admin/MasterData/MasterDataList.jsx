@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useCallback, useRef, useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 
 import DataListPage from "../../../components/common/DataListPage";
 import masterConfig from "../../../config/masterConfig";
@@ -42,7 +42,7 @@ const normalizeRows = (records, config) =>
 export default function MasterDataList() {
   const { masterKey } = useParams();
   const navigate = useNavigate();
-  const location = useLocation();
+  // const location = useLocation();
 
   const config = masterConfig[masterKey];
 
@@ -92,24 +92,7 @@ export default function MasterDataList() {
     [config],
   );
 
-  useEffect(() => {
-    if (!config) return;
-
-    const initialQuery = {
-      page: 1,
-      pageSize: 10,
-      search: "",
-      status: "All",
-    };
-
-    latestQuery.current = initialQuery;
-    loadRows(initialQuery);
-
-    return () => {
-      // Invalidate pending requests when navigating away.
-      requestId.current += 1;
-    };
-  }, [masterKey, location.pathname, config, loadRows]);
+ 
 
   const handleQueryChange = useCallback(
     (query) => {
