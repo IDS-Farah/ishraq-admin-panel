@@ -1,10 +1,25 @@
 import { useCallback, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-import DataListPage from "../../../components/common/DataListPage";
-import masterConfig from "../../../config/masterConfig";
-import { getApiErrorMessage } from "../../../api/utils/apiHelpers";
+import DataListPage from "../../../../components/common/DataListPage";
+import userTypeApi from "../../../../api/Services/userTypeApi";
+import { getApiErrorMessage } from "../../../../api/utils/apiHelpers";
 import dayjs from "dayjs";
+
+/* ----------------------------- CONFIG ----------------------------- */
+
+const config = {
+  title: "User Types",
+  singular: "User Type",
+  api: userTypeApi,
+  idField: "uT_user_type_id",
+  nameField: "uT_name",
+  activeField: "uT_is_active",
+  createdAtField: "uT_created_at",
+  updatedAtField: "uT_updated_at",
+  createdByField: "uT_created_by",
+  updatedByField: "uT_updated_by",
+};
 
 /* --------------------------- DATE HELPERS ------------------------- */
 
@@ -13,7 +28,6 @@ import dayjs from "dayjs";
  * Accepts: Date | number (epoch) | ISO string | "yyyy-mm-dd" | null/undefined.
  * Returns "-" for invalid/missing values.
  */
-
 const formatDate = (value) => {
   if (!value) return "-";
 
@@ -29,9 +43,32 @@ const formatDate = (value) => {
 
   return date.format("DD-MM-YYYY");
 };
+
+/* ----------------------------- COLUMNS ----------------------------- */
+
+const columns = [
+  {
+    key: "uT_name",
+    label: "User Type",
+    sortable: true,
+    render: (row) => row.uT_name || "-",
+  },
+  {
+    key: "uT_created_at",
+    label: "Created At",
+    sortable: true,
+    render: (row) => formatDate(row.uT_created_at),
+  },
+  {
+    key: "uT_updated_at",
+    label: "Updated At",
+    render: (row) => formatDate(row.uT_updated_at),
+  },
+];
+
 /* --------------------------- NORMALIZE ---------------------------- */
 
-const normalizeRows = (records, config) =>
+const normalizeRows = (records) =>
   records.map((record) => ({
     ...record,
     id: record[config.idField],
@@ -39,12 +76,8 @@ const normalizeRows = (records, config) =>
     status: record[config.activeField] ? "Active" : "Inactive",
   }));
 
-export default function MasterDataList() {
-  const { masterKey } = useParams();
+export default function UserTypeList() {
   const navigate = useNavigate();
-  // const location = useLocation();
-
-  const config = masterConfig[masterKey];
 
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
@@ -53,46 +86,39 @@ export default function MasterDataList() {
   const latestQuery = useRef(null);
   const requestId = useRef(0);
 
-  const loadRows = useCallback(
-    async (query, { quiet = false } = {}) => {
-      if (!config) return;
+  const loadRows = useCallback(async (query, { quiet = false } = {}) => {
+    latestQuery.current = query;
+    const currentRequest = ++requestId.current;
 
-      latestQuery.current = query;
-      const currentRequest = ++requestId.current;
+    if (!quiet) setLoading(true);
 
-      if (!quiet) setLoading(true);
+    try {
+      const response = await config.api.getAll({
+        pageNo: query.page,
+        pageSize: query.pageSize,
+        search: query.search.trim() || undefined,
+        isActive:
+          query.status === "All" ? undefined : query.status === "Active",
+      });
 
-      try {
-        const response = await config.api.getAll({
-          pageNo: query.page,
-          pageSize: query.pageSize,
-          search: query.search.trim() || undefined,
-          isActive:
-            query.status === "All" ? undefined : query.status === "Active",
-        });
+      const result = response?.data?.data;
 
-        const result = response?.data?.data;
+      if (currentRequest !== requestId.current) return;
 
-        if (currentRequest !== requestId.current) return;
-
-        setRows(normalizeRows(result?.data ?? [], config));
-        setTotal(result?.totalRecords ?? 0);
-      } catch (error) {
-        if (currentRequest === requestId.current) {
-          setRows([]);
-          setTotal(0);
-          console.error(getApiErrorMessage(error));
-        }
-      } finally {
-        if (currentRequest === requestId.current && !quiet) {
-          setLoading(false);
-        }
+      setRows(normalizeRows(result?.data ?? []));
+      setTotal(result?.totalRecords ?? 0);
+    } catch (error) {
+      if (currentRequest === requestId.current) {
+        setRows([]);
+        setTotal(0);
+        console.error(getApiErrorMessage(error));
       }
-    },
-    [config],
-  );
-
- 
+    } finally {
+      if (currentRequest === requestId.current && !quiet) {
+        setLoading(false);
+      }
+    }
+  }, []);
 
   const handleQueryChange = useCallback(
     (query) => {
@@ -135,35 +161,11 @@ export default function MasterDataList() {
       allRecords.push(...(response?.data?.data?.data ?? []));
     }
 
-    return normalizeRows(allRecords, config);
+    return normalizeRows(allRecords);
   };
 
-  if (!config) {
-    return (
-      <div className="rounded-xl border bg-white p-6">
-        Master data configuration not found.
-      </div>
-    );
-  }
-
-  const columns = config.columns.map((column) => ({
-    ...column,
-    render: (row) => {
-      const value = row[column.key];
-
-      if (
-        column.key === config.createdAtField ||
-        column.key === config.updatedAtField
-      ) {
-        return formatDate(value); // → dd-mm-yyyy
-      }
-
-      return value || "-";
-    },
-  }));
-
   const exportConfig = {
-    fileName: `${masterKey}.xlsx`,
+    fileName: "userType.xlsx",
     sheetName: config.title.slice(0, 31),
     fetchRows: handleExport,
     toRow: (row, index) => ({
@@ -188,6 +190,7 @@ export default function MasterDataList() {
         { value: "Active", tone: "success" },
         { value: "Inactive", tone: "danger" },
       ]}
+      statusColumnIndex={4}
       activeValue="Active"
       inactiveValue="Inactive"
       columns={columns}

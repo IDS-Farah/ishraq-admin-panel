@@ -221,6 +221,7 @@ const EmployerList = () => {
         ]}
         activeValue="Active"
         inactiveValue="Inactive"
+        statusColumnIndex={5}
         categoryLabel="Organization Type"
         categoryField="orgType"
         categories={ORGANIZATION_TYPES}

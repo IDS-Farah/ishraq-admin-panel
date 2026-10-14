@@ -74,6 +74,7 @@ const JobRequirementList = () => {
         ]}
         activeValue="Open"
         inactiveValue="Closed"
+        statusColumnIndex={6}
         categoryLabel="Job Category"
         categoryField="employmentType"
         categories={EMPLOYMENT_TYPES}

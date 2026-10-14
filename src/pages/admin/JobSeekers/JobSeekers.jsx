@@ -117,7 +117,7 @@ const JobSeekerList = () => {
       sortable: true,
       render: (u) => (
         <div className="flex items-center gap-2.5">
-          <Avatar user={u} />
+          {/* <Avatar user={u} /> */}
           <span
             className={`transition-colors ${
               u.status === "Active" ? "text-slate-900" : "text-[#6b7a88]"
@@ -178,6 +178,7 @@ const JobSeekerList = () => {
         ]}
         activeValue="Active"
         inactiveValue="Inactive"
+        statusColumnIndex={4}
         categoryLabel="Profession"
         categoryField="jobCategory"
         categories={JOB_CATEGORIES}

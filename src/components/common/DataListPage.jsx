@@ -8,7 +8,6 @@ import {
   RotateCcw,
   Plus,
   Download,
-  Eye,
   Pencil,
   X as CloseIcon,
   Check as CheckIcon,
@@ -17,7 +16,6 @@ import {
   ShieldAlert,
   UserRoundCheck,
   UserRoundX,
-  ChevronsLeft,
   ChevronsRight,
 } from "lucide-react";
 
@@ -144,7 +142,7 @@ const Select = ({ label, value, onChange, options }) => (
       aria-label={label}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="h-9 w-full cursor-pointer appearance-none rounded-lg border border-[#c9d5dd] bg-white px-3 pr-9 text-[15px] font-medium text-[#34445a] outline-none transition hover:border-[#2c6b8a] focus:border-[#2c6b8a] focus:ring-2 focus:ring-[#2c6b8a]/30"
+      className="h-9 w-full cursor-pointer appearance-none rounded-lg border border-[#c9d5dd] bg-[#f9fbfc] px-3 pr-9 text-[15px] font-medium text-[#34445a] outline-none transition hover:border-[#2c6b8a] hover:bg-white focus:border-[#2c6b8a] focus:bg-white focus:ring-2 focus:ring-[#2c6b8a]/30"
     >
       <option value="All">{label}: All</option>
       {options.map((o) => (
@@ -259,16 +257,6 @@ const StatusConfirmDialog = ({
 
 /* ------------------------------ COMPONENT ------------------------- */
 
-/**
- * Reusable list page: title, search, optional status + category filters,
- * optional export and add, table with Sr.No, optional status column (always 2nd),
- * your columns, actions (view always, edit/toggle optional), and pagination.
- *
- * LOCAL mode (default): pass `rows`, filtering/sorting/paging happen in the browser.
- * SERVER mode: pass `onQueryChange` + `rows` (current page) + `total`.
- *   The component emits { search, status, category, sort, page, pageSize } and
- *   your API call returns the matching page.
- */
 const DataListPage = ({
   title,
   rows = [],
@@ -276,38 +264,32 @@ const DataListPage = ({
   loading = false,
   hasStats = false,
 
-  // server mode
   onQueryChange,
 
-  // search
   searchPlaceholder = "Search",
-  searchKeys, // local search keys; defaults to column keys
+  searchKeys,
 
-  // status filter + status column (column is auto-inserted as 2nd, after Sr.No)
   statusField = "status",
-  statuses, // [{ value: "Active", tone: "success" | "danger" | "warning" | "neutral" }]
+  statuses,
   activeValue = "Active",
   inactiveValue = "Inactive",
+  statusColumnIndex = 2,
 
-  // category filter (2nd filter)
   categoryLabel = "Category",
   categoryField,
-  categories, // string[]
+  categories,
 
-  // table
-  columns = [], // [{ key, label, sortable, sortValue, render(row) }]
+  columns = [],
   rowTitle = (row) => row.name || row.title || row.id,
   entityName = "Record",
 
-  // header buttons
   onAdd,
   addLabel = "Add",
-  exportConfig, // { fileName, sheetName, toRow(row, i), fetchRows?(query) }
+  exportConfig,
 
-  // actions
-  onView, // always expected
+  onView,
   onEdit,
-  onToggleStatus, // async (row, nextStatus) => {}
+  onToggleStatus,
 
   pageSizes = DEFAULT_PAGE_SIZES,
 }) => {
@@ -318,29 +300,21 @@ const DataListPage = ({
   const hasFilters = hasStatus || hasCategory;
   const hasActions = Boolean(onView || onEdit || onToggleStatus);
 
-  const [query, setQuery] = useState({
+  const initialQuery = {
     search: "",
     status: "All",
     category: "All",
     sort: { key: null, dir: null },
     page: 1,
     pageSize: pageSizes[0],
-  });
+  };
 
-  const [confirm, setConfirm] = useState(null); // { row, next }
+  const [query, setQuery] = useState(initialQuery);
+  const [confirm, setConfirm] = useState(null);
   const [busy, setBusy] = useState(false);
   const [toast, setToast] = useState(null);
 
-  useEffect(() => {
-    setQuery({
-      search: "",
-      status: "All",
-      category: "All",
-      sort: { key: null, dir: null },
-      page: 1,
-      pageSize: pageSizes[0],
-    });
-  }, [location.pathname, pageSizes]);
+  useEffect(() => setQuery(initialQuery), [location.pathname, pageSizes]);
 
   /* query helpers */
   const patchFilter = (patch) => setQuery((q) => ({ ...q, page: 1, ...patch }));
@@ -370,16 +344,14 @@ const DataListPage = ({
     query.status !== "All" ||
     query.category !== "All";
 
-  /* server mode: notify parent on every query change */
   useEffect(() => {
     if (serverMode) onQueryChange(query);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query]);
 
-  /* local mode: filter + sort */
+  /* local filter + sort */
   const localRows = useMemo(() => {
     if (serverMode) return rows;
-
     const q = query.search.trim().toLowerCase();
     const keys = searchKeys ?? columns.map((c) => c.key).filter(Boolean);
 
@@ -393,11 +365,7 @@ const DataListPage = ({
         )
       )
         return false;
-      if (
-        hasStatus &&
-        query.status !== "All" &&
-        r[statusField] !== query.status
-      )
+      if (hasStatus && query.status !== "All" && r[statusField] !== query.status)
         return false;
       if (
         hasCategory &&
@@ -452,11 +420,15 @@ const DataListPage = ({
     return Array.from({ length: to - from + 1 }, (_, i) => from + i);
   }, [currentPage, totalPages]);
 
-  /* header columns: Sr.No always first, status always second */
+  /* header columns */
+  const statusInsertAt = hasStatus
+    ? Math.min(Math.max(statusColumnIndex - 2, 0), columns.length)
+    : 0;
   const headCols = [
     { sr: true, label: "Sr.No" },
+    ...columns.slice(0, statusInsertAt),
     ...(hasStatus ? [{ status: true, label: "Status" }] : []),
-    ...columns,
+    ...columns.slice(statusInsertAt),
     ...(hasActions ? [{ actions: true, label: "Actions" }] : []),
   ];
 
@@ -517,9 +489,9 @@ const DataListPage = ({
   };
 
   const pageBtn =
-    "grid h-8 min-w-8 cursor-pointer place-items-center rounded-lg px-2.5 text-[12.5px] font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2c6b8a]";
-  const td =
-    "border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900";
+    "grid h-8 min-w-8 cursor-pointer place-items-center rounded-lg px-2.5 text-[13px] font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#2c6b8a]";
+  const navBtn = `${pageBtn} border border-[#dce3eb] bg-white text-[#34445a] hover:border-[#2c6b8a] hover:bg-[#e8f1f6] hover:text-[#2c6b8a] disabled:cursor-not-allowed disabled:border-[#e2e8ee] disabled:text-[#b8c4d3] disabled:hover:bg-white disabled:hover:text-[#b8c4d3]`;
+  const td = "border-t border-[#e2e8ee] px-3.5 py-2.5 text-[15px] text-slate-900";
 
   const renderCell = (col, row, index) => {
     if (col.sr) return start + index + 1;
@@ -559,8 +531,11 @@ const DataListPage = ({
     return row[col.key] ?? "-";
   };
 
+  const btnPrimary =
+    "group inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#16834f] to-[#2fb877] px-3 text-[13px] font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#16834f] focus-visible:ring-offset-2";
+
   return (
-    <div className="mx-auto  max-w-[1400px] rounded-[12px] border border-[#e2e8ee] bg-white p-2 text-[#1e2b36] shadow-sm sm:px-[18px]">
+    <div className="mx-auto max-w-[1400px] rounded-[14px] border border-[#e2e8ee] bg-white p-4 text-[#1e2b36] shadow-[0_1px_2px_rgba(30,43,54,0.05),0_12px_28px_-16px_rgba(44,107,138,0.35)] sm:px-5">
       {/* HEADER */}
       <div className="mb-2 flex flex-col items-start justify-between gap-3 xl:flex-row xl:items-center">
         <h1 className="m-0 text-[22px] font-extrabold tracking-tight text-[#2c6b8a] sm:text-[26px]">
@@ -579,7 +554,7 @@ const DataListPage = ({
               placeholder={searchPlaceholder}
               value={query.search}
               onChange={(e) => patchFilter({ search: e.target.value })}
-              className="h-9 w-full rounded-lg border border-[#c9d5dd] bg-white pl-9 pr-3 text-[15px] text-[#1e2b36] outline-none transition placeholder:text-[#9aa5b1] hover:border-[#2c6b8a] focus:border-[#2c6b8a] focus:ring-2 focus:ring-[#2c6b8a]/30"
+              className="h-9 w-full rounded-lg border border-[#c9d5dd] bg-[#f9fbfc] pl-9 pr-3 text-[13px] text-[#1e2b36] outline-none transition placeholder:text-[#9aa5b1] hover:border-[#2c6b8a] hover:bg-white focus:border-[#2c6b8a] focus:bg-white focus:ring-2 focus:ring-[#2c6b8a]/30"
             />
           </div>
 
@@ -607,7 +582,7 @@ const DataListPage = ({
               onClick={resetFilters}
               disabled={!isFiltered}
               title="Reset filters"
-              className="group inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg px-2.5 text-[15px] font-medium text-[#d64545] transition hover:bg-[#fbe9e9] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d64545] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+              className="group inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border border-[#e2e8ee] px-2.5 text-[13px] font-medium text-[#d64545] transition hover:border-[#d64545]/40 hover:bg-[#fbe9e9] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#d64545] disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:border-[#e2e8ee] disabled:hover:bg-transparent"
             >
               <RotateCcw
                 size={14}
@@ -621,10 +596,13 @@ const DataListPage = ({
               type="button"
               onClick={handleExport}
               title="Export to Excel"
-              className="group inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#16834f] to-[#2fb877] px-3 text-[15px] font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#16834f] focus-visible:ring-offset-2"
+              className={btnPrimary}
             >
-              <Download size={14} />
-              {/* Export */}
+              <Download
+                size={14}
+                className="transition-transform group-hover:translate-y-0.5"
+              />
+              <span className="hidden sm:inline">Export</span>
             </button>
           )}
 
@@ -633,7 +611,7 @@ const DataListPage = ({
               type="button"
               title={addLabel}
               onClick={onAdd}
-              className="group inline-flex h-9 shrink-0 cursor-pointer items-center gap-1.5 rounded-lg bg-gradient-to-r from-[#16834f] to-[#2fb877] px-3 text-[15px] font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[#16834f] focus-visible:ring-offset-2"
+              className={btnPrimary}
             >
               <Plus
                 size={15}
@@ -645,7 +623,10 @@ const DataListPage = ({
           )}
         </div>
       </div>
-      <hr />
+      <div
+        aria-hidden="true"
+        className="my-3.5 h-px bg-gradient-to-r from-[#2c6b8a]/45 via-[#e2e8ee] to-transparent"
+      />
 
       {/* TABLE */}
       <div
@@ -670,13 +651,19 @@ const DataListPage = ({
                           : "descending"
                         : undefined
                     }
-                    className="whitespace-nowrap bg-gradient-to-r from-[#2c6b8a] to-[#3b86a6] px-3.5 py-3 text-left text-[15px] font-bold text-white"
+                    className={`whitespace-nowrap bg-gradient-to-r from-[#2c6b8a] to-[#3b86a6] px-4 py-1.5 text-left text-[13px] font-semibold tracking-wide text-white shadow-[0_3px_6px_-3px_rgba(30,43,54,0.45)] ${
+                      col.actions ? "w-[120px]" : ""
+                    }`}
                   >
                     {sortable ? (
                       <button
                         type="button"
                         onClick={() => toggleSort(col.key)}
-                        className="inline-flex cursor-pointer items-center gap-1 rounded font-bold hover:text-white/80 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                        className={`inline-flex cursor-pointer items-center gap-1 rounded px-1.5 py-0.5 text-[13px] font-bold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-white ${
+                          active
+                            ? "bg-white/20 text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.4)]"
+                            : "text-white hover:text-white/80"
+                        }`}
                       >
                         {col.label}
                         <span className="flex flex-col leading-none">
@@ -710,11 +697,16 @@ const DataListPage = ({
           <tbody>
             {loading ? (
               <tr>
-                <td
-                  colSpan={headCols.length}
-                  className="px-4 py-12 text-center text-[15px] text-[#6b7a88]"
-                >
-                  Loading...
+                <td colSpan={headCols.length} className="px-4 py-12 text-center">
+                  <div className="flex flex-col items-center">
+                    <span
+                      aria-hidden="true"
+                      className="h-9 w-9 animate-spin rounded-full border-[3px] border-[#e8f1f6] border-t-[#2c6b8a]"
+                    />
+                    <p className="mt-3 text-[15px] text-[#6b7a88]">
+                      Loading...
+                    </p>
+                  </div>
                 </td>
               </tr>
             ) : pageRows.length === 0 ? (
@@ -723,7 +715,7 @@ const DataListPage = ({
                   colSpan={headCols.length}
                   className="border-t border-[#e2e8ee] px-4 py-12 text-center"
                 >
-                  <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#e8f1f6] text-[#2c6b8a]">
+                  <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#e8f1f6] text-[#2c6b8a] shadow-[0_0_0_6px_rgba(232,241,246,0.6)]">
                     <Inbox size={22} />
                   </div>
                   <p className="mt-3 text-[15px] text-[#1e2b36]">
@@ -752,16 +744,16 @@ const DataListPage = ({
                   {headCols.map((col) => (
                     <td
                       key={col.label}
-                      className={`${td} ${col.sr ? "tabular-nums" : ""} ${
-                        col.actions ? "" : "whitespace-nowrap"
-                      }`}
+                      className={`${td} ${
+                        col.sr ? "tabular-nums" : ""
+                      } ${col.actions ? "" : "whitespace-nowrap"}`}
                     >
                       <div
-                        className={`max-w-[200px] min-w-0 ${
+                        className={
                           col.actions
-                            ? "inline-flex items-center gap-2"
-                            : "truncate"
-                        }`}
+                            ? "flex w-[104px] items-center gap-2"
+                            : "max-w-[200px] min-w-0 truncate"
+                        }
                         title={
                           !col.sr && !col.status && !col.actions
                             ? String(row[col.key] ?? "")
@@ -781,7 +773,7 @@ const DataListPage = ({
 
       {/* PAGINATION */}
       <div className="mt-3.5 flex flex-col gap-3 border-t border-[#e2e8ee] pt-3.5 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-3.5 text-[12.5px] text-[#60738a]">
+        <div className="flex flex-wrap items-center gap-3.5 text-[13px] text-[#60738a]">
           <span>
             Showing{" "}
             <strong className="font-semibold text-[#53677f]">
@@ -805,7 +797,7 @@ const DataListPage = ({
                   page: 1,
                 }))
               }
-              className="h-8 cursor-pointer rounded-lg border border-[#dce3eb] bg-white px-2 text-[12.5px] text-[#34445a] hover:border-[#2c6b8a] focus:border-[#2c6b8a] focus:outline-none focus:ring-2 focus:ring-[#2c6b8a]/30"
+              className="h-8 cursor-pointer rounded-lg border border-[#dce3eb] bg-white px-2 text-[13px] text-[#34445a] hover:border-[#2c6b8a] focus:border-[#2c6b8a] focus:outline-none focus:ring-2 focus:ring-[#2c6b8a]/30"
             >
               {pageSizes.map((n) => (
                 <option key={n} value={n}>
@@ -824,7 +816,7 @@ const DataListPage = ({
             type="button"
             onClick={() => setPage(currentPage - 1)}
             disabled={currentPage === 1}
-            className={`${pageBtn} border border-[#dce3eb] bg-white text-[#34445a] hover:bg-[#e8f1f6] disabled:cursor-not-allowed disabled:text-[#b8c4d3] disabled:hover:bg-white`}
+            className={navBtn}
           >
             Previous
           </button>
@@ -836,8 +828,8 @@ const DataListPage = ({
               aria-current={n === currentPage ? "page" : undefined}
               className={`${pageBtn} ${
                 n === currentPage
-                  ? "bg-gradient-to-br from-[#2c6b8a] to-[#3b86a6] font-semibold text-white shadow-sm"
-                  : "border border-[#dce3eb] bg-white text-[#34445a] hover:bg-[#e8f1f6]"
+                  ? "bg-gradient-to-br from-[#2c6b8a] to-[#3b86a6] font-semibold text-white shadow-[0_2px_6px_rgba(44,107,138,0.45)] ring-2 ring-[#2c6b8a]/25"
+                  : "border border-[#dce3eb] bg-white text-[#34445a] hover:border-[#2c6b8a] hover:bg-[#e8f1f6] hover:text-[#2c6b8a]"
               }`}
             >
               {n}
@@ -847,7 +839,7 @@ const DataListPage = ({
             type="button"
             onClick={() => setPage(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className={`${pageBtn} border border-[#dce3eb] bg-white text-[#34445a] hover:bg-[#e8f1f6] disabled:cursor-not-allowed disabled:text-[#b8c4d3] disabled:hover:bg-white`}
+            className={navBtn}
           >
             Next
           </button>
@@ -873,7 +865,7 @@ const DataListPage = ({
           key={toast.id}
           role="status"
           aria-live="polite"
-          className="js-toast fixed bottom-5 right-5 z-[60] flex items-center gap-2.5 rounded-xl bg-[#1e2b36] px-4 py-2.5 text-[15px] font-medium text-white shadow-xl"
+          className="js-toast fixed bottom-5 right-5 z-[60] flex items-center gap-2.5 rounded-xl border border-white/10 bg-[#1e2b36] px-4 py-3 text-[15px] font-medium text-white shadow-2xl"
         >
           <span
             className={`grid h-5 w-5 place-items-center rounded-full ${
