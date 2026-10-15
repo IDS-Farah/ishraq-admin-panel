@@ -717,7 +717,7 @@ export default function EmployerEdit() {
 
           <div className="flex items-center justify-end gap-3">
             <Link
-              to={`/employers/${id}`}
+              to={`/employer/organization-profile`}
               className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
             >
               Cancel

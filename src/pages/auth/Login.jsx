@@ -390,7 +390,7 @@ const Login = () => {
               </span>
 
               <input
-                type="email"
+                type="text"
                 value={username}
                 placeholder=" "
                 autoComplete="username"
@@ -398,7 +398,7 @@ const Login = () => {
                   setUsername(e.target.value);
                   setError("");
                 }}
-                required
+               
               />
 
               <span className="ish-field-label">Email</span>
