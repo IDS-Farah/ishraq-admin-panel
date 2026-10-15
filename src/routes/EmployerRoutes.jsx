@@ -27,7 +27,7 @@ const EmployerRoutes = (
       <Route path="profile" element={<EmployerProfile />} />
       <Route path="jobs" element={<EmployerJobs />} />
       <Route
-        path="organization-profile/:id"
+        path="organization-profile"
         element={<OrganizationDetails />}
       />
       <Route path="organization-profile/edit/:id" element={<EmployerEdit />} />

@@ -96,7 +96,7 @@ export const EmployerSidebar = () => {
     {
       text: "Organization Profile",
       icon: Building2,
-      link: "/employer/organization-profile/1",
+      link: "/employer/organization-profile",
       tile: "from-violet-400 to-indigo-500",
     },
     // {

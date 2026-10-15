@@ -1,10 +1,12 @@
 import { useId, useState } from "react";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { loginApi } from "../../api/authApi";
 import "./Login.css";
+import toast from "react-hot-toast";
 
 /* ------------------------------------------------------------------ */
-/*  Config                                                             */
+/* Role configuration                                                  */
 /* ------------------------------------------------------------------ */
 
 const ROLES = [
@@ -38,43 +40,57 @@ const ROLES = [
   },
 ];
 
-// Dummy login credentials (replace with your API later)
-const dummyUsers = [
-  {
-    id: 1,
-    username: "admin@ishraqhr.com",
-    password: "Admin@123",
-    name: "Admin",
-    role: "admin",
-  },
-  {
-    id: 2,
-    username: "jobseeker@ishraqhr.com",
-    password: "Job@123",
-    name: "Jobseeker",
-    role: "jobseeker",
-  },
-  {
-    id: 3,
-    username: "employer@ishraqhr.com",
-    password: "Employer@123",
-    name: "employer",
-    role: "employer",
-  },
-];
+/* ------------------------------------------------------------------ */
+/* Dashboard routes                                                    */
+/* ------------------------------------------------------------------ */
+
+const DASHBOARD_ROUTES = {
+  admin: "/admin/dashboard",
+  employer: "/employer/dashboard",
+  jobseeker: "/jobseeker/dashboard",
+};
 
 /* ------------------------------------------------------------------ */
-/*  Heartbeat line (same shape as the reference image)                 */
+/* Normalize API role names                                            */
+/* ------------------------------------------------------------------ */
+
+const normalizeRole = (role) => {
+  const normalized = String(role ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]/g, "");
+
+  if (normalized === "admin") {
+    return "admin";
+  }
+
+  // The API uses Recruiter for employer accounts.
+  if (normalized === "recruiter" || normalized === "employer") {
+    return "employer";
+  }
+
+  if (normalized === "jobseeker") {
+    return "jobseeker";
+  }
+
+  return null;
+};
+
+/* ------------------------------------------------------------------ */
+/* Heartbeat line                                                      */
 /* ------------------------------------------------------------------ */
 
 const PERIOD = 380;
 
 const buildPulsePath = (beats) => {
   let d = "M0 60";
+
   for (let i = 0; i < beats; i++) {
     const x = i * PERIOD + 40;
+
     d += ` H${x} l22 -4 l30 7 l16 -53 l16 76 l15 -26 l23 -6 l15 8 l15 -8 l16 6`;
   }
+
   return d + ` H${beats * PERIOD}`;
 };
 
@@ -90,15 +106,14 @@ const Pulse = ({ beats = 3, className = "" }) => {
       preserveAspectRatio="xMidYMid meet"
       aria-hidden="true"
     >
-      {/* faint ghost line that is always there */}
       <path className="pulse-ghost" d={d} />
-      {/* the line that draws itself */}
+
       <path id={id} className="pulse-line" d={d} pathLength="1" />
 
-      {/* the dot that rides the line */}
       <g className="pulse-dot">
         <circle r="11" className="pulse-halo" />
         <circle r="5" className="pulse-core" />
+
         <animateMotion
           dur="6s"
           repeatCount="indefinite"
@@ -108,6 +123,7 @@ const Pulse = ({ beats = 3, className = "" }) => {
         >
           <mpath href={`#${id}`} />
         </animateMotion>
+
         <animate
           attributeName="opacity"
           dur="6s"
@@ -121,7 +137,7 @@ const Pulse = ({ beats = 3, className = "" }) => {
 };
 
 /* ------------------------------------------------------------------ */
-/*  Small inline icons                                                 */
+/* Inline icons                                                        */
 /* ------------------------------------------------------------------ */
 
 const IconUser = () => (
@@ -153,7 +169,7 @@ const IconCheck = () => (
 );
 
 /* ------------------------------------------------------------------ */
-/*  Login                                                              */
+/* Login component                                                     */
 /* ------------------------------------------------------------------ */
 
 const Login = () => {
@@ -161,9 +177,11 @@ const Login = () => {
   const location = useLocation();
   const { login } = useAuth();
 
-  // Roles allowed for each login URL
+  // Admin login must remain separate.
   const isAdminLogin = location.pathname === "/admin/login";
 
+  // Only Admin appears on /admin/login.
+  // Employer and Job Seeker appear on /login.
   const visibleRoles = isAdminLogin
     ? ROLES.filter((r) => r.key === "admin")
     : ROLES.filter((r) => r.key === "employer" || r.key === "jobseeker");
@@ -179,79 +197,125 @@ const Login = () => {
 
   const [error, setError] = useState("");
   const [shake, setShake] = useState(false);
-  const [status, setStatus] = useState("idle"); // idle | loading | success
+  const [status, setStatus] = useState("idle");
 
   const roleIndex = visibleRoles.findIndex((r) => r.key === roleKey);
-  const role = visibleRoles[roleIndex];
+
+  const role = visibleRoles[roleIndex] ?? visibleRoles[0];
 
   const fail = (message) => {
-    setError(message);
+    setError("");
     setStatus("idle");
     setShake(true);
+    toast.error(message);
   };
 
   const handleRoleChange = (key) => {
     setRoleKey(key);
     setError("");
+    setShake(false);
   };
 
-  const fillDemo = () => {
-    const demo = dummyUsers.find((u) => u.role === roleKey);
-    if (demo) {
-      setUsername(demo.username);
-      setPassword(demo.password);
-      setError("");
-    }
-  };
+  /* ---------------------------------------------------------------- */
+  /* API login                                                         */
+  /* ---------------------------------------------------------------- */
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
+
     if (status !== "idle") return;
 
     setError("");
     setStatus("loading");
 
-    // Small delay so the loading state is visible (remove with a real API)
-    setTimeout(() => {
-      const user = dummyUsers.find(
-        (item) =>
-          item.username === username.trim() && item.password === password,
-      );
+    try {
+      const data = await loginApi({
+        email: username.trim(),
+        password,
+      });
 
-      if (!user) {
-        fail("Username or password is incorrect. Check both and try again.");
-        return;
+      if (!data?.token) {
+        throw new Error("The server did not return an authentication token.");
       }
 
-      if (user.role !== roleKey) {
-        const actual = ROLES.find((r) => r.key === user.role)?.label;
+      if (!Array.isArray(data.roles) || data.roles.length === 0) {
+        throw new Error(
+          "No role is assigned to this account. Please contact the administrator.",
+        );
+      }
+
+      const normalizedRoles = data.roles.map(normalizeRole).filter(Boolean);
+
+      const actualRole = normalizedRoles.find((item) => DASHBOARD_ROUTES[item]);
+
+      if (!actualRole) {
+        throw new Error(
+          "Your account role is not recognized. Please contact the administrator.",
+        );
+      }
+
+      // Extra protection: only Admin can sign in on /admin/login.
+      if (isAdminLogin && actualRole !== "admin") {
         fail(
-          `This is a ${actual} account. Select "${actual}" above to sign in.`,
+          "Access denied. Please use the appropriate login page for your account.",
         );
         return;
       }
 
+      // On the public login page, enforce the selected tab.
+      if (!isAdminLogin && actualRole !== roleKey) {
+        const actualLabel =
+          ROLES.find((r) => r.key === actualRole)?.label ?? actualRole;
+
+        fail(
+          `This is a ${actualLabel} account. Select "${actualLabel}" above to sign in.`,
+        );
+        return;
+      }
+
+      // Pass actual backend user information to AuthContext.
       const userData = {
-        id: user.id,
-        name: user.name,
-        role: user.role,
-        username: user.username,
+        id: data.userId,
+        name: data.fullName,
+        username: data.email,
+        email: data.email,
+        role: actualRole,
+        roles: data.roles,
+        token: data.token,
       };
 
-      login(userData);
+      // Keep this signature consistent with your AuthContext.
+      login(userData, { remember });
+
       setStatus("success");
 
-      setTimeout(() => navigate(role.redirect), 650);
-    }, 700);
+      // Redirect using the normalized backend role.
+      navigate(DASHBOARD_ROUTES[actualRole], {
+        replace: true,
+      });
+    } catch (err) {
+      const message =
+        err.response?.data?.message ||
+        err.response?.data?.Message ||
+        err.message ||
+        "Login failed. Please try again.";
+
+      toast.error(message);
+      setStatus("idle");
+      setShake(true);
+    }
   };
+
+  /* ---------------------------------------------------------------- */
+  /* UI                                                                */
+  /* ---------------------------------------------------------------- */
 
   return (
     <div className="ish-page">
-      {/* Full-width heartbeat running behind the card */}
       <Pulse beats={6} className="pulse-page" />
 
       <main className="ish-card" data-status={status}>
-        {/* ---------------- Brand panel ---------------- */}
+        {/* Brand panel */}
         <aside className="ish-panel">
           <span className="blob blob-a" />
           <span className="blob blob-b" />
@@ -262,11 +326,13 @@ const Login = () => {
                 <path d="M2 17h7l3-9 5 17 3-8h10" />
               </svg>
             </span>
+
             <span className="ish-brand-name">Ishraq HR</span>
           </div>
 
           <div className="ish-panel-copy">
             <h2>Where hiring finds its rhythm.</h2>
+
             <p key={role.key} className="ish-blurb">
               {role.blurb}
             </p>
@@ -275,7 +341,7 @@ const Login = () => {
           <Pulse beats={3} className="pulse-panel" />
         </aside>
 
-        {/* ---------------- Form ---------------- */}
+        {/* Form panel */}
         <section className="ish-form-side">
           {visibleRoles.length > 1 && (
             <div className="ish-tabs" role="tablist" aria-label="Account type">
@@ -302,10 +368,14 @@ const Login = () => {
           )}
 
           <form
-            className={`ish-form ${error ? "has-error" : ""} ${shake ? "shake" : ""}`}
+            className={`ish-form ${error ? "has-error" : ""} ${
+              shake ? "shake" : ""
+            }`}
             onSubmit={handleLogin}
             onAnimationEnd={(e) => {
-              if (e.animationName === "ish-shake") setShake(false);
+              if (e.animationName === "ish-shake") {
+                setShake(false);
+              }
             }}
           >
             <header key={role.key} className="ish-form-head">
@@ -313,12 +383,14 @@ const Login = () => {
               <p>Enter your details to continue.</p>
             </header>
 
+            {/* Email */}
             <label className="ish-field">
               <span className="ish-field-icon">
                 <IconUser />
               </span>
+
               <input
-                type="text"
+                type="email"
                 value={username}
                 placeholder=" "
                 autoComplete="username"
@@ -328,13 +400,16 @@ const Login = () => {
                 }}
                 required
               />
-              <span className="ish-field-label">Email or username</span>
+
+              <span className="ish-field-label">Email</span>
             </label>
 
+            {/* Password */}
             <label className="ish-field">
               <span className="ish-field-icon">
                 <IconLock />
               </span>
+
               <input
                 type={showPassword ? "text" : "password"}
                 value={password}
@@ -348,11 +423,13 @@ const Login = () => {
                 onBlur={() => setCapsOn(false)}
                 required
               />
+
               <span className="ish-field-label">Password</span>
+
               <button
                 type="button"
                 className="ish-eye"
-                onClick={() => setShowPassword((s) => !s)}
+                onClick={() => setShowPassword((value) => !value)}
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 <IconEye off={showPassword} />
@@ -391,16 +468,16 @@ const Login = () => {
               disabled={status !== "idle"}
             >
               <span className="ish-submit-text">
-                Sign in as {role.label.toLowerCase()}
+                {status === "loading"
+                  ? "Signing in..."
+                  : `Sign in as ${role.label.toLowerCase()}`}
               </span>
+
               <span className="ish-submit-spinner" aria-hidden="true" />
+
               <span className="ish-submit-done" aria-hidden="true">
                 <IconCheck />
               </span>
-            </button>
-
-            <button type="button" className="ish-demo" onClick={fillDemo}>
-              Fill {role.label.toLowerCase()} demo login
             </button>
 
             {role.registerUrl && (

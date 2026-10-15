@@ -1,5 +1,10 @@
+// employerConfig.js
+
+// API is retained for any other existing code that uses it.
 export const API = "/api/employers";
 
+// Legacy constants retained to avoid breaking other imports.
+// EmployerEdit now loads these options from the master APIs.
 export const ORG_TYPES = [
   "Hospital",
   "Clinic",
@@ -46,7 +51,6 @@ export const STATES = [
   "Puducherry",
 ];
 
-// name, label, type, required, options
 export const FIELDS = [
   {
     name: "organizationName",
@@ -56,10 +60,9 @@ export const FIELDS = [
   },
   {
     name: "organizationType",
-    label: "Organization Type",
+    label: "Institute Type",
     type: "select",
     required: true,
-    options: ORG_TYPES,
   },
   {
     name: "contactPerson",
@@ -67,24 +70,45 @@ export const FIELDS = [
     type: "text",
     required: true,
   },
-  { name: "designation", label: "Designation", type: "text" },
-  { name: "mobile", label: "Mobile Number", type: "tel", required: true },
-  { name: "email", label: "Email Address", type: "email" },
-  { name: "city", label: "City", type: "text", required: true },
+  {
+    name: "designation",
+    label: "Designation",
+    type: "text",
+  },
+  {
+    name: "mobile",
+    label: "Mobile Number",
+    type: "tel",
+    required: true,
+  },
+  {
+    name: "email",
+    label: "Email Address",
+    type: "email",
+    required: true,
+  },
+  {
+    name: "country",
+    label: "Country",
+    type: "select",
+    required: true,
+  },
   {
     name: "state",
     label: "State",
-    type: "text",
-    required: true,
-    list: "states",
-  },
-  { name: "website", label: "Website (optional)", type: "url" },
-  {
-    name: "status",
-    label: "Status",
     type: "select",
     required: true,
-    options: ["Active", "Inactive"],
+  },
+  {
+    name: "city",
+    label: "City",
+    type: "select",
+    required: true,
+  },
+  {
+    name: "website",
+    label: "Website (optional)",
+    type: "url",
   },
   {
     name: "consent",
@@ -100,39 +124,36 @@ export const DEMO_EMPLOYER = {
   designation: "Medical Director",
   mobile: "9876543210",
   email: "hr@example.com",
-  city: "Chhatrapati Sambhaji Nagar",
-  state: "Maharashtra",
+  country: "",
+  city: "",
+  state: "",
   website: "https://example.com",
   status: "Active",
   consent: true,
   registeredAt: new Date().toISOString(),
 };
 
-// Load from API; fall back to localStorage / demo data if server is unreachable.
-export async function loadEmployer(id) {
-  try {
-    const r = await fetch(`${API}/${encodeURIComponent(id)}`);
-    if (!r.ok) throw new Error("load failed");
-    return await r.json();
-  } catch {
-    const local = localStorage.getItem(`employer:${id}`);
-    return local ? JSON.parse(local) : { id, ...DEMO_EMPLOYER };
-  }
-}
-
 export function validate(data) {
   const errors = {};
+
   FIELDS.forEach(({ name, label, type, required }) => {
-    const v = data[name];
-    const clean = label.replace(" (optional)", "");
-    if (required && !String(v ?? "").trim())
-      errors[name] = `${clean} is required`;
-    else if (v && type === "email" && !/^\S+@\S+\.\S+$/.test(v))
+    const value = data[name];
+    const cleanLabel = label.replace(" (optional)", "");
+
+    if (required && !String(value ?? "").trim()) {
+      errors[name] = `${cleanLabel} is required`;
+    } else if (value && type === "email" && !/^\S+@\S+\.\S+$/.test(value)) {
       errors[name] = "Enter a valid email";
-    else if (v && type === "tel" && !/^[+]?[0-9\s-]{10,15}$/.test(v))
+    } else if (
+      value &&
+      type === "tel" &&
+      !/^[+]?[0-9\s-]{10,15}$/.test(value)
+    ) {
       errors[name] = "Enter a valid mobile number";
-    else if (v && type === "url" && !/^https?:\/\/\S+\.\S+/.test(v))
+    } else if (value && type === "url" && !/^https?:\/\/\S+\.\S+/.test(value)) {
       errors[name] = "Start with http:// or https://";
+    }
   });
+
   return errors;
 }
