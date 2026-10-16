@@ -1,260 +1,457 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ChevronsLeft,
-  Plus,
-  Paperclip,
-  X as CloseIcon,
-  Check as CheckIcon,
-} from "lucide-react";
-import { FIELDS, createJob, validate } from "./Jobrequirementdata";
+import { ChevronsLeft, Paperclip, Plus, X as CloseIcon } from "lucide-react";
+import toast from "react-hot-toast";
+import jobRequirementApi from "../../../api/Services/jobRequirementApi";
+import { getAllEmployers } from "../../../api/employerApi";
+import instituteTypeApi from "../../../api/Services/instituteTypeApi";
+import jobRoleApi from "../../../api/Services/jobRoleApi";
+import jobCategoryApi from "../../../api/Services/jobCategoryApi";
+import employmentTypeApi from "../../../api/Services/employmentTypeApi";
+import cityMasterApi from "../../../api/Services/cityMasterApi";
+import { getApiErrorMessage } from "../../../api/utils/apiHelpers";
 
-const inputCls =
-  "mt-1 w-full rounded-lg border bg-white px-3 text-[15px] text-[#1e2b36] outline-none transition placeholder:text-[#9aa5b1] hover:border-[#2c6b8a] focus:border-[#2c6b8a] focus:ring-2 focus:ring-[#2c6b8a]/30";
+const inputClass =
+  "w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none focus:border-[#2f6b8a] focus:ring-2 focus:ring-[#2f6b8a]/10 disabled:bg-slate-50";
+const first = (item, ...keys) =>
+  keys
+    .map((key) => item?.[key])
+    .find((value) => value !== undefined && value !== null) ?? "";
+const listFrom = (response) => {
+  const root = response?.data ?? response;
+  for (const value of [
+    root?.data?.data,
+    root?.Data?.Data,
+    root?.data,
+    root?.Data,
+    root,
+  ]) {
+    if (Array.isArray(value)) return value;
+    if (Array.isArray(value?.data)) return value.data;
+    if (Array.isArray(value?.Data)) return value.Data;
+  }
+  return [];
+};
+const options = (response, ids, names) =>
+  listFrom(response)
+    .map((item) => ({
+      id: first(item, ...ids),
+      name: first(item, ...names),
+      raw: item,
+    }))
+    .filter((item) => item.id && item.name);
 
 const EMPTY = {
-  organizationName: "",
-  mobile: "",
-  position: "",
-  department: "",
+  employerId: "",
+  instituteTypeId: "",
+  roleId: "",
+  categoryId: "",
+  employmentTypeId: "",
+  positionTitle: "",
+  departmentSpeciality: "",
   vacancies: "",
-  qualification: "",
-  experience: "",
-  salary: "",
-  location: "",
-  employmentType: "Full Time",
+  qualificationRequired: "",
+  experienceRequired: "",
+  salaryRange: "",
+  jobLocation: "",
   dutyHours: "",
-  accommodation: "No",
-  food: "No",
-  joiningDate: "",
-  status: "Open",
+  accommodation: false,
+  foodFacility: false,
+  expectedJoiningDate: "",
   description: "",
+  assignedTo: "",
 };
 
 export default function JobRequirementCreate() {
   const navigate = useNavigate();
   const [form, setForm] = useState(EMPTY);
   const [file, setFile] = useState(null);
-  const [errors, setErrors] = useState({});
+  const [sources, setSources] = useState({
+    employers: [],
+    institutes: [],
+    roles: [],
+    categories: [],
+    employmentTypes: [],
+    cities: [],
+  });
+  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState(null);
-
-  const change = (name, value) => {
-    setForm((f) => ({ ...f, [name]: value }));
-    if (errors[name]) setErrors((e) => ({ ...e, [name]: undefined }));
-  };
-
-  const onFile = (e) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    if (f.size > 5 * 1024 * 1024) {
-      setToast({ tone: "bad", msg: "File must be 5 MB or smaller." });
-      e.target.value = "";
-      return;
-    }
-    setFile(f);
-  };
-
-  const submit = (e) => {
-    e.preventDefault();
-    const clean = Object.fromEntries(
-      Object.entries(form).map(([k, v]) => [
-        k,
-        typeof v === "string" ? v.trim() : v,
-      ]),
-    );
-    const errs = validate(clean);
-    setErrors(errs);
-    if (Object.keys(errs).length) {
-      setToast({ tone: "bad", msg: "Please fix the highlighted fields." });
-      return;
-    }
-
-    setSaving(true);
-    // Only the file name is stored in demo mode. Send the File itself (FormData) to your API.
-    const job = createJob({
-      ...clean,
-      document: file ? { name: file.name, url: "" } : null,
-    });
-    setToast({ tone: "ok", msg: "Job requirement created" });
-    setTimeout(() => navigate(`/admin/job-requirement-list/${job.id}`), 800);
-  };
+  const [error, setError] = useState("");
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    if (!toast || toast.tone === "ok") return undefined;
-    const t = setTimeout(() => setToast(null), 2800);
-    return () => clearTimeout(t);
-  }, [toast]);
+    let cancelled = false;
+    Promise.all([
+      getAllEmployers(),
+      instituteTypeApi.getAllList(),
+      jobRoleApi.getAllList(),
+      jobCategoryApi.getAllList(),
+      employmentTypeApi.getAllList(),
+      cityMasterApi.getAllList(),
+    ])
+      .then(
+        ([
+          employers,
+          institutes,
+          roles,
+          categories,
+          employmentTypes,
+          cities,
+        ]) => {
+          if (cancelled) return;
+          setSources({
+            employers: options(
+              employers,
+              ["EM_employer_id", "employerId", "id"],
+              ["EM_organization_name", "EM_name", "organizationName", "name"],
+            ),
+            institutes: options(
+              institutes,
+              ["IT_institute_type_id", "instituteTypeId", "id"],
+              ["IT_name", "IT_institute_type_name", "name"],
+            ),
+            roles: options(
+              roles,
+              ["JR_job_role_id", "jobRoleId", "id"],
+              ["JR_name", "JR_job_role_name", "name"],
+            ),
+            categories: options(
+              categories,
+              ["JC_job_category_id", "jobCategoryId", "id"],
+              ["JC_name", "JC_job_category_name", "name"],
+            ),
+            employmentTypes: options(
+              employmentTypes,
+              ["ET_employment_type_id", "employmentTypeId", "id"],
+              ["ET_name", "ET_employment_type_name", "name"],
+            ),
+            cities: options(
+              cities,
+              ["CTM_Id", "cityId", "id"],
+              ["CTM_Name", "CTM_name", "cityName", "name"],
+            ),
+          });
+        },
+      )
+      .catch(
+        (err) =>
+          !cancelled &&
+          setError(getApiErrorMessage(err) || "Unable to load form options."),
+      )
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const roles = useMemo(
+    () =>
+      sources.roles.filter(
+        (item) =>
+          !form.instituteTypeId ||
+          String(first(item.raw, "JR_institute_type_id", "instituteTypeId")) ===
+            String(form.instituteTypeId),
+      ),
+    [sources.roles, form.instituteTypeId],
+  );
+  const categories = useMemo(
+    () =>
+      sources.categories.filter(
+        (item) =>
+          !form.roleId ||
+          String(first(item.raw, "JC_job_role_id", "jobRoleId")) ===
+            String(form.roleId),
+      ),
+    [sources.categories, form.roleId],
+  );
+  const set = (name, value) => {
+    setForm((current) => ({
+      ...current,
+      [name]: value,
+      ...(name === "instituteTypeId" ? { roleId: "", categoryId: "" } : {}),
+      ...(name === "roleId" ? { categoryId: "" } : {}),
+    }));
+    setErrors((current) => ({ ...current, [name]: undefined }));
+  };
+  const submit = async (event) => {
+    event.preventDefault();
+    const required = [
+      "employerId",
+      "instituteTypeId",
+      "roleId",
+      "categoryId",
+      "employmentTypeId",
+      "positionTitle",
+      "vacancies",
+    ];
+    const nextErrors = Object.fromEntries(
+      required
+        .filter((name) => !String(form[name]).trim())
+        .map((name) => [name, "This field is required."]),
+    );
+    if (form.vacancies && Number(form.vacancies) <= 0)
+      nextErrors.vacancies = "Vacancies must be greater than zero.";
+    if (Object.keys(nextErrors).length) {
+      setErrors(nextErrors);
+      return;
+    }
+    const payload = {
+      JQ_employer_id: Number(form.employerId),
+      JQ_institute_type_id: Number(form.instituteTypeId),
+      JQ_job_category_id: Number(form.categoryId),
+      JQ_job_role_id: Number(form.roleId),
+      JQ_position_title: form.positionTitle.trim(),
+      JQ_department_speciality: form.departmentSpeciality.trim(),
+      JQ_vacancies: Number(form.vacancies),
+      JQ_qualification_required: form.qualificationRequired.trim(),
+      JQ_experience_required: form.experienceRequired.trim(),
+      JQ_salary_range: form.salaryRange.trim(),
+      JQ_job_location: form.jobLocation ? Number(form.jobLocation) : "",
+      JQ_employment_type_id: Number(form.employmentTypeId),
+      JQ_duty_hours: form.dutyHours.trim(),
+      JQ_accommodation: Boolean(form.accommodation),
+      JQ_food_facility: Boolean(form.foodFacility),
+      JQ_expected_joining_date: form.expectedJoiningDate || "",
+      JQ_description: form.description.trim(),
+      JQ_assigned_to: form.assignedTo ? Number(form.assignedTo) : "",
+    };
+    const data = new FormData();
+    Object.entries(payload).forEach(([key, value]) =>
+      data.append(key, String(value ?? "")),
+    );
+    if (file) data.append("Attachment", file, file.name);
+    try {
+      setSaving(true);
+      setError("");
+      await jobRequirementApi.create(data);
+      toast.success("Job requirement created successfully.");
+      navigate("/admin/job-requirement-list");
+    } catch (err) {
+      setError(getApiErrorMessage(err) || "Unable to create job requirement.");
+    } finally {
+      setSaving(false);
+    }
+  };
+  const field = (name, label, children, full = false) => (
+    <div className={full ? "md:col-span-2" : ""} key={name}>
+      <label className="mb-1.5 block text-sm font-medium text-slate-700">
+        {label}
+        {errors[name] && <span className="text-red-500"> *</span>}
+      </label>
+      {children}
+      {errors[name] && (
+        <p className="mt-1 text-xs text-red-500">{errors[name]}</p>
+      )}
+    </div>
+  );
+  const select = (name, items, placeholder) => (
+    <select
+      value={form[name]}
+      onChange={(e) => set(name, e.target.value)}
+      className={inputClass}
+      disabled={loading || saving}
+    >
+      <option value="">{placeholder}</option>
+      {items.map((item) => (
+        <option key={item.id} value={item.id}>
+          {item.name}
+        </option>
+      ))}
+    </select>
+  );
+  const text = (name, type = "text") => (
+    <input
+      type={type}
+      value={form[name]}
+      onChange={(e) => set(name, e.target.value)}
+      min={type === "number" ? 1 : undefined}
+      className={inputClass}
+      disabled={saving}
+    />
+  );
 
   return (
     <div className="text-[#1e2b36]">
-      {/* HERO */}
       <header
-        className="ep-hero relative mb-4 overflow-hidden rounded-2xl p-4 text-white shadow-sm sm:px-4 sm:py-2"
+        className="ep-hero relative mb-4 overflow-hidden rounded-2xl p-4 text-white shadow-sm sm:px-0 sm:py-2"
         style={{
           backgroundImage:
             "linear-gradient(110deg,#17405a 0%,#2f6b8a 40%,#4a9bb3 70%,#2f6b8a 100%)",
         }}
       >
-        <span className="ep-orb ep-orb-a !h-40 !w-40" />
-        <span className="ep-orb ep-orb-b !h-24 !w-24" />
-        <div className="relative flex flex-wrap items-center gap-3.5">
+        <div className="relative flex items-center gap-3.5">
           <button
             type="button"
             onClick={() => navigate(-1)}
-            title="Back"
-            aria-label="Back"
-            className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-xl bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+            className="grid h-8 w-8 place-items-center rounded-xl bg-white/15"
           >
             <ChevronsLeft size={18} />
           </button>
-          <div className="min-w-0 flex-1">
-            <h1 className="m-0 text-[22px] font-extrabold tracking-tight sm:text-[26px]">
-              Add Job Requirement
-            </h1>
-          </div>
+          <h1 className="m-0 text-[22px] font-extrabold sm:text-[26px]">
+            Add Job Requirement
+          </h1>
         </div>
       </header>
-
-      <main className="mx-auto max-w-[1100px]">
+      <main className="mx-auto max-w-[1300px]">
         <form
           onSubmit={submit}
           noValidate
           className="rounded-xl border border-[#e2e8ee] bg-white p-5 shadow-sm"
         >
-          <div className="grid gap-x-5 gap-y-4 md:grid-cols-2">
-            {FIELDS.map((f) => (
-              <div key={f.name} className={f.full ? "md:col-span-2" : ""}>
-                <label
-                  htmlFor={f.name}
-                  className="block text-[13px] font-semibold text-[#34445a]"
-                >
-                  {f.label}
-                  {f.required && <span className="text-rose-600"> *</span>}
-                </label>
-
-                {f.type === "select" ? (
-                  <select
-                    id={f.name}
-                    value={form[f.name] ?? ""}
-                    onChange={(e) => change(f.name, e.target.value)}
-                    className={`${inputCls} h-10 cursor-pointer ${errors[f.name] ? "border-rose-500" : "border-[#c9d5dd]"}`}
-                  >
-                    <option value="">Select</option>
-                    {f.options.map((o) => (
-                      <option key={o} value={o}>
-                        {o}
-                      </option>
-                    ))}
-                  </select>
-                ) : f.type === "textarea" ? (
-                  <textarea
-                    id={f.name}
-                    rows={5}
-                    value={form[f.name] ?? ""}
-                    onChange={(e) => change(f.name, e.target.value)}
-                    className={`${inputCls} py-2 ${errors[f.name] ? "border-rose-500" : "border-[#c9d5dd]"}`}
-                  />
-                ) : (
-                  <input
-                    id={f.name}
-                    type={f.type}
-                    min={f.type === "number" ? 1 : undefined}
-                    value={form[f.name] ?? ""}
-                    onChange={(e) => change(f.name, e.target.value)}
-                    className={`${inputCls} h-10 ${errors[f.name] ? "border-rose-500" : "border-[#c9d5dd]"}`}
-                  />
-                )}
-
-                {errors[f.name] && (
-                  <p className="mt-1 text-[12px] text-rose-600">
-                    {errors[f.name]}
-                  </p>
-                )}
-              </div>
-            ))}
-
-            {/* OPTIONAL JD UPLOAD */}
+          {error && (
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            {field(
+              "employerId",
+              "Employer",
+              select("employerId", sources.employers, "Select employer"),
+            )}
+            {field(
+              "instituteTypeId",
+              "Institute Type",
+              select(
+                "instituteTypeId",
+                sources.institutes,
+                "Select institute type",
+              ),
+            )}
+            {field(
+              "roleId",
+              "Job Role",
+              select("roleId", roles, "Select job role"),
+            )}
+            {field(
+              "categoryId",
+              "Job Category",
+              select("categoryId", categories, "Select job category"),
+            )}
+            {field(
+              "employmentTypeId",
+              "Employment Type",
+              select(
+                "employmentTypeId",
+                sources.employmentTypes,
+                "Select employment type",
+              ),
+            )}
+            {field("positionTitle", "Position Title", text("positionTitle"))}
+            {field(
+              "departmentSpeciality",
+              "Department / Speciality",
+              text("departmentSpeciality"),
+            )}
+            {field(
+              "vacancies",
+              "Number of Vacancies",
+              text("vacancies", "number"),
+            )}
+            {field(
+              "qualificationRequired",
+              "Qualification Required",
+              text("qualificationRequired"),
+            )}
+            {field(
+              "experienceRequired",
+              "Experience Required",
+              text("experienceRequired"),
+            )}
+            {field("salaryRange", "Salary Range", text("salaryRange"))}
+            {field(
+              "jobLocation",
+              "Job Location",
+              select("jobLocation", sources.cities, "Select city"),
+            )}
+            {field("dutyHours", "Duty Hours", text("dutyHours"))}
+            {field(
+              "expectedJoiningDate",
+              "Expected Joining Date",
+              text("expectedJoiningDate", "date"),
+            )}
+            {field(
+              "assignedTo",
+              "Assign To (optional)",
+              text("assignedTo", "number"),
+            )}
+            {field(
+              "accommodation",
+              "Accommodation",
+              <label className="flex items-center gap-2 pt-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={form.accommodation}
+                  onChange={(e) => set("accommodation", e.target.checked)}
+                />{" "}
+                Available
+              </label>,
+            )}
+            {field(
+              "foodFacility",
+              "Food Facility",
+              <label className="flex items-center gap-2 pt-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={form.foodFacility}
+                  onChange={(e) => set("foodFacility", e.target.checked)}
+                />{" "}
+                Available
+              </label>,
+            )}
+            {field(
+              "description",
+              "Job Description / Special Requirements",
+              <textarea
+                rows={5}
+                value={form.description}
+                onChange={(e) => set("description", e.target.value)}
+                className={inputClass}
+              />,
+              true,
+            )}
             <div className="md:col-span-2">
-              <span className="block text-[13px] font-semibold text-[#34445a]">
-                Upload Job Description (optional)
-              </span>
-              <div className="mt-1 flex flex-wrap items-center gap-3">
-                <label className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-lg border border-dashed border-[#2c6b8a] bg-[#f4f9fb] px-4 text-[14px] font-medium text-[#2c6b8a] hover:bg-[#e8f1f6]">
-                  <Paperclip size={15} /> Choose file
-                  <input
-                    type="file"
-                    accept=".pdf,.doc,.docx"
-                    onChange={onFile}
-                    className="sr-only"
-                  />
-                </label>
-                {file ? (
-                  <span className="inline-flex items-center gap-2 rounded-full bg-[#e8f1f6] px-3 py-1 text-[13px] text-[#34445a]">
-                    {file.name}
-                    <button
-                      type="button"
-                      onClick={() => setFile(null)}
-                      aria-label="Remove file"
-                      className="cursor-pointer text-[#6b7a88] hover:text-rose-600"
-                    >
-                      <CloseIcon size={14} />
-                    </button>
-                  </span>
-                ) : (
-                  <span className="text-[13px] text-[#6b7a88]">
-                    PDF or Word, up to 5 MB
-                  </span>
-                )}
-              </div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                Job Description Attachment
+              </label>
+              <label className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-[#2f6b8a] bg-[#f4f9fb] px-4 py-2 text-sm font-medium text-[#2f6b8a]">
+                <Paperclip size={15} /> Choose file
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx"
+                  onChange={(e) => setFile(e.target.files?.[0] || null)}
+                  className="sr-only"
+                />
+              </label>
+              {file && (
+                <span className="ml-3 inline-flex items-center gap-2 rounded-full bg-[#e8f1f6] px-3 py-1 text-xs">
+                  {file.name}
+                  <button type="button" onClick={() => setFile(null)}>
+                    <CloseIcon size={14} />
+                  </button>
+                </span>
+              )}
             </div>
           </div>
-
-          <div className="mt-6 flex justify-end gap-2.5 border-t border-[#e2e8ee] pt-4">
-            <button
-              type="button"
-              onClick={() => {
-                setForm(EMPTY);
-                setFile(null);
-                setErrors({});
-              }}
-              className="h-10 cursor-pointer rounded-[10px] border border-[#dce3eb] bg-white px-5 text-[14px] font-semibold text-[#34445a] hover:bg-slate-50"
-            >
-              Clear
-            </button>
+          <div className="mt-6 flex justify-end gap-3 border-t border-slate-100 pt-4">
             <button
               type="button"
               onClick={() => navigate("/admin/job-requirement-list")}
-              className="h-10 cursor-pointer rounded-[10px] border border-[#dce3eb] bg-white px-5 text-[14px] font-semibold text-[#34445a] hover:bg-slate-50"
+              className="rounded-lg border border-slate-300 px-5 py-2.5 text-sm font-medium text-slate-600"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-[10px] bg-gradient-to-r from-[#16834f] to-[#2fb877] px-5 text-[14px] font-semibold text-white shadow-md transition hover:brightness-105 active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#16834f] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#2f6b8a] px-5 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
             >
-              <Plus size={16} />{" "}
-              {saving ? "Creating..." : "Create Job Requirement"}
+              <Plus size={16} />
+              {saving ? "Saving..." : "Add Job Requirement"}
             </button>
           </div>
         </form>
       </main>
-
-      {toast && (
-        <div
-          role="status"
-          aria-live="polite"
-          className="js-toast fixed bottom-5 right-5 z-[60] flex items-center gap-2.5 rounded-xl bg-[#1e2b36] px-4 py-2.5 text-[15px] font-medium text-white shadow-xl"
-        >
-          <span
-            className={`grid h-5 w-5 place-items-center rounded-full ${toast.tone === "ok" ? "bg-emerald-500" : "bg-rose-500"}`}
-          >
-            <CheckIcon size={12} strokeWidth={3.4} />
-          </span>
-          {toast.msg}
-        </div>
-      )}
     </div>
   );
 }

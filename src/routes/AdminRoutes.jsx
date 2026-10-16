@@ -7,7 +7,6 @@ import AdminDashboard from "../pages/admin/Dashboard/AdminDashboard";
 import AdminUsers from "../pages/admin/Users/Users";
 
 import JobSeekers from "../pages/admin/JobSeekers/JobSeekers";
-import JobSeekerDetails from "../pages/admin/JobSeekers/JobSeekerDetails";
 import AddJobSeeker from "../pages/admin/JobSeekers/AddJobSeeker";
 
 import EmployerList from "../pages/admin/Employer/EmployerList";
@@ -63,9 +62,12 @@ const AdminRoutes = (
       <Route path="reset-password" element={<ResetPassword />} />
       {/* Job Seeker Management */}
       <Route path="jobseekers" element={<JobSeekers />} />
-      <Route path="jobseekers/add" element={<AddJobSeeker />} />
-      <Route path="jobseekers/:id" element={<JobSeekerDetails />} />
-      <Route path="jobseekers/:id/edit" element={<JobSeekerDetails />} />
+      <Route path="jobseekers/add" element={<AddJobSeeker mode="create" />} />
+      <Route path="jobseekers/:id" element={<AddJobSeeker mode="view" />} />
+      <Route
+        path="jobseekers/:id/edit"
+        element={<AddJobSeeker mode="edit" />}
+      />
       <Route path="job-requirement-list" element={<JobRequirementList />} />
       {/* <Route path="/admin/job-requirements" element={<JobRequirementList />} /> */}
       <Route path="job-requirements/:id" element={<JobRequirementView />} />

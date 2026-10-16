@@ -8,7 +8,10 @@ const axiosInstance = axios.create({
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 20000,
+  // Some master-data endpoints return several hundred records (for example,
+  // employers used by the Job Requirement form). Keep the client from
+  // aborting while those responses are being materialized.
+  timeout: 60000,
 });
 
 axiosInstance.interceptors.response.use(
