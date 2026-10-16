@@ -45,6 +45,10 @@ import CreateCity from "../pages/admin/MasterData/City/CreateCity";
 // admin enquiry imports
 import EnquiryListPage from "../pages/admin/EnquiryListPage";
 import EnquiryDetails from "../components/form/EnquiryDetails";
+import FeedbackListPage from "../pages/admin/FeedBack/Feedback";
+import FeedbackDetails from "../pages/admin/FeedBack/FeedbackDetails";
+import CreateEmployee from "../pages/admin/Employer/CreateEmployee";
+import CreateJob from "../pages/admin/Employer/CreateJob";
 
 const AdminRoutes = (
   <Route element={<ProtectedRoute allowedRole="admin" />}>
@@ -218,6 +222,22 @@ const AdminRoutes = (
         path="settings/master/cityMaster/:id/view"
         element={<CreateCity mode="view" />}
       />
+      <Route
+        path="settings/master/employee/add"
+        element={<CreateEmployee mode="create" />}
+      />
+      <Route
+        path="settings/master/job/add"
+        element={<CreateJob mode="create" />}
+      />
+      <Route
+        path="settings/master/employee/:id/view"
+        element={<CreateEmployee mode="view" />}
+      />
+      <Route
+        path="settings/master/employee/:id/edit"
+        element={<CreateEmployee mode="view" />}
+      />
       {/* Admin Enquiry routes  */}
 
       <Route
@@ -235,13 +255,17 @@ const AdminRoutes = (
         path="contact/:id"
         element={<EnquiryDetails formType="contact" />}
       />
-      <Route
+      {/* <Route
         path="feedback"
         element={<EnquiryListPage formType="feedback" />}
+      /> */}
+      <Route
+        path="feedback"
+        element={<FeedbackListPage formType="feedback" />}
       />
       <Route
         path="feedback/:id"
-        element={<EnquiryDetails formType="feedback" />}
+        element={<FeedbackDetails formType="feedback" />}
       />
     </Route>
   </Route>

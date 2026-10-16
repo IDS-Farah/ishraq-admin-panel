@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Save, ChevronDown, ChevronsLeft } from "lucide-react";
+import { ChevronDown, ChevronsLeft } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import cityMasterApi from "../../../../api/Services/cityMasterApi";
@@ -12,8 +12,6 @@ const selectClass =
 const inputClass =
   "w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#2f6b8a] focus:ring-2 focus:ring-[#2f6b8a]/10 disabled:bg-slate-50 disabled:text-slate-500";
 
-/* ----------------------------- CONFIG ----------------------------- */
-
 const config = {
   singular: "City",
   api: cityMasterApi,
@@ -24,23 +22,18 @@ const config = {
   updatedAtField: "ctM_UpdatedAt",
   createdByField: "ctM_CreatedBy",
   updatedByField: "ctM_UpdatedBy",
+  createdByNameField: "ctM_CreatedByName",
+  updatedByNameField: "ctM_UpdatedByName",
   stateField: "ctM_StateId",
   postalCodeField: "ctM_PostalCode",
 };
 
 const listPath = "/admin/settings/master/cityMaster";
 
-/* --------------------------- DATE HELPERS ------------------------- */
-
-/**
- * Format a date value into dd-mm-yyyy.
- * Empty / invalid / .NET default (0001-01-01) → "".
- */
 const formatDate = (value) => {
   if (value === null || value === undefined || value === "") return "";
 
   const s = String(value).trim();
-
   if (s.startsWith("0001-01-01")) return "";
 
   let d;
@@ -60,7 +53,6 @@ const formatDate = (value) => {
   return `${dd}-${mm}-${yyyy}`;
 };
 
-// Supports Axios responses and ApiResponseDto<T> responses.
 const extractRecord = (response) => {
   let result = response?.data ?? response;
 
@@ -79,7 +71,6 @@ const extractRecord = (response) => {
   return result;
 };
 
-// Supports paginated / wrapped / plain-array responses.
 const extractList = (response) => {
   const root = response?.data ?? response;
 
@@ -93,7 +84,6 @@ const extractList = (response) => {
 
   for (const candidate of candidates) {
     if (Array.isArray(candidate)) return candidate;
-
     if (Array.isArray(candidate?.data)) return candidate.data;
     if (Array.isArray(candidate?.Data)) return candidate.Data;
   }
@@ -107,14 +97,39 @@ const getErrorMessage = (error, fallback) =>
   error?.message ||
   fallback;
 
+const pickUserDisplay = (item, nameKey, idKey) => {
+  const name = item?.[nameKey];
+  if (name !== undefined && name !== null && String(name).trim() !== "") {
+    return String(name);
+  }
+
+  const id = item?.[idKey];
+  if (id === undefined || id === null || id === "") return "";
+
+  return String(id);
+};
+
+/**
+ * Resolve the current user's id. Adjust if your app stores auth elsewhere.
+ */
+const getCurrentUserId = () => {
+  const raw =
+    localStorage.getItem("userId") ??
+    localStorage.getItem("user_id") ??
+    localStorage.getItem("id");
+
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+};
 
 const CreateCity = ({ mode }) => {
   const navigate = useNavigate();
   const { id } = useParams();
 
   const isCreate = mode === "create";
-  const isEdit = mode === "edit";
-  const isView = mode === "view";
+
+  const [isView, setIsView] = useState(mode === "view");
+  const [isEdit, setIsEdit] = useState(mode === "edit");
 
   const [name, setName] = useState("");
   const [status, setStatus] = useState("Active");
@@ -140,8 +155,6 @@ const CreateCity = ({ mode }) => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
-
-  // 1. Load countries for the City form.
   useEffect(() => {
     let cancelled = false;
 
@@ -152,18 +165,14 @@ const CreateCity = ({ mode }) => {
         const response = await countryMasterApi.getAllList();
         const result = extractList(response);
 
-        if (!cancelled) {
-          setCountries(result);
-        }
+        if (!cancelled) setCountries(result);
       } catch (err) {
         if (!cancelled) {
           console.error("Failed to load countries:", err);
           setError("Failed to load countries.");
         }
       } finally {
-        if (!cancelled) {
-          setLoadingCountries(false);
-        }
+        if (!cancelled) setLoadingCountries(false);
       }
     };
 
@@ -174,7 +183,6 @@ const CreateCity = ({ mode }) => {
     };
   }, []);
 
-  // 2. Load states for the City form.
   useEffect(() => {
     let cancelled = false;
 
@@ -185,9 +193,7 @@ const CreateCity = ({ mode }) => {
         const response = await stateMasterApi.getAllList();
         const result = extractList(response);
 
-        if (!cancelled) {
-          setStates(result);
-        }
+        if (!cancelled) setStates(result);
       } catch (err) {
         if (!cancelled) {
           console.error("Failed to load states:", err);
@@ -195,9 +201,7 @@ const CreateCity = ({ mode }) => {
           setError("Failed to load states.");
         }
       } finally {
-        if (!cancelled) {
-          setLoadingStates(false);
-        }
+        if (!cancelled) setLoadingStates(false);
       }
     };
 
@@ -208,8 +212,6 @@ const CreateCity = ({ mode }) => {
     };
   }, []);
 
-
-  // 3. Reset create form or load the existing record for edit/view.
   useEffect(() => {
     let cancelled = false;
 
@@ -262,7 +264,6 @@ const CreateCity = ({ mode }) => {
         const savedStateId = String(item[config.stateField] ?? "");
         setStateId(savedStateId);
 
-        // Resolve the city's country from its saved state.
         if (savedStateId) {
           const stateResponse = await stateMasterApi.getById(savedStateId);
           const stateRecord = extractRecord(stateResponse);
@@ -274,18 +275,24 @@ const CreateCity = ({ mode }) => {
 
         setAudit({
           createdAt: formatDate(item[config.createdAtField]),
-          createdBy: item[config.createdByField] ?? "",
+          createdBy: pickUserDisplay(
+            item,
+            config.createdByNameField,
+            config.createdByField,
+          ),
           updatedAt: formatDate(item[config.updatedAtField]),
-          updatedBy: item[config.updatedByField] ?? "",
+          updatedBy: pickUserDisplay(
+            item,
+            config.updatedByNameField,
+            config.updatedByField,
+          ),
         });
       } catch (err) {
         if (!cancelled) {
           setError(getErrorMessage(err, "Failed to load record."));
         }
       } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        if (!cancelled) setLoading(false);
       }
     };
 
@@ -296,9 +303,8 @@ const CreateCity = ({ mode }) => {
     };
   }, [id, isCreate]);
 
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
     if (saving) return;
 
@@ -323,21 +329,31 @@ const CreateCity = ({ mode }) => {
     setError("");
 
     try {
-      const payload = {
-        [config.activeField]: status === "Active",
-        [config.nameField]: trimmedName,
-        CTM_StateId: Number(stateId),
-        CTM_PostalCode: postalCode.trim() || null,
-      };
-
-      if (isEdit || isView) {
-        payload[config.idField] = Number(id);
-      }
-
       if (isCreate) {
-        await config.api.addNew(payload);
+        // POST /CityMaster — matches the create contract:
+        // { ctM_CityName, ctM_StateId, ctM_PostalCode, ctM_IsActive, ctM_CreatedBy }
+        const payload = {
+          [config.nameField]: trimmedName,
+          [config.stateField]: Number(stateId),
+          [config.postalCodeField]: postalCode.trim() || "",
+          [config.activeField]: status === "Active",
+          [config.createdByField]: getCurrentUserId(),
+        };
+
+        await config.api.create(payload);
       } else {
-        await config.api.update(id, payload);
+        // PUT /CityMaster — matches the edit contract:
+        // { ctM_Id, ctM_CityName, ctM_StateId, ctM_PostalCode, ctM_IsActive, ctM_UpdatedBy }
+        const payload = {
+          [config.idField]: Number(id),
+          [config.nameField]: trimmedName,
+          [config.stateField]: Number(stateId),
+          [config.postalCodeField]: postalCode.trim() || "",
+          [config.activeField]: status === "Active",
+          [config.updatedByField]: getCurrentUserId(),
+        };
+
+        await config.api.update(payload);
       }
 
       navigate(listPath);
@@ -353,280 +369,281 @@ const CreateCity = ({ mode }) => {
     }
   };
 
+  const handleEditClick = () => {
+    setIsView(false);
+    setIsEdit(true);
+    setError("");
+  };
+
+  const title = config.singular;
+  const disabled = isView || loading || saving;
+
   const pageTitle = isCreate
-    ? "Add City"
+    ? `Create ${title}`
     : isEdit
-      ? "Edit City"
-      : "View City";
-
-
-  const title = config.singular.toLowerCase();
-  const disabled = saving || isView;
-
-  if (loading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#2f6b8a] border-t-transparent" />
-      </div>
-    );
-  }
+      ? `Update ${title}`
+      : `View ${title}`;
 
   return (
-    <div className="mx-auto max-w-4xl p-4 sm:p-6">
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        {/* Header */}
-        <div className="flex flex-col gap-4 border-b border-slate-200 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-          <div>
+    <div className="min-h-full bg-[#f4f8fb]">
+      <div className="mx-auto">
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex justify-between border-b border-slate-200 px-6 py-4">
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => navigate(listPath)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-600 transition hover:bg-slate-50"
-                title="Back to list"
+                title="Back"
+                aria-label="Back"
+                className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-xl bg-[#2f6b8a] text-white transition hover:bg-[#25566f]"
               >
-                <ChevronsLeft size={18} />
+                <ChevronsLeft size={18} strokeWidth={2} />
               </button>
 
-              <div>
-                <h1 className="text-xl font-bold text-slate-900">
-                  {pageTitle}
-                </h1>
-                <p className="mt-1 text-sm text-slate-500">
-                  {isView
-                    ? `View the ${title} details below.`
-                    : `${isCreate ? "Create" : "Edit"} a new ${title}.`}
-                </p>
-              </div>
+              <h2 className="font-semibold text-slate-800">{pageTitle}</h2>
             </div>
           </div>
 
-          {!isView && (
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => navigate(listPath)}
-                className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-              >
-                Cancel
-              </button>
-
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={disabled}
-                className="inline-flex items-center gap-2 rounded-lg bg-[#2f6b8a] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#25566f] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <Save size={16} />
-                {saving ? "Saving..." : isCreate ? "Create" : "Update"}
-              </button>
+          {error && (
+            <div className="mx-4 mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">
+              {error}
             </div>
           )}
-        </div>
 
-        {error && (
-          <div className="mx-6 mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
-          </div>
-        )}
+          <form onSubmit={handleSubmit} className="p-4">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Country
+                  {!isView && <span className="ml-1 text-red-500">*</span>}
+                </label>
 
-        <form onSubmit={handleSubmit} className="p-4 sm:p-6">
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            {/* Country dropdown for the City master */}
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Country {!isView && <span className="text-red-500">*</span>}
-              </label>
-
-              <div className="relative">
-                <select
-                  value={countryId}
-                  onChange={(event) => {
-                    setCountryId(event.target.value);
-                    setStateId("");
-                    setError("");
-                  }}
-                  disabled={disabled || loadingCountries}
-                  required={!isView}
-                  className={selectClass}
-                >
-                  <option value="">
-                    {loadingCountries
-                      ? "Loading countries..."
-                      : "Select Country"}
-                  </option>
-
-                  {countries.map((country) => (
-                    <option
-                      key={country.cM_Id}
-                      value={String(country.cM_Id)}
-                    >
-                      {country.cM_CountryName}
+                <div className="relative">
+                  <select
+                    value={countryId}
+                    onChange={(event) => {
+                      setCountryId(event.target.value);
+                      setStateId("");
+                      setError("");
+                    }}
+                    disabled={disabled || loadingCountries}
+                    required={!isView}
+                    className={selectClass}
+                  >
+                    <option value="">
+                      {loadingCountries
+                        ? "Loading countries..."
+                        : "Select Country"}
                     </option>
-                  ))}
-                </select>
 
-                <ChevronDown
-                  size={17}
-                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
-                />
-              </div>
-            </div>
-
-
-            {/* State dropdown for the City master */}
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                State {!isView && <span className="text-red-500">*</span>}
-              </label>
-
-              <div className="relative">
-                <select
-                  value={stateId}
-                  onChange={(event) => setStateId(event.target.value)}
-                  disabled={disabled || !countryId || loadingStates}
-                  required={!isView}
-                  className={selectClass}
-                >
-                  <option value="">
-                    {!countryId
-                      ? "Select Country first"
-                      : loadingStates
-                        ? "Loading states..."
-                        : "Select State"}
-                  </option>
-
-                  {states
-                    .filter(
-                      (state) =>
-                        String(state.sM_CountryId) === String(countryId),
-                    )
-                    .map((state) => (
-                      <option key={state.sM_Id} value={String(state.sM_Id)}>
-                        {state.sM_StateName}
+                    {countries.map((country) => (
+                      <option
+                        key={country.cM_Id}
+                        value={String(country.cM_Id)}
+                      >
+                        {country.cM_CountryName}
                       </option>
                     ))}
-                </select>
+                  </select>
 
-                <ChevronDown
-                  size={17}
-                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
-                />
+                  <ChevronDown
+                    size={17}
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Postal code */}
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Postal Code
-              </label>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  State
+                  {!isView && <span className="ml-1 text-red-500">*</span>}
+                </label>
 
-              <input
-                type="text"
-                value={postalCode}
-                onChange={(event) => setPostalCode(event.target.value)}
-                disabled={disabled}
-                placeholder="Enter postal code"
-                className={inputClass}
-              />
-            </div>
+                <div className="relative">
+                  <select
+                    value={stateId}
+                    onChange={(event) => setStateId(event.target.value)}
+                    disabled={disabled || !countryId || loadingStates}
+                    required={!isView}
+                    className={selectClass}
+                  >
+                    <option value="">
+                      {!countryId
+                        ? "Select Country first"
+                        : loadingStates
+                          ? "Loading states..."
+                          : "Select State"}
+                    </option>
 
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Value
-                {!isView && <span className="ml-1 text-red-500">*</span>}
-              </label>
+                    {states
+                      .filter(
+                        (state) =>
+                          String(state.sM_CountryId) === String(countryId),
+                      )
+                      .map((state) => (
+                        <option key={state.sM_Id} value={String(state.sM_Id)}>
+                          {state.sM_StateName}
+                        </option>
+                      ))}
+                  </select>
 
-              <input
-                type="text"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                disabled={disabled}
-                required={!isView}
-                placeholder={`Enter ${title}`}
-                className={inputClass}
-              />
-            </div>
+                  <ChevronDown
+                    size={17}
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
+                  />
+                </div>
+              </div>
 
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Status
-              </label>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Value
+                  {!isView && <span className="ml-1 text-red-500">*</span>}
+                </label>
 
-              <div className="relative">
-                <select
-                  value={status}
-                  onChange={(event) => setStatus(event.target.value)}
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
                   disabled={disabled}
-                  className={selectClass}
-                >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-
-                <ChevronDown
-                  size={17}
-                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
+                  required={!isView}
+                  placeholder={`Enter ${title}`}
+                  className={inputClass}
                 />
               </div>
-            </div>
-          </div>
 
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Postal Code
+                </label>
 
-          {!isCreate && (
-            <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50">
-              <div className="border-b border-slate-200 px-5 py-3">
-                <h3 className="text-sm font-semibold text-slate-700">
-                  Audit Information
-                </h3>
+                <input
+                  type="text"
+                  value={postalCode}
+                  onChange={(event) => setPostalCode(event.target.value)}
+                  disabled={disabled}
+                  placeholder="Enter postal code"
+                  className={inputClass}
+                />
               </div>
 
-              <div className="grid grid-cols-1 gap-5 p-5 sm:grid-cols-2">
-                <AuditField label="Created At" value={audit.createdAt} />
-                <AuditField label="Created By" value={audit.createdBy} />
-                <AuditField label="Updated At" value={audit.updatedAt} />
-                <AuditField label="Updated By" value={audit.updatedBy} />
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Status
+                </label>
+
+                <div className="relative">
+                  <select
+                    value={status}
+                    onChange={(event) => setStatus(event.target.value)}
+                    disabled={disabled}
+                    className={selectClass}
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+
+                  <ChevronDown
+                    size={17}
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
+                  />
+                </div>
               </div>
+
+              {!isCreate && (
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Created At
+                  </label>
+                  <input
+                    type="text"
+                    value={audit.createdAt || "—"}
+                    readOnly
+                    disabled
+                    className={inputClass}
+                  />
+                </div>
+              )}
+
+              {!isCreate && (
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Created By
+                  </label>
+                  <input
+                    type="text"
+                    value={audit.createdBy || "—"}
+                    readOnly
+                    disabled
+                    className={inputClass}
+                  />
+                </div>
+              )}
+
+              {!isCreate && (
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Updated At
+                  </label>
+                  <input
+                    type="text"
+                    value={audit.updatedAt || "—"}
+                    readOnly
+                    disabled
+                    className={inputClass}
+                  />
+                </div>
+              )}
+
+              {!isCreate && (
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Updated By
+                  </label>
+                  <input
+                    type="text"
+                    value={audit.updatedBy || "—"}
+                    readOnly
+                    disabled
+                    className={inputClass}
+                  />
+                </div>
+              )}
             </div>
-          )}
 
-          <div className="mt-4 flex justify-end gap-3 border-t border-slate-100 pt-4">
-            <button
-              type="button"
-              onClick={() => navigate(listPath)}
-              className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-            >
-              {isView ? "Back" : "Cancel"}
-            </button>
-
-            {!isView && (
+            <div className="mt-4 flex justify-between gap-3 border-t border-slate-100 pt-4">
               <button
-                type="submit"
-                disabled={disabled}
-                className="inline-flex items-center gap-2 rounded-lg bg-[#2f6b8a] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#25566f] disabled:cursor-not-allowed disabled:opacity-60"
+                type="button"
+                onClick={() => navigate(listPath)}
+                className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
               >
-                <Save size={16} />
-                {saving ? "Saving..." : isCreate ? "Create" : "Update"}
+                {isView ? "Back" : "Cancel"}
               </button>
-            )}
-          </div>
-        </form>
+
+              {isView && (
+                <button
+                  type="button"
+                  onClick={handleEditClick}
+                  className="inline-flex items-center gap-2 rounded-lg bg-[#2f6b8a] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#25566f]"
+                >
+                  Edit
+                </button>
+              )}
+
+              {!isView && (
+                <button
+                  type="submit"
+                  disabled={disabled}
+                  className="inline-flex items-center gap-2 rounded-lg bg-[#2f6b8a] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#25566f] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {saving ? "Saving..." : isCreate ? "Create" : "Update"}
+                </button>
+              )}
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
 };
 
-const AuditField = ({ label, value }) => (
-  <div>
-    <p className="text-xs font-medium text-slate-500">{label}</p>
-    <p className="mt-1 text-sm font-medium text-slate-700">{value || "—"}</p>
-  </div>
-);
-
 export default CreateCity;
-
-
-
-
-
-
-

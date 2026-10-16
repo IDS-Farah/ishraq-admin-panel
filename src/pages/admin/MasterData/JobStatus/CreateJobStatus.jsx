@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Save, ChevronDown, ChevronsLeft } from "lucide-react";
+import { ChevronDown, ChevronsLeft } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import jobStatusApi from "../../../../api/Services/jobStatusApi";
@@ -22,6 +22,9 @@ const config = {
   updatedAtField: "jS_updated_at",
   createdByField: "jS_created_by",
   updatedByField: "jS_updated_by",
+  // Display-name fields returned by the API (preferred over the numeric IDs).
+  createdByNameField: "jS_created_by_name",
+  updatedByNameField: "jS_updated_by_name",
 };
 
 const listPath = "/admin/settings/master/jobStatus";
@@ -29,21 +32,18 @@ const listPath = "/admin/settings/master/jobStatus";
 /* --------------------------- DATE HELPERS ------------------------- */
 
 /**
- * Format a date value into dd-mm-yyyy HH:mm.
+ * Format a date value into dd-mm-yyyy.
  * Empty / invalid / .NET default (0001-01-01) → "".
  */
 const formatDate = (value) => {
   if (value === null || value === undefined || value === "") return "";
 
   const s = String(value).trim();
-
-  // .NET default / unset date
   if (s.startsWith("0001-01-01")) return "";
 
   let d;
   const plain = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
   if (plain) {
-    // Treat plain "yyyy-mm-dd" as local date (avoid UTC shift)
     d = new Date(Number(plain[1]), Number(plain[2]) - 1, Number(plain[3]));
   } else {
     d = value instanceof Date ? value : new Date(s);
@@ -54,24 +54,19 @@ const formatDate = (value) => {
   const dd = String(d.getDate()).padStart(2, "0");
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const yyyy = d.getFullYear();
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mi = String(d.getMinutes()).padStart(2, "0");
 
   return `${dd}-${mm}-${yyyy}`;
 };
 
-// Supports Axios responses and ApiResponseDto<T> responses.
 const extractRecord = (response) => {
   let result = response?.data ?? response;
 
-  // ApiResponseDto: { success, message, data: record }
   if (result?.data !== undefined) {
     result = result.data;
   } else if (result?.Data !== undefined) {
     result = result.Data;
   }
 
-  // Handle an additional wrapper if present.
   if (result?.data && !Array.isArray(result.data)) {
     result = result.data;
   } else if (result?.Data && !Array.isArray(result.Data)) {
@@ -87,13 +82,30 @@ const getErrorMessage = (error, fallback) =>
   error?.message ||
   fallback;
 
+/**
+ * Prefer the display name if present, otherwise fall back to the raw id.
+ */
+const pickUserDisplay = (item, nameKey, idKey) => {
+  const name = item?.[nameKey];
+  if (name !== undefined && name !== null && String(name).trim() !== "") {
+    return String(name);
+  }
+
+  const id = item?.[idKey];
+  if (id === undefined || id === null || id === "") return "";
+
+  return String(id);
+};
+
 const CreateJobStatus = ({ mode }) => {
   const navigate = useNavigate();
   const { id } = useParams();
 
   const isCreate = mode === "create";
-  const isEdit = mode === "edit";
-  const isView = mode === "view";
+
+  // Driven by state so the Edit button can flip view → edit in place.
+  const [isView, setIsView] = useState(mode === "view");
+  const [isEdit, setIsEdit] = useState(mode === "edit");
 
   const [name, setName] = useState("");
   const [status, setStatus] = useState("Active");
@@ -157,18 +169,25 @@ const CreateJobStatus = ({ mode }) => {
 
         setAudit({
           createdAt: formatDate(item[config.createdAtField]),
-          createdBy: item[config.createdByField] ?? "",
+          // Prefer the name; fall back to the raw id.
+          createdBy: pickUserDisplay(
+            item,
+            config.createdByNameField,
+            config.createdByField,
+          ),
           updatedAt: formatDate(item[config.updatedAtField]),
-          updatedBy: item[config.updatedByField] ?? "",
+          updatedBy: pickUserDisplay(
+            item,
+            config.updatedByNameField,
+            config.updatedByField,
+          ),
         });
       } catch (err) {
         if (!cancelled) {
           setError(getErrorMessage(err, "Failed to load record."));
         }
       } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        if (!cancelled) setLoading(false);
       }
     };
 
@@ -179,12 +198,13 @@ const CreateJobStatus = ({ mode }) => {
     };
   }, [id, isCreate]);
 
-
   const title = config.singular;
   const disabled = isView || loading || saving;
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (saving) return;
 
     const trimmed = name.trim();
 
@@ -193,22 +213,27 @@ const CreateJobStatus = ({ mode }) => {
       return;
     }
 
-    const payload = {
-      [config.nameField]: trimmed,
-      [config.activeField]: status === "Active",
-    };
-
     setSaving(true);
     setError("");
 
     try {
       if (isCreate) {
+        // POST /JobStatus
+        const payload = {
+          [config.nameField]: trimmed,
+          [config.activeField]: status === "Active",
+        };
+
         await config.api.create(payload);
       } else {
-        await config.api.update({
-          ...payload,
+        // PUT /JobStatus — id goes INSIDE the body.
+        const payload = {
+          [config.nameField]: trimmed,
+          [config.activeField]: status === "Active",
           [config.idField]: Number(id),
-        });
+        };
+
+        await config.api.update(payload);
       }
 
       navigate(listPath);
@@ -217,6 +242,13 @@ const CreateJobStatus = ({ mode }) => {
     } finally {
       setSaving(false);
     }
+  };
+
+  // Clicking Edit flips the view into edit mode (matches the siblings).
+  const handleEditClick = () => {
+    setIsView(false);
+    setIsEdit(true);
+    setError("");
   };
 
   const pageTitle = isCreate
@@ -253,6 +285,7 @@ const CreateJobStatus = ({ mode }) => {
 
           <form onSubmit={handleSubmit} className="p-4">
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              {/* Value */}
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">
                   Value
@@ -270,6 +303,7 @@ const CreateJobStatus = ({ mode }) => {
                 />
               </div>
 
+              {/* Status */}
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">
                   Status
@@ -292,26 +326,73 @@ const CreateJobStatus = ({ mode }) => {
                   />
                 </div>
               </div>
+
+              {/* Created At — read only */}
+              {!isCreate && (
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Created At
+                  </label>
+                  <input
+                    type="text"
+                    value={audit.createdAt || "—"}
+                    readOnly
+                    disabled
+                    className={inputClass}
+                  />
+                </div>
+              )}
+
+              {/* Created By — read only (name preferred, id fallback) */}
+              {!isCreate && (
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Created By
+                  </label>
+                  <input
+                    type="text"
+                    value={audit.createdBy || "—"}
+                    readOnly
+                    disabled
+                    className={inputClass}
+                  />
+                </div>
+              )}
+
+              {/* Updated At — read only */}
+              {!isCreate && (
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Updated At
+                  </label>
+                  <input
+                    type="text"
+                    value={audit.updatedAt || "—"}
+                    readOnly
+                    disabled
+                    className={inputClass}
+                  />
+                </div>
+              )}
+
+              {/* Updated By — read only (name preferred, id fallback) */}
+              {!isCreate && (
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Updated By
+                  </label>
+                  <input
+                    type="text"
+                    value={audit.updatedBy || "—"}
+                    readOnly
+                    disabled
+                    className={inputClass}
+                  />
+                </div>
+              )}
             </div>
 
-            {!isCreate && (
-              <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50">
-                <div className="border-b border-slate-200 px-5 py-3">
-                  <h3 className="text-sm font-semibold text-slate-700">
-                    Audit Information
-                  </h3>
-                </div>
-
-                <div className="grid grid-cols-1 gap-5 p-5 sm:grid-cols-2">
-                  <AuditField label="Created At" value={audit.createdAt} />
-                  <AuditField label="Created By" value={audit.createdBy} />
-                  <AuditField label="Updated At" value={audit.updatedAt} />
-                  <AuditField label="Updated By" value={audit.updatedBy} />
-                </div>
-              </div>
-            )}
-
-            <div className="mt-4 flex justify-end gap-3 border-t border-slate-100 pt-4">
+            <div className="mt-4 flex justify-between gap-3 border-t border-slate-100 pt-4">
               <button
                 type="button"
                 onClick={() => navigate(listPath)}
@@ -320,13 +401,24 @@ const CreateJobStatus = ({ mode }) => {
                 {isView ? "Back" : "Cancel"}
               </button>
 
+              {/* Edit button — only in view mode */}
+              {isView && (
+                <button
+                  type="button"
+                  onClick={handleEditClick}
+                  className="inline-flex items-center gap-2 rounded-lg bg-[#2f6b8a] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#25566f]"
+                >
+                  Edit
+                </button>
+              )}
+
+              {/* Save button — only when NOT in view mode */}
               {!isView && (
                 <button
                   type="submit"
                   disabled={disabled}
                   className="inline-flex items-center gap-2 rounded-lg bg-[#2f6b8a] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#25566f] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <Save size={16} />
                   {saving ? "Saving..." : isCreate ? "Create" : "Update"}
                 </button>
               )}
@@ -338,12 +430,4 @@ const CreateJobStatus = ({ mode }) => {
   );
 };
 
-const AuditField = ({ label, value }) => (
-  <div>
-    <p className="text-xs font-medium text-slate-500">{label}</p>
-    <p className="mt-1 text-sm font-medium text-slate-700">{value || "—"}</p>
-  </div>
-);
-
 export default CreateJobStatus;
-
