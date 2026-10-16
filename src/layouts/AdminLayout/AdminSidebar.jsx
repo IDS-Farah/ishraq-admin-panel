@@ -138,6 +138,12 @@ export const AdminSidebar = () => {
       // alert: true,
     },
     {
+      text: "Feedback",
+      icon: MessagesSquare,
+      link: "/admin/feedback",
+      tile: "from-pink-400 to-rose-500",
+    },
+    {
       text: "Master Data",
       icon: Database,
       link: "/admin/master-data",
@@ -204,12 +210,12 @@ export const AdminSidebar = () => {
     //   link: "/admin/settings",
     //   tile: "from-slate-400 to-slate-600",
     // },
-    {
-      text: "Feedback",
-      icon: MessagesSquare,
-      link: "/admin/feedback",
-      tile: "from-pink-400 to-rose-500",
-    },
+    // {
+    //   text: "Feedback",
+    //   icon: MessagesSquare,
+    //   link: "/admin/feedback",
+    //   tile: "from-pink-400 to-rose-500",
+    // },
   ];
 
   const matches = (item) =>

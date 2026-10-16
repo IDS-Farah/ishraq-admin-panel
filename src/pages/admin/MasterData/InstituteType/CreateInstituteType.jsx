@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Save, ChevronDown, ChevronsLeft } from "lucide-react";
+import { Save, ChevronDown, ChevronsLeft, Pencil } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import instituteTypeApi from "../../../../api/Services/instituteTypeApi";
@@ -20,8 +20,11 @@ const config = {
   activeField: "iT_is_active",
   createdAtField: "iT_created_at",
   updatedAtField: "iT_updated_at",
-  createdByField: "iT_created_by",
-  updatedByField: "iT_updated_by",
+
+  createdByField: "createdByName",
+  updatedByField: "updatedByName",
+  createdByNameField: "createdByName",
+  updatedByNameField: "updatedByName",
 };
 
 const listPath = "/admin/settings/master/instituteType";
@@ -29,7 +32,7 @@ const listPath = "/admin/settings/master/instituteType";
 /* --------------------------- DATE HELPERS ------------------------- */
 
 /**
- * Format a date value into dd-mm-yyyy HH:mm.
+ * Format a date value into dd-mm-yyyy.
  * Empty / invalid / .NET default (0001-01-01) → "".
  */
 const formatDate = (value) => {
@@ -54,8 +57,6 @@ const formatDate = (value) => {
   const dd = String(d.getDate()).padStart(2, "0");
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const yyyy = d.getFullYear();
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mi = String(d.getMinutes()).padStart(2, "0");
 
   return `${dd}-${mm}-${yyyy}`;
 };
@@ -91,9 +92,11 @@ const CreateInstituteType = ({ mode }) => {
   const navigate = useNavigate();
   const { id } = useParams();
 
+  // `isView` and `isEdit` are now driven by state so the Edit button can flip them.
   const isCreate = mode === "create";
-  const isEdit = mode === "edit";
-  const isView = mode === "view";
+
+  const [isView, setIsView] = useState(mode === "view");
+  const [isEdit, setIsEdit] = useState(mode === "edit");
 
   const [name, setName] = useState("");
   const [status, setStatus] = useState("Active");
@@ -179,7 +182,6 @@ const CreateInstituteType = ({ mode }) => {
     };
   }, [id, isCreate]);
 
-
   const title = config.singular;
   const disabled = isView || loading || saving;
 
@@ -219,6 +221,13 @@ const CreateInstituteType = ({ mode }) => {
     }
   };
 
+  // Clicking the Edit button at the bottom switches the view into edit mode.
+  const handleEditClick = () => {
+    setIsView(false);
+    setIsEdit(true);
+    setError("");
+  };
+
   const pageTitle = isCreate
     ? `Create ${title}`
     : isEdit
@@ -253,6 +262,7 @@ const CreateInstituteType = ({ mode }) => {
 
           <form onSubmit={handleSubmit} className="p-4">
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              {/* Value */}
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">
                   Value
@@ -270,6 +280,7 @@ const CreateInstituteType = ({ mode }) => {
                 />
               </div>
 
+              {/* Status */}
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">
                   Status
@@ -292,26 +303,73 @@ const CreateInstituteType = ({ mode }) => {
                   />
                 </div>
               </div>
+
+              {/* Created At — read only */}
+              {!isCreate && (
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Created At
+                  </label>
+                  <input
+                    type="text"
+                    value={audit.createdAt || "—"}
+                    readOnly
+                    disabled
+                    className={inputClass}
+                  />
+                </div>
+              )}
+
+              {/* Created By — read only */}
+              {!isCreate && (
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Created By
+                  </label>
+                  <input
+                    type="text"
+                    value={audit.createdBy || "—"}
+                    readOnly
+                    disabled
+                    className={inputClass}
+                  />
+                </div>
+              )}
+
+              {/* Updated At — read only */}
+              {!isCreate && (
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Updated At
+                  </label>
+                  <input
+                    type="text"
+                    value={audit.updatedAt || "—"}
+                    readOnly
+                    disabled
+                    className={inputClass}
+                  />
+                </div>
+              )}
+
+              {/* Updated By — read only */}
+              {!isCreate && (
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Updated By
+                  </label>
+                  <input
+                    type="text"
+                    value={audit.updatedBy || "—"}
+                    readOnly
+                    disabled
+                    className={inputClass}
+                  />
+                </div>
+              )}
             </div>
 
-            {!isCreate && (
-              <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50">
-                <div className="border-b border-slate-200 px-5 py-3">
-                  <h3 className="text-sm font-semibold text-slate-700">
-                    Audit Information
-                  </h3>
-                </div>
-
-                <div className="grid grid-cols-1 gap-5 p-5 sm:grid-cols-2">
-                  <AuditField label="Created At" value={audit.createdAt} />
-                  <AuditField label="Created By" value={audit.createdBy} />
-                  <AuditField label="Updated At" value={audit.updatedAt} />
-                  <AuditField label="Updated By" value={audit.updatedBy} />
-                </div>
-              </div>
-            )}
-
-            <div className="mt-4 flex justify-end gap-3 border-t border-slate-100 pt-4">
+            <div className="mt-4 flex justify-between gap-3 border-t border-slate-100 pt-4">
               <button
                 type="button"
                 onClick={() => navigate(listPath)}
@@ -320,13 +378,26 @@ const CreateInstituteType = ({ mode }) => {
                 {isView ? "Back" : "Cancel"}
               </button>
 
+              {/* Edit button — only shows in view mode */}
+              {isView && (
+                <button
+                  type="button"
+                  onClick={handleEditClick}
+                  className="inline-flex items-center gap-2 rounded-lg bg-[#2f6b8a] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#25566f]"
+                >
+                  
+                  Edit
+                </button>
+              )}
+
+              {/* Save button — only shows when NOT in view mode */}
               {!isView && (
                 <button
                   type="submit"
                   disabled={disabled}
                   className="inline-flex items-center gap-2 rounded-lg bg-[#2f6b8a] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#25566f] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <Save size={16} />
+                  {/* <Save size={16} /> */}
                   {saving ? "Saving..." : isCreate ? "Create" : "Update"}
                 </button>
               )}
@@ -338,12 +409,4 @@ const CreateInstituteType = ({ mode }) => {
   );
 };
 
-const AuditField = ({ label, value }) => (
-  <div>
-    <p className="text-xs font-medium text-slate-500">{label}</p>
-    <p className="mt-1 text-sm font-medium text-slate-700">{value || "—"}</p>
-  </div>
-);
-
 export default CreateInstituteType;
-

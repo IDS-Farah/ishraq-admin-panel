@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Save, ChevronDown, ChevronsLeft } from "lucide-react";
+import { ChevronDown, ChevronsLeft } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import jobCategoryApi from "../../../../api/Services/jobCategoryApi";
@@ -24,6 +24,8 @@ const config = {
   updatedAtField: "jC_updated_at",
   createdByField: "jC_created_by",
   updatedByField: "jC_updated_by",
+  createdByNameField: "jC_created_by_name",
+  updatedByNameField: "jC_updated_by_name",
   jobRoleField: "jC_job_role_id",
   responsibilityField: "jC_job_responsibility",
 };
@@ -32,15 +34,10 @@ const listPath = "/admin/settings/master/jobCategory";
 
 /* --------------------------- DATE HELPERS ------------------------- */
 
-/**
- * Format a date value into dd-mm-yyyy.
- * Empty / invalid / .NET default (0001-01-01) → "".
- */
 const formatDate = (value) => {
   if (value === null || value === undefined || value === "") return "";
 
   const s = String(value).trim();
-
   if (s.startsWith("0001-01-01")) return "";
 
   let d;
@@ -60,7 +57,6 @@ const formatDate = (value) => {
   return `${dd}-${mm}-${yyyy}`;
 };
 
-// Supports Axios responses and ApiResponseDto<T> responses.
 const extractRecord = (response) => {
   let result = response?.data ?? response;
 
@@ -79,7 +75,6 @@ const extractRecord = (response) => {
   return result;
 };
 
-// Supports paginated / wrapped / plain-array responses.
 const extractList = (response) => {
   const root = response?.data ?? response;
 
@@ -93,7 +88,6 @@ const extractList = (response) => {
 
   for (const candidate of candidates) {
     if (Array.isArray(candidate)) return candidate;
-
     if (Array.isArray(candidate?.data)) return candidate.data;
     if (Array.isArray(candidate?.Data)) return candidate.Data;
   }
@@ -107,20 +101,35 @@ const getErrorMessage = (error, fallback) =>
   error?.message ||
   fallback;
 
+/**
+ * Prefer the display name if present, otherwise fall back to the raw id.
+ */
+const pickUserDisplay = (item, nameKey, idKey) => {
+  const name = item?.[nameKey];
+  if (name !== undefined && name !== null && String(name).trim() !== "") {
+    return String(name);
+  }
+
+  const id = item?.[idKey];
+  if (id === undefined || id === null || id === "") return "";
+
+  return String(id);
+};
 
 const CreateJobCategory = ({ mode }) => {
   const navigate = useNavigate();
   const { id } = useParams();
 
   const isCreate = mode === "create";
-  const isEdit = mode === "edit";
-  const isView = mode === "view";
+
+  // Driven by state so the Edit button can flip view → edit in place.
+  const [isView, setIsView] = useState(mode === "view");
+  const [isEdit, setIsEdit] = useState(mode === "edit");
 
   const [name, setName] = useState("");
   const [status, setStatus] = useState("Active");
   const [jobResponsibility, setJobResponsibility] = useState("");
 
-  // Institute type is only required when creating a job category.
   const needsInstituteType = isCreate;
 
   const [instituteTypes, setInstituteTypes] = useState([]);
@@ -154,9 +163,7 @@ const CreateJobCategory = ({ mode }) => {
         const response = await instituteTypeApi.getAllList();
         const types = extractList(response);
 
-        if (!cancelled) {
-          setInstituteTypes(types);
-        }
+        if (!cancelled) setInstituteTypes(types);
       } catch (err) {
         if (!cancelled) {
           console.error("Failed to load institute types:", err);
@@ -171,7 +178,6 @@ const CreateJobCategory = ({ mode }) => {
       cancelled = true;
     };
   }, [needsInstituteType]);
-
 
   // 2. Reset create form or load the existing record for edit/view.
   useEffect(() => {
@@ -222,14 +228,10 @@ const CreateJobCategory = ({ mode }) => {
         setName(item[config.nameField] ?? "");
         setStatus(item[config.activeField] ? "Active" : "Inactive");
 
-        const savedRoleId = String(
-          item[config.jobRoleField] ?? item.JC_job_role_id ?? "",
-        );
+        const savedRoleId = String(item[config.jobRoleField] ?? "");
         setJobRoleId(savedRoleId);
 
-        setJobResponsibility(
-          item[config.responsibilityField] ?? item.JC_job_responsibility ?? "",
-        );
+        setJobResponsibility(item[config.responsibilityField] ?? "");
 
         // Resolve the related job role's institute type for edit & view.
         if (savedRoleId) {
@@ -237,28 +239,30 @@ const CreateJobCategory = ({ mode }) => {
           const role = extractRecord(roleResponse);
 
           if (!cancelled) {
-            setInstituteTypeId(
-              String(
-                role?.jR_institute_type_id ?? role?.JR_institute_type_id ?? "",
-              ),
-            );
+            setInstituteTypeId(String(role?.jR_institute_type_id ?? ""));
           }
         }
 
         setAudit({
           createdAt: formatDate(item[config.createdAtField]),
-          createdBy: item[config.createdByField] ?? "",
+          createdBy: pickUserDisplay(
+            item,
+            config.createdByNameField,
+            config.createdByField,
+          ),
           updatedAt: formatDate(item[config.updatedAtField]),
-          updatedBy: item[config.updatedByField] ?? "",
+          updatedBy: pickUserDisplay(
+            item,
+            config.updatedByNameField,
+            config.updatedByField,
+          ),
         });
       } catch (err) {
         if (!cancelled) {
           setError(getErrorMessage(err, "Failed to load record."));
         }
       } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        if (!cancelled) setLoading(false);
       }
     };
 
@@ -269,9 +273,7 @@ const CreateJobCategory = ({ mode }) => {
     };
   }, [id, isCreate]);
 
-
-  // 3. Load job roles whenever an institute type is selected (the create
-  // form picks the institute type itself; edit/view get it from the record).
+  // 3. Load job roles whenever an institute type is selected.
   useEffect(() => {
     if (!instituteTypeId) {
       setJobRoles([]);
@@ -287,9 +289,7 @@ const CreateJobCategory = ({ mode }) => {
         );
         const roles = extractList(response);
 
-        if (!cancelled) {
-          setJobRoles(roles);
-        }
+        if (!cancelled) setJobRoles(roles);
       } catch (err) {
         if (!cancelled) {
           console.error("Failed to load job roles:", err);
@@ -311,8 +311,8 @@ const CreateJobCategory = ({ mode }) => {
     setJobRoles([]);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
 
     if (saving) return;
 
@@ -337,21 +337,27 @@ const CreateJobCategory = ({ mode }) => {
     setError("");
 
     try {
-      const payload = {
-        [config.activeField]: status === "Active",
-        [config.nameField]: trimmedName,
-        JC_job_role_id: Number(jobRoleId),
-        JC_job_responsibility: jobResponsibility.trim(),
-      };
-
-      if (isEdit || isView) {
-        payload[config.idField] = Number(id);
-      }
-
       if (isCreate) {
-        await config.api.addNew(payload);
+        // POST /JobCategory
+        const payload = {
+          [config.activeField]: status === "Active",
+          [config.nameField]: trimmedName,
+          [config.jobRoleField]: Number(jobRoleId),
+          [config.responsibilityField]: jobResponsibility.trim(),
+        };
+
+        await config.api.create(payload);
       } else {
-        await config.api.update(id, payload);
+        // PUT /JobCategory — id lives inside the body.
+        const payload = {
+          [config.activeField]: status === "Active",
+          [config.nameField]: trimmedName,
+          [config.jobRoleField]: Number(jobRoleId),
+          [config.responsibilityField]: jobResponsibility.trim(),
+          [config.idField]: Number(id),
+        };
+
+        await config.api.update(payload);
       }
 
       navigate(listPath);
@@ -367,110 +373,110 @@ const CreateJobCategory = ({ mode }) => {
     }
   };
 
+  const handleEditClick = () => {
+    setIsView(false);
+    setIsEdit(true);
+    setError("");
+  };
+
+  const title = config.singular;
+  const disabled = isView || loading || saving;
+
   const pageTitle = isCreate
-    ? "Add Job Category"
+    ? `Create ${title}`
     : isEdit
-      ? "Edit Job Category"
-      : "View Job Category";
-
-
-  const title = config.singular.toLowerCase();
-  const disabled = saving || isView;
-
-  if (loading) {
-    return (
-      <div className="flex min-h-[60vh] items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#2f6b8a] border-t-transparent" />
-      </div>
-    );
-  }
+      ? `Update ${title}`
+      : `View ${title}`;
 
   return (
-    <div className="mx-auto max-w-4xl p-4 sm:p-6">
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        {/* Header */}
-        <div className="flex flex-col gap-4 border-b border-slate-200 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-          <div>
+    <div className="min-h-full bg-[#f4f8fb]">
+      <div className="mx-auto">
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
+          <div className="flex justify-between border-b border-slate-200 px-6 py-4">
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => navigate(listPath)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-slate-300 bg-white text-slate-600 transition hover:bg-slate-50"
-                title="Back to list"
+                title="Back"
+                aria-label="Back"
+                className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-xl bg-[#2f6b8a] text-white transition hover:bg-[#25566f]"
               >
-                <ChevronsLeft size={18} />
+                <ChevronsLeft size={18} strokeWidth={2} />
               </button>
 
-              <div>
-                <h1 className="text-xl font-bold text-slate-900">
-                  {pageTitle}
-                </h1>
-                <p className="mt-1 text-sm text-slate-500">
-                  {isView
-                    ? `View the ${title} details below.`
-                    : `${isCreate ? "Create" : "Edit"} a new ${title}.`}
-                </p>
-              </div>
+              <h2 className="font-semibold text-slate-800">{pageTitle}</h2>
             </div>
           </div>
 
-          {!isView && (
-            <div className="flex items-center gap-3">
-              <button
-                type="button"
-                onClick={() => navigate(listPath)}
-                className="rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-              >
-                Cancel
-              </button>
-
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={disabled}
-                className="inline-flex items-center gap-2 rounded-lg bg-[#2f6b8a] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#25566f] disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                <Save size={16} />
-                {saving ? "Saving..." : isCreate ? "Create" : "Update"}
-              </button>
+          {error && (
+            <div className="mx-4 mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2.5 text-sm text-red-600">
+              {error}
             </div>
           )}
-        </div>
 
-        {error && (
-          <div className="mx-6 mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {error}
-          </div>
-        )}
+          <form onSubmit={handleSubmit} className="p-4">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              {needsInstituteType && (
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Institute Type
+                    {!isView && <span className="ml-1 text-red-500">*</span>}
+                  </label>
 
-        <form onSubmit={handleSubmit} className="p-4 sm:p-6">
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-            {/* Institute type (create only) */}
-            {needsInstituteType && (
+                  <div className="relative">
+                    <select
+                      value={instituteTypeId}
+                      onChange={(event) =>
+                        handleInstituteTypeChange(event.target.value)
+                      }
+                      disabled={disabled}
+                      required={!isView}
+                      className={selectClass}
+                    >
+                      <option value="">Select Institute Type</option>
+                      {instituteTypes.map((item) => (
+                        <option
+                          key={item.iT_institute_type_id}
+                          value={String(item.iT_institute_type_id)}
+                        >
+                          {item.iT_name}
+                        </option>
+                      ))}
+                    </select>
+
+                    <ChevronDown
+                      size={17}
+                      className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
+                    />
+                  </div>
+                </div>
+              )}
+
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                  Institute Type
+                  Job Role
                   {!isView && <span className="ml-1 text-red-500">*</span>}
                 </label>
 
                 <div className="relative">
                   <select
-                    value={instituteTypeId}
-                    onChange={(event) =>
-                      handleInstituteTypeChange(event.target.value)
-                    }
-                    disabled={disabled}
+                    value={jobRoleId}
+                    onChange={(event) => setJobRoleId(event.target.value)}
+                    disabled={disabled || !instituteTypeId}
                     required={!isView}
                     className={selectClass}
                   >
-                    <option value="">Select Institute Type</option>
-
-                    {instituteTypes.map((item) => (
+                    <option value="">
+                      {!instituteTypeId
+                        ? "Select Institute Type first"
+                        : "Select Job Role"}
+                    </option>
+                    {jobRoles.map((role) => (
                       <option
-                        key={item.iT_institute_type_id}
-                        value={String(item.iT_institute_type_id)}
+                        key={role.jR_job_role_id}
+                        value={String(role.jR_job_role_id)}
                       >
-                        {item.iT_name}
+                        {role.jR_name}
                       </option>
                     ))}
                   </select>
@@ -481,159 +487,159 @@ const CreateJobCategory = ({ mode }) => {
                   />
                 </div>
               </div>
-            )}
 
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Value
+                  {!isView && <span className="ml-1 text-red-500">*</span>}
+                </label>
 
-            {/* Job role dropdown */}
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Job Role
-                {!isView && <span className="ml-1 text-red-500">*</span>}
-              </label>
-
-              <div className="relative">
-                <select
-                  value={jobRoleId}
-                  onChange={(event) => setJobRoleId(event.target.value)}
-                  disabled={disabled || !instituteTypeId}
-                  required={!isView}
-                  className={selectClass}
-                >
-                  <option value="">
-                    {!instituteTypeId
-                      ? "Select Institute Type first"
-                      : "Select Job Role"}
-                  </option>
-
-                  {jobRoles.map((role) => (
-                    <option
-                      key={role.jR_job_role_id}
-                      value={String(role.jR_job_role_id)}
-                    >
-                      {role.jR_name}
-                    </option>
-                  ))}
-                </select>
-
-                <ChevronDown
-                  size={17}
-                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
-                />
-              </div>
-            </div>
-
-            {/* Job responsibility */}
-            <div className="md:col-span-2">
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Job Responsibility
-              </label>
-
-              <textarea
-                value={jobResponsibility}
-                onChange={(event) => setJobResponsibility(event.target.value)}
-                disabled={disabled}
-                rows={3}
-                placeholder="Enter job responsibility"
-                className={inputClass}
-              />
-            </div>
-
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Value
-                {!isView && <span className="ml-1 text-red-500">*</span>}
-              </label>
-
-              <input
-                type="text"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                disabled={disabled}
-                required={!isView}
-                placeholder={`Enter ${title}`}
-                className={inputClass}
-              />
-            </div>
-
-
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                Status
-              </label>
-
-              <div className="relative">
-                <select
-                  value={status}
-                  onChange={(event) => setStatus(event.target.value)}
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
                   disabled={disabled}
-                  className={selectClass}
-                >
-                  <option value="Active">Active</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-
-                <ChevronDown
-                  size={17}
-                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
+                  required={!isView}
+                  placeholder={`Enter ${title}`}
+                  className={inputClass}
                 />
               </div>
-            </div>
-          </div>
 
-          {!isCreate && (
-            <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50">
-              <div className="border-b border-slate-200 px-5 py-3">
-                <h3 className="text-sm font-semibold text-slate-700">
-                  Audit Information
-                </h3>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Status
+                </label>
+
+                <div className="relative">
+                  <select
+                    value={status}
+                    onChange={(event) => setStatus(event.target.value)}
+                    disabled={disabled}
+                    className={selectClass}
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+
+                  <ChevronDown
+                    size={17}
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
+                  />
+                </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-5 p-5 sm:grid-cols-2">
-                <AuditField label="Created At" value={audit.createdAt} />
-                <AuditField label="Created By" value={audit.createdBy} />
-                <AuditField label="Updated At" value={audit.updatedAt} />
-                <AuditField label="Updated By" value={audit.updatedBy} />
+              <div className="md:col-span-2">
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Job Responsibility
+                </label>
+
+                <textarea
+                  value={jobResponsibility}
+                  onChange={(event) =>
+                    setJobResponsibility(event.target.value)
+                  }
+                  disabled={disabled}
+                  rows={3}
+                  placeholder="Enter job responsibility"
+                  className={inputClass}
+                />
               </div>
+
+              {!isCreate && (
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Created At
+                  </label>
+                  <input
+                    type="text"
+                    value={audit.createdAt || "—"}
+                    readOnly
+                    disabled
+                    className={inputClass}
+                  />
+                </div>
+              )}
+
+              {!isCreate && (
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Created By
+                  </label>
+                  <input
+                    type="text"
+                    value={audit.createdBy || "—"}
+                    readOnly
+                    disabled
+                    className={inputClass}
+                  />
+                </div>
+              )}
+
+              {!isCreate && (
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Updated At
+                  </label>
+                  <input
+                    type="text"
+                    value={audit.updatedAt || "—"}
+                    readOnly
+                    disabled
+                    className={inputClass}
+                  />
+                </div>
+              )}
+
+              {!isCreate && (
+                <div>
+                  <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                    Updated By
+                  </label>
+                  <input
+                    type="text"
+                    value={audit.updatedBy || "—"}
+                    readOnly
+                    disabled
+                    className={inputClass}
+                  />
+                </div>
+              )}
             </div>
-          )}
 
-          <div className="mt-4 flex justify-end gap-3 border-t border-slate-100 pt-4">
-            <button
-              type="button"
-              onClick={() => navigate(listPath)}
-              className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
-            >
-              {isView ? "Back" : "Cancel"}
-            </button>
-
-            {!isView && (
+            <div className="mt-4 flex justify-between gap-3 border-t border-slate-100 pt-4">
               <button
-                type="submit"
-                disabled={disabled}
-                className="inline-flex items-center gap-2 rounded-lg bg-[#2f6b8a] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#25566f] disabled:cursor-not-allowed disabled:opacity-60"
+                type="button"
+                onClick={() => navigate(listPath)}
+                className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
               >
-                <Save size={16} />
-                {saving ? "Saving..." : isCreate ? "Create" : "Update"}
+                {isView ? "Back" : "Cancel"}
               </button>
-            )}
-          </div>
-        </form>
+
+              {isView && (
+                <button
+                  type="button"
+                  onClick={handleEditClick}
+                  className="inline-flex items-center gap-2 rounded-lg bg-[#2f6b8a] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#25566f]"
+                >
+                  Edit
+                </button>
+              )}
+
+              {!isView && (
+                <button
+                  type="submit"
+                  disabled={disabled}
+                  className="inline-flex items-center gap-2 rounded-lg bg-[#2f6b8a] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#25566f] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {saving ? "Saving..." : isCreate ? "Create" : "Update"}
+                </button>
+              )}
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
 };
 
-const AuditField = ({ label, value }) => (
-  <div>
-    <p className="text-xs font-medium text-slate-500">{label}</p>
-    <p className="mt-1 text-sm font-medium text-slate-700">{value || "—"}</p>
-  </div>
-);
-
 export default CreateJobCategory;
-
-
-
-
-
-
