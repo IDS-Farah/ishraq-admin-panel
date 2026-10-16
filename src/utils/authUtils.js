@@ -24,6 +24,7 @@ export const getCurrentUser = () => {
       role: user.role ?? "",
       roles: Array.isArray(user.roles) ? user.roles : [],
       token: user.token ?? "",
+      profileId: user.profileId
     };
   } catch (error) {
     console.error("Failed to read current user:", error);
@@ -35,7 +36,7 @@ export const getCurrentUser = () => {
  * Get the current user's ID.
  */
 export const getCurrentUserId = () => {
-  return getCurrentUser()?.id ?? null;
+  return getCurrentUser()?.profileId ?? null;
 };
 
 /**

@@ -29,6 +29,8 @@ import countryMasterApi from "../../../api/Services/countryMasterApi";
 import stateMasterApi from "../../../api/Services/stateMasterApi";
 import cityMasterApi from "../../../api/Services/cityMasterApi";
 
+import SelectField from "../../../components/common/SelectField";
+
 const ACCENT = "#2f6b8a";
 
 /* -------------------------- API HELPERS -------------------------- */
@@ -201,13 +203,17 @@ export default function EmployerEdit() {
       setLoadingMasters(true);
 
       try {
-        const [instituteResponse, countryResponse, stateResponse, cityResponse] =
-          await Promise.all([
-            instituteTypeApi.getAllList(),
-            countryMasterApi.getAllList(),
-            stateMasterApi.getAllList(),
-            cityMasterApi.getAllList(),
-          ]);
+        const [
+          instituteResponse,
+          countryResponse,
+          stateResponse,
+          cityResponse,
+        ] = await Promise.all([
+          instituteTypeApi.getAllList(),
+          countryMasterApi.getAllList(),
+          stateMasterApi.getAllList(),
+          cityMasterApi.getAllList(),
+        ]);
 
         if (cancelled) return;
 
@@ -388,19 +394,18 @@ export default function EmployerEdit() {
 
     try {
       const employerId = emp.eM_employer_id;
+      const optional = (value) => (value?.trim() ? value.trim() : null);
+
       const payload = {
         eM_organization_name: trimmed.organizationName,
         eM_institute_type_id: Number(trimmed.organizationType),
-        eM_contact_person: trimmed.contactPerson,
-        eM_designation: trimmed.designation || null,
-
+        eM_contact_person: optional(trimmed.contactPerson),
+        eM_designation: optional(trimmed.designation),
         eM_country_id: Number(trimmed.country),
         eM_state_id: Number(trimmed.state),
         eM_city_id: Number(trimmed.city),
-
-        eM_website: trimmed.website || null,
+        eM_website: optional(trimmed.website),
         eM_consent_given: Boolean(trimmed.consent),
-
         email: trimmed.email,
         mobile: trimmed.mobile,
         fullName: emp.fullName ?? emp.userName ?? "",
@@ -502,7 +507,9 @@ export default function EmployerEdit() {
         <label
           key={name}
           className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition hover:bg-slate-50 sm:col-span-2 ${
-            form[name] ? "border-[#2f6b8a]/40 bg-[#eaf3f7]/40" : "border-slate-200"
+            form[name]
+              ? "border-[#2f6b8a]/40 bg-[#eaf3f7]/40"
+              : "border-slate-200"
           }`}
         >
           <input
@@ -580,26 +587,21 @@ export default function EmployerEdit() {
           />
 
           {isSelect ? (
-            <select
-              className={inputClass}
+            <SelectField
               value={form[name] ?? ""}
+              onChange={(next) => change(name, next)}
+              options={
+                isMaster
+                  ? options
+                  : (field.options || []).map((option) => ({
+                      value: option,
+                      label: option,
+                    }))
+              }
+              placeholder={placeholder}
               disabled={disabled}
-              onChange={(event) => change(name, event.target.value)}
-            >
-              <option value="">{isMaster ? placeholder : "Select"}</option>
-
-              {isMaster
-                ? options.map((option, index) => (
-                    <option key={`${option.value}-${index}`} value={option.value}>
-                      {option.label || option.value}
-                    </option>
-                  ))
-                : (field.options || []).map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-            </select>
+              hasError={Boolean(error)}
+            />
           ) : (
             <input
               type={type}
@@ -628,7 +630,11 @@ export default function EmployerEdit() {
     return (
       <div className="flex min-h-[50vh] items-center justify-center bg-white p-6">
         <div className="flex items-center gap-3 text-sm text-slate-600">
-          <LoaderCircle className="animate-spin" style={{ color: ACCENT }} size={20} />
+          <LoaderCircle
+            className="animate-spin"
+            style={{ color: ACCENT }}
+            size={20}
+          />
           Loading organization details...
         </div>
       </div>
@@ -674,8 +680,9 @@ export default function EmployerEdit() {
             <ChevronsLeft size={18} />
           </button>
           <div className="min-w-0">
-            <h1 className="text-lg font-semibold text-slate-800">Edit Organization</h1>
-            
+            <h1 className="text-lg font-semibold text-slate-800">
+              Edit Organization
+            </h1>
           </div>
         </div>
         <span
@@ -697,7 +704,11 @@ export default function EmployerEdit() {
           ))}
 
           {extraNames.length > 0 && (
-            <Card title="Additional Details" icon={Briefcase} className="xl:col-span-2">
+            <Card
+              title="Additional Details"
+              icon={Briefcase}
+              className="xl:col-span-2"
+            >
               <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
                 {extraNames.map((name) => renderField(name))}
               </div>
@@ -717,7 +728,7 @@ export default function EmployerEdit() {
 
           <div className="flex items-center justify-end gap-3">
             <Link
-              to={`/employers/${id}`}
+              to={`/employer/organization-profile`}
               className="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
             >
               Cancel

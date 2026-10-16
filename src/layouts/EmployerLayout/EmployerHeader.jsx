@@ -1,30 +1,55 @@
-import React, { useState } from "react";
-import {
-  Bell,
-  ChevronDown,
-  ChevronUp,
-  Settings,
-  LogOut,
-  UserRound,
-} from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Bell, ChevronDown, ChevronUp, Settings, LogOut, UserRound } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { getCurrentUser } from "../../utils/authUtils";
+import { getCurrentUser, getCurrentUserId } from "../../utils/authUtils.js";
+import {
+  getPayload,
+  extractEmployerRecord,
+  normalizeEmployer,
+  getEmployerRequest,
+} from "../../utils/employerProfile";
 
 const EmployeeHeader = () => {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [employer, setEmployer] = useState(null);
 
-  // Get logged-in user details from localStorage
+  // Fallback values from local storage, used until the API responds or if it fails.
   const user = getCurrentUser();
 
-  const userName = user?.name || user?.username || "Employer";
-  const userEmail = user?.email || user?.username || "";
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadEmployer = async () => {
+      try {
+        const userId = getCurrentUserId();
+        if (!userId) return;
+
+        const response = await getEmployerRequest(userId);
+        const record = normalizeEmployer(extractEmployerRecord(getPayload(response)));
+
+        if (!cancelled && record?.EM_employer_id !== undefined) {
+          setEmployer(record);
+        }
+      } catch {
+        // Keep the local storage fallback if the request fails.
+      }
+    };
+
+    loadEmployer();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const orgName = employer?.EM_organization_name?.trim();
+  const userName = orgName || user?.name || user?.username || "Employer";
+  const userEmail = employer?.Email || user?.email || user?.username || "";
   const userRole = "Employer";
 
-  // Generate initials for the avatar
   const initials = userName
     .trim()
     .split(/\s+/)

@@ -282,6 +282,7 @@ const Login = () => {
         role: actualRole,
         roles: data.roles,
         token: data.token,
+        profileId: data.profileId
       };
 
       // Keep this signature consistent with your AuthContext.
@@ -390,7 +391,7 @@ const Login = () => {
               </span>
 
               <input
-                type="email"
+                type="text"
                 value={username}
                 placeholder=" "
                 autoComplete="username"
@@ -398,7 +399,7 @@ const Login = () => {
                   setUsername(e.target.value);
                   setError("");
                 }}
-                required
+               
               />
 
               <span className="ish-field-label">Email</span>
