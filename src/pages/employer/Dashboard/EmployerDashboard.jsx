@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import EmployerProfileProgress from "./EmployerProfileProgress";
 import {
   AreaChart,
   Area,
@@ -508,31 +509,7 @@ const EmployerDashboard = () => {
             </span>
           </div>
         </Panel>
-
-        <Panel
-          title="Interest per job"
-          subtitle="People interested in each posting"
-          icon={Users}
-        >
-          <ul className="space-y-0.5">
-            {[...jobs]
-              .sort((a, b) => b.interested - a.interested)
-              .map((j, i) => (
-                <li key={j.id}>
-                  <BarRow
-                    name={j.title}
-                    right={
-                      <b className="text-slate-800">{fmt(j.interested)}</b>
-                    }
-                    pct={(j.interested / maxInterest) * 100}
-                    color={j.color}
-                    animKey={j.title}
-                    delay={i * 70}
-                  />
-                </li>
-              ))}
-          </ul>
-        </Panel>
+        <EmployerProfileProgress />
       </div>
 
       {/* Row 2 */}

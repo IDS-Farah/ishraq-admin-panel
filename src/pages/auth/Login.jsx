@@ -282,6 +282,7 @@ const Login = () => {
         role: actualRole,
         roles: data.roles,
         token: data.token,
+        profileId: data.profileId
       };
 
       // Keep this signature consistent with your AuthContext.

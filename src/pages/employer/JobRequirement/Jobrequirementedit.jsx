@@ -21,7 +21,7 @@ import employmentTypeApi from "../../../api/Services/employmentTypeApi";
 import countryMasterApi from "../../../api/Services/countryMasterApi";
 import stateMasterApi from "../../../api/Services/stateMasterApi";
 import cityMasterApi from "../../../api/Services/cityMasterApi";
-import { getCurrentUser } from "../../../utils/auth";
+import { getCurrentUser } from "../../../utils/authUtils";
 
 const inputCls =
   "mt-1 w-full rounded-lg border bg-white px-3 text-[15px] text-[#1e2b36] outline-none transition placeholder:text-[#9aa5b1] hover:border-[#2c6b8a] focus:border-[#2c6b8a] focus:ring-2 focus:ring-[#2c6b8a]/30";
