@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ChevronsLeft,
@@ -13,7 +13,6 @@ import {
   getJobRequirementById,
   updateJobRequirement,
 } from "../../../api/jobRequirementApi";
-
 import instituteTypeApi from "../../../api/Services/instituteTypeApi";
 import jobRoleApi from "../../../api/Services/jobRoleApi";
 import jobCategoryApi from "../../../api/Services/jobCategoryApi";
@@ -21,10 +20,9 @@ import employmentTypeApi from "../../../api/Services/employmentTypeApi";
 import countryMasterApi from "../../../api/Services/countryMasterApi";
 import stateMasterApi from "../../../api/Services/stateMasterApi";
 import cityMasterApi from "../../../api/Services/cityMasterApi";
-import { getCurrentUser } from "../../../utils/authUtils";
 
 const inputCls =
-  "mt-1 w-full rounded-lg border bg-white px-3 text-[15px] text-[#1e2b36] outline-none transition placeholder:text-[#9aa5b1] hover:border-[#2c6b8a] focus:border-[#2c6b8a] focus:ring-2 focus:ring-[#2c6b8a]/30";
+  "mt-1 w-full rounded-lg border bg-white px-3 text-[15px] text-[#1e2b36] outline-none transition placeholder:text-[#9aa5b1] hover:border-[#2c6b8a] focus:border-[#2c6b8a] focus:ring-2 focus:ring-[#2c6b8a]/30 disabled:bg-slate-100 disabled:text-slate-500";
 
 const emptyForm = {
   instituteTypeId: "",
@@ -48,22 +46,45 @@ const emptyForm = {
   description: "",
 };
 
+// When a parent selection changes, these children are cleared.
+const CASCADE_RESETS = {
+  jobRoleId: ["jobCategoryId"],
+  countryId: ["stateId", "cityId"],
+  stateId: ["cityId"],
+};
+
+// Field names used by the master APIs. Values are checked case-insensitively by pick().
+const OPTION_CONFIG = {
+  institute: { id: ["iT_institute_type_id", "IT_institute_type_id"], label: ["iT_name", "IT_name"] },
+  role: { id: ["jR_job_role_id", "JR_job_role_id"], label: ["jR_name", "JR_name"] },
+  category: { id: ["jC_job_category_id", "JC_job_category_id"], label: ["jC_name", "JC_name"] },
+  employment: { id: ["eT_employment_type_id", "ET_employment_type_id"], label: ["eT_name", "ET_name"] },
+  country: { id: ["cM_Id", "CM_Id"], label: ["cM_CountryName", "CM_CountryName"] },
+  state: {
+    id: ["sM_Id", "SM_Id"],
+    label: ["sM_StateName", "SM_StateName"],
+    parent: ["sM_CountryId", "SM_CountryId"],
+  },
+  city: {
+    id: ["ctM_Id", "CTM_Id"],
+    label: ["ctM_CityName", "CTM_CityName"],
+    parent: ["ctM_StateId", "CTM_StateId"],
+  },
+};
+
 const pick = (obj, ...keys) => {
   if (!obj || typeof obj !== "object") return undefined;
 
   for (const key of keys) {
-    if (obj[key] !== undefined && obj[key] !== null) {
-      return obj[key];
-    }
+    if (obj[key] !== undefined && obj[key] !== null) return obj[key];
   }
 
-  // Handle PascalCase/camelCase differences in API JSON.
-  const normalizedKeys = Object.keys(obj);
+  // Case-insensitive fallback for PascalCase/camelCase differences.
+  const existingKeys = Object.keys(obj);
   for (const key of keys) {
-    const match = normalizedKeys.find(
-      (existing) => existing.toLowerCase() === key.toLowerCase()
+    const match = existingKeys.find(
+      (existing) => existing.toLowerCase() === key.toLowerCase(),
     );
-
     if (match && obj[match] !== undefined && obj[match] !== null) {
       return obj[match];
     }
@@ -75,13 +96,10 @@ const pick = (obj, ...keys) => {
 const unwrap = (response) => {
   let result = response;
 
-  for (let i = 0; i < 3; i++) {
-    if (!result || typeof result !== "object" || Array.isArray(result)) {
-      break;
-    }
+  for (let i = 0; i < 3; i += 1) {
+    if (!result || typeof result !== "object" || Array.isArray(result)) break;
 
     const nested = pick(result, "data", "Data");
-
     if (nested === undefined) break;
     result = nested;
   }
@@ -92,24 +110,101 @@ const unwrap = (response) => {
 const extractList = (response) => {
   let result = response;
 
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 4; i += 1) {
     if (Array.isArray(result)) return result;
     if (!result || typeof result !== "object") return [];
 
     const nested = pick(result, "data", "Data", "items", "Items", "results");
-
     if (nested === undefined || nested === result) break;
     result = nested;
+  }
+
+  // A single category object instead of an array.
+  if (
+    result &&
+    typeof result === "object" &&
+    pick(result, "jC_job_category_id", "JC_job_category_id") !== undefined
+  ) {
+    return [result];
   }
 
   return Array.isArray(result) ? result : [];
 };
 
-const getId = (item, keys) => pick(item, ...keys);
+// Converts raw master rows into { value, label } options.
+// parentValue filters rows by their parent ID (country for states, state for cities).
+const toOptions = (list, config, parentValue) =>
+  list
+    .filter(
+      (item) =>
+        parentValue === undefined ||
+        (config.parent &&
+          String(pick(item, ...config.parent) ?? "") === String(parentValue)),
+    )
+    .map((item) => ({
+      value: String(pick(item, ...config.id) ?? ""),
+      label: String(pick(item, ...config.label) ?? ""),
+    }))
+    .filter((option) => option.value);
 
-const getOptionLabel = (item, keys) => {
-  const value = pick(item, ...keys);
-  return value == null ? "" : String(value);
+const getMasterList = async (api) => extractList(await api.getAllList());
+
+const fetchRoles = async (instituteTypeId) =>
+  toOptions(
+    extractList(await jobRoleApi.getByInstituteType(Number(instituteTypeId))),
+    OPTION_CONFIG.role,
+  );
+
+const fetchCategories = async (jobRoleId) =>
+  toOptions(
+    extractList(await jobCategoryApi.getByJobRole(Number(jobRoleId))),
+    OPTION_CONFIG.category,
+  );
+
+const fetchStates = async (countryId) =>
+  toOptions(
+    await getMasterList(stateMasterApi),
+    OPTION_CONFIG.state,
+    String(countryId),
+  );
+
+const fetchCities = async (stateId) =>
+  toOptions(
+    await getMasterList(cityMasterApi),
+    OPTION_CONFIG.city,
+    String(stateId),
+  );
+
+// Loads options for a dropdown whenever its parent value changes.
+const useDependentOptions = (parentValue, fetcher) => {
+  const [options, setOptions] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    setOptions([]);
+    if (!parentValue) return undefined;
+
+    setLoading(true);
+
+    fetcher(parentValue)
+      .then((list) => {
+        if (!cancelled) setOptions(list);
+      })
+      .catch(() => {
+        if (!cancelled) setOptions([]);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [parentValue, fetcher]);
+
+  return { options, loading };
 };
 
 const toDateInput = (value) => {
@@ -120,18 +215,14 @@ const toDateInput = (value) => {
 
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
     2,
-    "0"
+    "0",
   )}-${String(date.getDate()).padStart(2, "0")}`;
 };
 
 const toBooleanString = (value) => {
   if (value === true || value === 1) return "true";
-
   const text = String(value ?? "").toLowerCase();
-
-  return text === "true" || text === "yes" || text === "1"
-    ? "true"
-    : "false";
+  return text === "true" || text === "yes" || text === "1" ? "true" : "false";
 };
 
 const getErrorMessage = (error) => {
@@ -144,16 +235,6 @@ const getErrorMessage = (error) => {
   );
 };
 
-const getMasterList = async (api) => {
-  const response = await api.getAllList();
-  return extractList(response);
-};
-
-const getEmployerId = () => {
-  const user = getCurrentUser();
-  return Number(user?.id) || null;
-};
-
 export default function JobRequirementEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -162,367 +243,268 @@ export default function JobRequirementEdit() {
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
-  const [loadingMasters, setLoadingMasters] = useState(true);
+  const [loadingPage, setLoadingPage] = useState(true);
   const [toast, setToast] = useState(null);
   const [attachment, setAttachment] = useState(null);
-  const [existingAttachment, setExistingAttachment] = useState("");
+  const [existingAttachmentPath, setExistingAttachmentPath] = useState("");
+  const [masters, setMasters] = useState({
+    institute: [],
+    employment: [],
+    country: [],
+  });
 
-  const [instituteTypes, setInstituteTypes] = useState([]);
-  const [jobRoles, setJobRoles] = useState([]);
-  const [jobCategories, setJobCategories] = useState([]);
-  const [employmentTypes, setEmploymentTypes] = useState([]);
-  const [countries, setCountries] = useState([]);
-  const [states, setStates] = useState([]);
-  const [cities, setCities] = useState([]);
-
-  const [loadingRoles, setLoadingRoles] = useState(false);
-  const [loadingCategories, setLoadingCategories] = useState(false);
-  const [loadingStates, setLoadingStates] = useState(false);
-  const [loadingCities, setLoadingCities] = useState(false);
-
-  const [masterError, setMasterError] = useState("");
+  // Dependent dropdowns load from the parent selections.
+  const roles = useDependentOptions(form.instituteTypeId, fetchRoles);
+  const categories = useDependentOptions(form.jobRoleId, fetchCategories);
+  const states = useDependentOptions(form.countryId, fetchStates);
+  const cities = useDependentOptions(form.stateId, fetchCities);
 
   const change = (name, value) => {
-    setForm((current) => ({ ...current, [name]: value }));
+    setForm((current) => {
+      const next = { ...current, [name]: value };
+      (CASCADE_RESETS[name] || []).forEach((child) => {
+        next[child] = "";
+      });
+      return next;
+    });
 
     setErrors((current) => {
-      if (!current[name]) return current;
-
       const next = { ...current };
       delete next[name];
+      (CASCADE_RESETS[name] || []).forEach((child) => delete next[child]);
       return next;
     });
   };
 
-  // Load the non-dependent master lists.
+  // Load the job requirement and the master lists it depends on.
   useEffect(() => {
     let cancelled = false;
 
-    const loadMasters = async () => {
-      setLoadingMasters(true);
-      setMasterError("");
+    const numericId = Number(id);
+    if (!Number.isInteger(numericId) || numericId <= 0) {
+      setJob(null);
+      setToast({ tone: "bad", msg: "Invalid job requirement ID." });
+      setLoadingPage(false);
+      return undefined;
+    }
+
+    const load = async () => {
+      setLoadingPage(true);
 
       try {
-        const [
-          instituteResponse,
-          employmentResponse,
-          countryResponse,
-        ] = await Promise.all([
-          getMasterList(instituteTypeApi),
-          getMasterList(employmentTypeApi),
-          getMasterList(countryMasterApi),
-        ]);
+        const [jobResponse, instituteRes, employmentRes, countryRes, stateRes, cityRes] =
+          await Promise.all([
+            getJobRequirementById(numericId),
+            instituteTypeApi.getAllList(),
+            employmentTypeApi.getAllList(),
+            countryMasterApi.getAllList(),
+            stateMasterApi.getAllList(),
+            cityMasterApi.getAllList(),
+          ]);
 
-        if (cancelled) return;
+        const item = unwrap(jobResponse);
 
-        setInstituteTypes(instituteResponse);
-        setEmploymentTypes(employmentResponse);
-        setCountries(countryResponse);
-      } catch (error) {
-        if (!cancelled) {
-          setMasterError(
-            `Unable to load master data: ${getErrorMessage(error)}`
-          );
-        }
-      } finally {
-        if (!cancelled) setLoadingMasters(false);
-      }
-    };
-
-    loadMasters();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // Load job requirement by route ID.
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadJob = async () => {
-      setJob(undefined);
-
-      if (!id || !Number.isInteger(Number(id)) || Number(id) <= 0) {
-        setJob(null);
-        setToast({
-          tone: "bad",
-          msg: "Invalid job requirement ID.",
-        });
-        return;
-      }
-
-      try {
-        const response = await getJobRequirementById(id);
-        const item = unwrap(response);
-
-        if (
-          !item ||
-          typeof item !== "object" ||
-          !pick(
-            item,
-            "JQ_job_requirement_id",
-            "jQ_job_requirement_id",
-            "id",
-            "Id"
-          )
-        ) {
+        if (!item || typeof item !== "object" || !pick(item, "JQ_job_requirement_id", "id")) {
           throw new Error("Job requirement not found.");
         }
 
         if (cancelled) return;
 
-        const mapped = {
-          ...emptyForm,
+        // The job response only has the city ID, so derive state and country from the masters.
+        const rawStates = extractList(stateRes);
+        const rawCities = extractList(cityRes);
+        const jobCityId = String(pick(item, "JQ_job_location") ?? "");
 
-          instituteTypeId: String(
-            pick(
-              item,
-              "JQ_institute_type_id",
-              "instituteTypeId",
-              "iT_institute_type_id"
-            ) ?? ""
-          ),
+        const city = rawCities.find(
+          (row) => String(pick(row, ...OPTION_CONFIG.city.id)) === jobCityId,
+        );
+        const stateId = city
+          ? String(pick(city, ...OPTION_CONFIG.city.parent) ?? "")
+          : "";
 
-          jobRoleId: String(
-            pick(item, "JQ_job_role_id", "jobRoleId", "jR_job_role_id") ?? ""
-          ),
+        const state = rawStates.find(
+          (row) => String(pick(row, ...OPTION_CONFIG.state.id)) === stateId,
+        );
+        const countryId = state
+          ? String(pick(state, ...OPTION_CONFIG.state.parent) ?? "")
+          : "";
 
-          jobCategoryId: String(
-            pick(
-              item,
-              "JQ_job_category_id",
-              "jobCategoryId",
-              "jC_job_category_id"
-            ) ?? ""
-          ),
-
-          position:
-            pick(item, "JQ_position_title", "positionTitle", "position") ?? "",
-
-          department:
-            pick(
-              item,
-              "JQ_department_speciality",
-              "departmentSpeciality",
-              "department"
-            ) ?? "",
-
-          vacancies: String(pick(item, "JQ_vacancies", "vacancies") ?? ""),
-
-          qualification:
-            pick(item, "JQ_qualification", "qualification") ?? "",
-
-          experience:
-            pick(item, "JQ_experience", "experience") ?? "",
-
-          salary: String(pick(item, "JQ_salary", "salary") ?? ""),
-
-          countryId: String(
-            pick(
-              item,
-              "countryId",
-              "JQ_country_id",
-              "CM_Id",
-              "cM_Id"
-            ) ?? ""
-          ),
-
-          stateId: String(
-            pick(
-              item,
-              "stateId",
-              "JQ_state_id",
-              "SM_Id",
-              "sM_Id"
-            ) ?? ""
-          ),
-
-          cityId: String(
-            pick(
-              item,
-              "JQ_job_location",
-              "jobLocationId",
-              "cityId",
-              "CTM_Id",
-              "ctM_Id"
-            ) ?? ""
-          ),
-
-          employmentTypeId: String(
-            pick(
-              item,
-              "JQ_employment_type_id",
-              "employmentTypeId",
-              "eT_employment_type_id"
-            ) ?? ""
-          ),
-
-          dutyHours:
-            pick(item, "JQ_duty_hours", "dutyHours") ?? "",
-
-          accommodation: toBooleanString(
-            pick(item, "JQ_accommodation", "accommodation")
-          ),
-
-          food: toBooleanString(pick(item, "JQ_food", "food")),
-
-          joiningDate: toDateInput(
-            pick(
-              item,
-              "JQ_expected_joining_date",
-              "expectedJoiningDate",
-              "joiningDate"
-            )
-          ),
-
-          deadline: toDateInput(pick(item, "JQ_deadline", "deadline")),
-
-          description:
-            pick(item, "JQ_description", "description") ?? "",
-        };
+        setMasters({
+          institute: toOptions(extractList(instituteRes), OPTION_CONFIG.institute),
+          employment: toOptions(extractList(employmentRes), OPTION_CONFIG.employment),
+          country: toOptions(extractList(countryRes), OPTION_CONFIG.country),
+        });
 
         setJob(item);
-        setForm(mapped);
+        setForm({
+          instituteTypeId: String(pick(item, "JQ_institute_type_id") ?? ""),
+          jobRoleId: String(pick(item, "JQ_job_role_id") ?? ""),
+          jobCategoryId: String(pick(item, "JQ_job_category_id") ?? ""),
+          position: pick(item, "JQ_position_title") ?? "",
+          department: pick(item, "JQ_department_speciality") ?? "",
+          vacancies: String(pick(item, "JQ_vacancies") ?? ""),
+          qualification: pick(item, "JQ_qualification_required") ?? "",
+          experience: pick(item, "JQ_experience_required") ?? "",
+          salary: pick(item, "JQ_salary_range") ?? "",
+          countryId,
+          stateId,
+          cityId: jobCityId,
+          employmentTypeId: String(pick(item, "JQ_employment_type_id") ?? ""),
+          dutyHours: pick(item, "JQ_duty_hours") ?? "",
+          accommodation: toBooleanString(pick(item, "JQ_accommodation")),
+          food: toBooleanString(pick(item, "JQ_food_facility")),
+          joiningDate: toDateInput(pick(item, "JQ_expected_joining_date")),
+          deadline: toDateInput(pick(item, "JQ_deadline")),
+          description: pick(item, "JQ_description") ?? "",
+        });
 
-        setExistingAttachment(
-          pick(
-            item,
-            "attachmentUrl",
-            "JQ_attachment_url",
-            "attachment",
-            "JQ_attachment"
-          ) ?? ""
-        );
+        setExistingAttachmentPath(pick(item, "JQ_jd_file_path") ?? "");
       } catch (error) {
         if (!cancelled) {
           setJob(null);
-          setToast({
-            tone: "bad",
-            msg: getErrorMessage(error),
-          });
+          setToast({ tone: "bad", msg: getErrorMessage(error) });
         }
+      } finally {
+        if (!cancelled) setLoadingPage(false);
       }
     };
 
-    loadJob();
+    load();
 
     return () => {
       cancelled = true;
     };
   }, [id]);
 
-  // Load dependent dropdown data when editing an existing requirement.
   useEffect(() => {
-    if (job === undefined || job === null || loadingMasters) return;
+    if (!toast) return undefined;
+    const timer = setTimeout(() => setToast(null), 3500);
+    return () => clearTimeout(timer);
+  }, [toast]);
 
-    let cancelled = false;
+  const onAttachmentChange = (event) => {
+    const selected = event.target.files?.[0] || null;
 
-    const loadDependentMasters = async () => {
-      try {
-        const tasks = [];
+    if (selected) {
+      const validExtension = /\.(pdf|doc|docx)$/i.test(selected.name);
 
-        if (form.instituteTypeId) {
-          tasks.push(
-            jobRoleApi
-              .getByInstituteType(Number(form.instituteTypeId))
-              .then((response) => {
-                if (!cancelled) setJobRoles(extractList(response));
-              })
-          );
-        } else {
-          setJobRoles([]);
-        }
-
-        if (form.countryId) {
-          tasks.push(
-            getMasterList(stateMasterApi).then((list) => {
-              if (cancelled) return;
-
-              setStates(
-                list.filter(
-                  (item) =>
-                    String(
-                      pick(item, "sM_CountryId", "SM_CountryId", "countryId")
-                    ) === String(form.countryId)
-                )
-              );
-            })
-          );
-        } else {
-          setStates([]);
-        }
-
-        if (form.stateId) {
-          tasks.push(
-            getMasterList(cityMasterApi).then((list) => {
-              if (cancelled) return;
-
-              setCities(
-                list.filter(
-                  (item) =>
-                    String(
-                      pick(item, "ctM_StateId", "CTM_StateId", "stateId")
-                    ) === String(form.stateId)
-                )
-              );
-            })
-          );
-        } else {
-          setCities([]);
-        }
-
-        if (form.jobRoleId) {
-          tasks.push(
-            getMasterList(jobCategoryApi).then((list) => {
-              if (cancelled) return;
-
-              setJobCategories(
-                list.filter(
-                  (item) =>
-                    String(
-                      pick(item, "jC_job_role_id", "JC_job_role_id", "jobRoleId")
-                    ) === String(form.jobRoleId)
-                )
-              );
-            })
-          );
-        } else {
-          setJobCategories([]);
-        }
-
-        await Promise.all(tasks);
-      } catch (error) {
-        if (!cancelled) {
-          setMasterError(getErrorMessage(error));
-        }
+      if (!validExtension) {
+        setErrors((current) => ({
+          ...current,
+          attachment: "Only PDF, DOC, or DOCX files are allowed.",
+        }));
+        event.target.value = "";
+        setAttachment(null);
+        return;
       }
-    };
 
-    loadDependentMasters();
+      if (selected.size > 5 * 1024 * 1024) {
+        setErrors((current) => ({
+          ...current,
+          attachment: "Attachment must be 5 MB or smaller.",
+        }));
+        event.target.value = "";
+        setAttachment(null);
+        return;
+      }
+    }
 
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    job,
-    loadingMasters,
-    form.instituteTypeId,
-    form.jobRoleId,
-    form.countryId,
-    form.stateId,
-  ]);
+    setAttachment(selected);
+    setErrors((current) => ({ ...current, attachment: undefined }));
+  };
 
-  // Reusable dropdown rendering.
+  const validateForm = () => {
+    const next = {};
+
+    if (!form.jobRoleId) next.jobRoleId = "Job role is required.";
+    if (!form.jobCategoryId) next.jobCategoryId = "Job category is required.";
+    if (!form.position.trim()) next.position = "Position title is required.";
+    if (!form.vacancies || Number(form.vacancies) < 1) {
+      next.vacancies = "Enter at least one vacancy.";
+    }
+    if (!form.employmentTypeId) next.employmentTypeId = "Employment type is required.";
+    if (!form.countryId) next.countryId = "Country is required.";
+    if (!form.stateId) next.stateId = "State is required.";
+    if (!form.cityId) next.cityId = "City is required.";
+
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
+  const save = async (event) => {
+    event.preventDefault();
+
+    if (!validateForm()) {
+      setToast({ tone: "bad", msg: "Please fix the highlighted fields." });
+      return;
+    }
+
+    const employerId = Number(pick(job, "JQ_employer_id"));
+    if (!Number.isInteger(employerId) || employerId <= 0) {
+      setToast({
+        tone: "bad",
+        msg: "Unable to identify the employer. Please log in again.",
+      });
+      return;
+    }
+
+    const payload = new FormData();
+
+    payload.append("JQ_employer_id", String(employerId));
+    payload.append("JQ_institute_type_id", form.instituteTypeId);
+    payload.append("JQ_job_role_id", form.jobRoleId);
+    payload.append("JQ_job_category_id", form.jobCategoryId);
+    payload.append("JQ_position_title", form.position.trim());
+    payload.append("JQ_vacancies", String(Number(form.vacancies)));
+    payload.append("JQ_employment_type_id", form.employmentTypeId);
+    payload.append("JQ_job_location", form.cityId);
+    payload.append("JQ_accommodation", String(form.accommodation === "true"));
+    payload.append("JQ_food_facility", String(form.food === "true"));
+
+    // Optional fields are always sent, so a cleared value is saved as empty.
+    payload.append("JQ_department_speciality", form.department.trim());
+    payload.append("JQ_qualification_required", form.qualification.trim());
+    payload.append("JQ_experience_required", form.experience.trim());
+    payload.append("JQ_salary_range", form.salary.trim());
+    payload.append("JQ_duty_hours", form.dutyHours.trim());
+    payload.append("JQ_description", form.description.trim());
+    payload.append(
+      "JQ_deadline",
+      form.deadline ? `${form.deadline}T00:00:00` : "",
+    );
+    payload.append(
+      "JQ_expected_joining_date",
+      form.joiningDate ? `${form.joiningDate}T00:00:00` : "",
+    );
+
+    if (attachment) payload.append("Attachment", attachment);
+
+    setSaving(true);
+    setToast(null);
+
+    try {
+      await updateJobRequirement(id, payload);
+
+      setToast({ tone: "ok", msg: "Job requirement updated successfully." });
+
+      setTimeout(() => {
+        navigate(`/employer/job-requirements/${id}`);
+      }, 700);
+    } catch (error) {
+      setToast({ tone: "bad", msg: getErrorMessage(error) });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const renderSelect = ({
     name,
     label,
     required = false,
     options,
-    idKeys,
-    labelKeys,
     disabled = false,
     loading = false,
+    placeholder = `Select ${label}`,
   }) => (
     <div>
       <label
@@ -536,28 +518,18 @@ export default function JobRequirementEdit() {
       <select
         id={name}
         value={form[name] ?? ""}
-        disabled={disabled || loading || loadingMasters}
-        onChange={(e) => change(name, e.target.value)}
+        disabled={disabled || loading || saving}
+        onChange={(event) => change(name, event.target.value)}
         className={`${inputCls} h-10 cursor-pointer ${
           errors[name] ? "border-rose-500" : "border-[#c9d5dd]"
-        } disabled:cursor-not-allowed disabled:bg-slate-100`}
+        } disabled:cursor-not-allowed`}
       >
-        <option value="">
-          {loading ? "Loading..." : `Select ${label}`}
-        </option>
-
-        {options.map((item, index) => {
-          const optionId = getId(item, idKeys);
-          const optionLabel = getOptionLabel(item, labelKeys);
-
-          if (optionId == null) return null;
-
-          return (
-            <option key={`${name}-${optionId}-${index}`} value={String(optionId)}>
-              {optionLabel || `Option ${optionId}`}
-            </option>
-          );
-        })}
+        <option value="">{loading ? "Loading..." : placeholder}</option>
+        {options.map((option) => (
+          <option key={`${name}-${option.value}`} value={option.value}>
+            {option.label || `Option ${option.value}`}
+          </option>
+        ))}
       </select>
 
       {errors[name] && (
@@ -571,10 +543,9 @@ export default function JobRequirementEdit() {
     label,
     type = "text",
     required = false,
-    full = false,
     min,
   }) => (
-    <div className={full ? "md:col-span-2" : ""}>
+    <div>
       <label
         htmlFor={name}
         className="block text-[13px] font-semibold text-[#34445a]"
@@ -588,8 +559,9 @@ export default function JobRequirementEdit() {
         type={type}
         min={min}
         value={form[name] ?? ""}
-        onChange={(e) => change(name, e.target.value)}
-        className={`${inputCls} h-10 ${
+        disabled={saving}
+        onChange={(event) => change(name, event.target.value)}
+        className={`${inputCls} h-10 border ${
           errors[name] ? "border-rose-500" : "border-[#c9d5dd]"
         }`}
       />
@@ -600,269 +572,16 @@ export default function JobRequirementEdit() {
     </div>
   );
 
-  const handleInstituteTypeChange = async (value) => {
-    change("instituteTypeId", value);
-    setForm((current) => ({
-      ...current,
-      instituteTypeId: value,
-      jobRoleId: "",
-      jobCategoryId: "",
-    }));
-    setJobRoles([]);
-    setJobCategories([]);
+  const yesNoOptions = [
+    { value: "true", label: "Yes" },
+    { value: "false", label: "No" },
+  ];
 
-    if (!value) return;
-
-    setLoadingRoles(true);
-
-    try {
-      const response = await jobRoleApi.getByInstituteType(Number(value));
-      setJobRoles(extractList(response));
-    } catch (error) {
-      setToast({ tone: "bad", msg: getErrorMessage(error) });
-    } finally {
-      setLoadingRoles(false);
-    }
-  };
-
-  const handleJobRoleChange = async (value) => {
-    setForm((current) => ({
-      ...current,
-      jobRoleId: value,
-      jobCategoryId: "",
-    }));
-    setErrors((current) => ({
-      ...current,
-      jobRoleId: undefined,
-      jobCategoryId: undefined,
-    }));
-    setJobCategories([]);
-
-    if (!value) return;
-
-    setLoadingCategories(true);
-
-    try {
-      const list = await getMasterList(jobCategoryApi);
-
-      setJobCategories(
-        list.filter(
-          (item) =>
-            String(
-              pick(item, "jC_job_role_id", "JC_job_role_id", "jobRoleId")
-            ) === String(value)
-        )
-      );
-    } catch (error) {
-      setToast({ tone: "bad", msg: getErrorMessage(error) });
-    } finally {
-      setLoadingCategories(false);
-    }
-  };
-
-  const handleCountryChange = async (value) => {
-    setForm((current) => ({
-      ...current,
-      countryId: value,
-      stateId: "",
-      cityId: "",
-    }));
-    setStates([]);
-    setCities([]);
-
-    if (!value) return;
-
-    setLoadingStates(true);
-
-    try {
-      const list = await getMasterList(stateMasterApi);
-
-      setStates(
-        list.filter(
-          (item) =>
-            String(pick(item, "sM_CountryId", "SM_CountryId", "countryId")) ===
-            String(value)
-        )
-      );
-    } catch (error) {
-      setToast({ tone: "bad", msg: getErrorMessage(error) });
-    } finally {
-      setLoadingStates(false);
-    }
-  };
-
-  const handleStateChange = async (value) => {
-    setForm((current) => ({
-      ...current,
-      stateId: value,
-      cityId: "",
-    }));
-    setCities([]);
-
-    if (!value) return;
-
-    setLoadingCities(true);
-
-    try {
-      const list = await getMasterList(cityMasterApi);
-
-      setCities(
-        list.filter(
-          (item) =>
-            String(pick(item, "ctM_StateId", "CTM_StateId", "stateId")) ===
-            String(value)
-        )
-      );
-    } catch (error) {
-      setToast({ tone: "bad", msg: getErrorMessage(error) });
-    } finally {
-      setLoadingCities(false);
-    }
-  };
-
-  const validateForm = () => {
-    const nextErrors = {};
-
-    if (!form.instituteTypeId) {
-      nextErrors.instituteTypeId = "Institute type is required.";
-    }
-    if (!form.jobRoleId) {
-      nextErrors.jobRoleId = "Job role is required.";
-    }
-    if (!form.jobCategoryId) {
-      nextErrors.jobCategoryId = "Job category is required.";
-    }
-    if (!form.position.trim()) {
-      nextErrors.position = "Position title is required.";
-    }
-    if (!form.vacancies || Number(form.vacancies) < 1) {
-      nextErrors.vacancies = "Enter at least one vacancy.";
-    }
-    if (!form.employmentTypeId) {
-      nextErrors.employmentTypeId = "Employment type is required.";
-    }
-    if (!form.cityId) {
-      nextErrors.cityId = "Job location is required.";
-    }
-
-    if (attachment) {
-      const allowedTypes = [
-        "application/pdf",
-        "application/msword",
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      ];
-
-      const validExtension = /\.(pdf|doc|docx)$/i.test(attachment.name);
-
-      if (!validExtension && !allowedTypes.includes(attachment.type)) {
-        nextErrors.attachment = "Only PDF, DOC, or DOCX files are allowed.";
-      } else if (attachment.size > 5 * 1024 * 1024) {
-        nextErrors.attachment = "Attachment must be 5 MB or smaller.";
-      }
-    }
-
-    setErrors(nextErrors);
-    return Object.keys(nextErrors).length === 0;
-  };
-
-  const save = async (event) => {
-    event.preventDefault();
-
-    if (!validateForm()) {
-      setToast({
-        tone: "bad",
-        msg: "Please fix the highlighted fields.",
-      });
-      return;
-    }
-
-    const employerId =
-      Number(
-        pick(
-          job,
-          "JQ_employer_id",
-          "employerId",
-          "EM_employer_id"
-        )
-      ) || getEmployerId();
-
-    if (!employerId) {
-      setToast({
-        tone: "bad",
-        msg: "Unable to identify the employer. Please log in again.",
-      });
-      return;
-    }
-
-    const payload = new FormData();
-
-    payload.append("JQ_employer_id", String(employerId));
-    payload.append("JQ_institute_type_id", String(form.instituteTypeId));
-    payload.append("JQ_job_role_id", String(form.jobRoleId));
-    payload.append("JQ_job_category_id", String(form.jobCategoryId));
-    payload.append("JQ_position_title", form.position.trim());
-    payload.append("JQ_vacancies", String(Number(form.vacancies)));
-    payload.append("JQ_job_location", String(form.cityId));
-    payload.append("JQ_employment_type_id", String(form.employmentTypeId));
-    payload.append("JQ_accommodation", form.accommodation);
-    payload.append("JQ_food", form.food);
-
-    const optionalFields = {
-      JQ_department_speciality: form.department,
-      JQ_qualification: form.qualification,
-      JQ_experience: form.experience,
-      JQ_salary: form.salary,
-      JQ_duty_hours: form.dutyHours,
-      JQ_description: form.description,
-      JQ_deadline: form.deadline,
-      JQ_expected_joining_date: form.joiningDate,
-    };
-
-    Object.entries(optionalFields).forEach(([key, value]) => {
-      if (value !== undefined && value !== null && value !== "") {
-        payload.append(key, value);
-      }
-    });
-
-    if (attachment) {
-      payload.append("Attachment", attachment);
-    }
-
-    setSaving(true);
-
-    try {
-      await updateJobRequirement(id, payload);
-
-      setToast({
-        tone: "ok",
-        msg: "Job requirement updated successfully.",
-      });
-
-      setTimeout(() => {
-        navigate(`/employer/job-requirements/${id}`);
-      }, 700);
-    } catch (error) {
-      setToast({
-        tone: "bad",
-        msg: getErrorMessage(error),
-      });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!toast) return undefined;
-
-    const timer = setTimeout(() => setToast(null), 3500);
-    return () => clearTimeout(timer);
-  }, [toast]);
-
-  if (job === undefined || loadingMasters) {
+  if (loadingPage) {
     return (
       <div className="flex min-h-64 items-center justify-center gap-3 p-5 text-[#2c6b8a]">
         <LoaderCircle size={22} className="animate-spin" />
-        Loading job requirement and master data...
+        Loading job requirement...
       </div>
     );
   }
@@ -884,18 +603,24 @@ export default function JobRequirementEdit() {
     );
   }
 
+  const requirementNumber = pick(job, "JQ_job_re_id") ?? `#${id}`;
+  const interestedCount = Number(
+    pick(job, "applicantsCount", "applicantCount", "applicants") || 0,
+  );
+  const instituteTypeName = pick(job, "instituteTypeName") ?? "-";
+  const existingAttachmentName = existingAttachmentPath
+    ? existingAttachmentPath.split("/").pop()
+    : "";
+
   return (
     <div className="text-[#1e2b36]">
       <header
-        className="ep-hero relative mb-4 overflow-hidden rounded-2xl p-4 text-white shadow-sm sm:px-4 sm:py-2"
+        className="ep-hero relative mb-4 overflow-hidden rounded-2xl px-4 text-white shadow-sm py-2"
         style={{
           backgroundImage:
             "linear-gradient(110deg,#17405a 0%,#2f6b8a 40%,#4a9bb3 70%,#2f6b8a 100%)",
         }}
       >
-        <span className="ep-orb ep-orb-a !h-40 !w-40" />
-        <span className="ep-orb ep-orb-b !h-24 !w-24" />
-
         <div className="relative flex flex-wrap items-center gap-3.5">
           <button
             type="button"
@@ -911,178 +636,129 @@ export default function JobRequirementEdit() {
             <h1 className="m-0 text-[22px] font-extrabold tracking-tight sm:text-[26px]">
               Edit Job Requirement
             </h1>
-            <p className="mt-1 text-sm text-white/80">
-              Requirement ID: {id}
-            </p>
           </div>
 
           <span className="inline-flex h-8 items-center gap-1.5 rounded-full bg-white/15 px-3 text-[13px] font-medium backdrop-blur-sm">
             <Users size={14} />
-            {Number(pick(job, "applicantsCount", "applicantCount", "applicants") || 0)}{" "}
-            interested
+            {interestedCount} interested
           </span>
         </div>
       </header>
 
       <main className="mx-auto max-w-[1100px]">
-        {masterError && (
-          <div className="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
-            {masterError}
-          </div>
-        )}
-
         <form
           onSubmit={save}
           noValidate
           className="rounded-xl border border-[#e2e8ee] bg-white p-5 shadow-sm"
         >
+          <h2 className="mb-4 border-b pb-2 text-sm font-bold text-[#2f6b8a]">
+            Job Information
+          </h2>
+
           <div className="grid gap-x-5 gap-y-4 md:grid-cols-2">
-            {renderSelect({
-              name: "instituteTypeId",
-              label: "Institute Type",
-              required: true,
-              options: instituteTypes,
-              idKeys: ["iT_institute_type_id", "IT_institute_type_id", "id"],
-              labelKeys: ["iT_name", "IT_name", "iT_institute_type_name", "name"],
-            })}
+            <div>
+              <label className="block text-[13px] font-semibold text-[#34445a]">
+                Job Type <span className="text-rose-600">*</span>
+              </label>
+              <input
+                type="text"
+                readOnly
+                disabled
+                value={instituteTypeName}
+                className={`${inputCls} h-10 border border-[#c9d5dd] bg-slate-100`}
+              />
+            </div>
 
             {renderSelect({
               name: "jobRoleId",
               label: "Job Role",
               required: true,
-              options: jobRoles,
-              idKeys: ["jR_job_role_id", "JR_job_role_id", "id"],
-              labelKeys: ["jR_name", "JR_name", "jR_job_role_name", "name"],
+              options: roles.options,
+              loading: roles.loading,
               disabled: !form.instituteTypeId,
-              loading: loadingRoles,
+              placeholder: "Select Job Role",
             })}
 
             {renderSelect({
               name: "jobCategoryId",
               label: "Job Category",
               required: true,
-              options: jobCategories,
-              idKeys: ["jC_job_category_id", "JC_job_category_id", "id"],
-              labelKeys: [
-                "jC_name",
-                "JC_name",
-                "jC_job_category_name",
-                "jC_job_responsibility",
-                "name",
-              ],
+              options: categories.options,
+              loading: categories.loading,
               disabled: !form.jobRoleId,
-              loading: loadingCategories,
+              placeholder: "Select Job Category",
             })}
 
-            {renderInput({
-              name: "position",
-              label: "Position Title",
-              required: true,
-            })}
-
-            {renderInput({
-              name: "department",
-              label: "Department / Speciality",
-            })}
-
+            {renderInput({ name: "position", label: "Position Title", required: true })}
+            {renderInput({ name: "department", label: "Department / Speciality" })}
             {renderInput({
               name: "vacancies",
               label: "Number of Vacancies",
-              required: true,
               type: "number",
+              required: true,
               min: 1,
             })}
-
-            {renderInput({
-              name: "qualification",
-              label: "Qualification",
-            })}
-
-            {renderInput({
-              name: "experience",
-              label: "Experience",
-            })}
-
-            {renderInput({
-              name: "salary",
-              label: "Salary",
-            })}
+            {renderInput({ name: "qualification", label: "Qualification Required" })}
+            {renderInput({ name: "experience", label: "Experience Required" })}
+            {renderInput({ name: "salary", label: "Salary Range" })}
 
             {renderSelect({
               name: "employmentTypeId",
               label: "Employment Type",
               required: true,
-              options: employmentTypes,
-              idKeys: ["eT_employment_type_id", "ET_employment_type_id", "id"],
-              labelKeys: ["eT_name", "ET_name", "eT_employment_type_name", "name"],
+              options: masters.employment,
+              placeholder: "Select Employment Type",
             })}
+
+            {renderInput({ name: "dutyHours", label: "Duty Hours" })}
+
+            {renderSelect({
+              name: "accommodation",
+              label: "Accommodation",
+              options: yesNoOptions,
+              placeholder: "Select",
+            })}
+
+            {renderSelect({
+              name: "food",
+              label: "Food Facility",
+              options: yesNoOptions,
+              placeholder: "Select",
+            })}
+
+            {renderInput({ name: "joiningDate", label: "Expected Joining Date", type: "date" })}
+            {renderInput({ name: "deadline", label: "Application Deadline", type: "date" })}
+
+            <h2 className="mt-3 border-b pb-2 text-sm font-bold text-[#2f6b8a] md:col-span-2">
+              Job Location
+            </h2>
 
             {renderSelect({
               name: "countryId",
               label: "Country",
-              options: countries,
-              idKeys: ["cM_Id", "CM_Id", "countryId", "id"],
-              labelKeys: ["cM_CountryName", "CM_CountryName", "countryName", "name"],
+              required: true,
+              options: masters.country,
+              placeholder: "Select Country",
             })}
 
             {renderSelect({
               name: "stateId",
               label: "State",
-              options: states,
-              idKeys: ["sM_Id", "SM_Id", "stateId", "id"],
-              labelKeys: ["sM_StateName", "SM_StateName", "stateName", "name"],
+              required: true,
+              options: states.options,
+              loading: states.loading,
               disabled: !form.countryId,
-              loading: loadingStates,
+              placeholder: "Select State",
             })}
 
             {renderSelect({
               name: "cityId",
-              label: "City / Job Location",
+              label: "City",
               required: true,
-              options: cities,
-              idKeys: ["ctM_Id", "CTM_Id", "cityId", "id"],
-              labelKeys: ["ctM_CityName", "CTM_CityName", "cityName", "name"],
+              options: cities.options,
+              loading: cities.loading,
               disabled: !form.stateId,
-              loading: loadingCities,
-            })}
-
-            {renderInput({
-              name: "dutyHours",
-              label: "Duty Hours",
-            })}
-
-            {renderSelect({
-              name: "accommodation",
-              label: "Accommodation Provided",
-              options: [
-                { id: "true", name: "Yes" },
-                { id: "false", name: "No" },
-              ],
-              idKeys: ["id"],
-              labelKeys: ["name"],
-            })}
-
-            {renderSelect({
-              name: "food",
-              label: "Food Provided",
-              options: [
-                { id: "true", name: "Yes" },
-                { id: "false", name: "No" },
-              ],
-              idKeys: ["id"],
-              labelKeys: ["name"],
-            })}
-
-            {renderInput({
-              name: "joiningDate",
-              label: "Expected Joining Date",
-              type: "date",
-            })}
-
-            {renderInput({
-              name: "deadline",
-              label: "Application Deadline",
-              type: "date",
+              placeholder: "Select City",
             })}
 
             <div className="md:col-span-2">
@@ -1090,44 +766,36 @@ export default function JobRequirementEdit() {
                 htmlFor="description"
                 className="block text-[13px] font-semibold text-[#34445a]"
               >
-                Job Description / Special Requirements
+                Job Description
               </label>
               <textarea
                 id="description"
                 rows={5}
                 value={form.description}
+                disabled={saving}
                 onChange={(event) => change("description", event.target.value)}
-                className={`${inputCls} py-2 ${
-                  errors.description ? "border-rose-500" : "border-[#c9d5dd]"
-                }`}
+                className={`${inputCls} py-2 border border-[#c9d5dd]`}
               />
-              {errors.description && (
-                <p className="mt-1 text-[12px] text-rose-600">
-                  {errors.description}
-                </p>
-              )}
             </div>
 
             <div className="md:col-span-2">
-              <label
-                htmlFor="attachment"
-                className="block text-[13px] font-semibold text-[#34445a]"
-              >
-                Attachment (PDF, DOC, DOCX; maximum 5 MB)
-              </label>
+              <span className="block text-[13px] font-semibold text-[#34445a]">
+                Upload Job Description (optional)
+              </span>
 
-              {existingAttachment && (
-                <p className="mt-2 text-sm text-[#6b7a88]">
-                  An attachment already exists. Select a new file to replace it.
+              {existingAttachmentName && (
+                <p className="mt-1 text-[13px] text-[#6b7a88]">
+                  Current file: {existingAttachmentName}. Choose a new file to
+                  replace it.
                 </p>
               )}
 
               <div className="mt-1 flex flex-wrap items-center gap-3">
                 <label
                   htmlFor="attachment"
-                  className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-[#c9d5dd] px-3 py-2 text-sm hover:border-[#2c6b8a]"
+                  className="inline-flex h-10 cursor-pointer items-center gap-1.5 rounded-lg border border-dashed border-[#2c6b8a] bg-[#f4f9fb] px-4 text-[14px] font-medium text-[#2c6b8a] hover:bg-[#e8f1f6]"
                 >
-                  <Paperclip size={16} />
+                  <Paperclip size={15} />
                   Choose file
                 </label>
 
@@ -1136,17 +804,11 @@ export default function JobRequirementEdit() {
                   type="file"
                   accept=".pdf,.doc,.docx"
                   className="sr-only"
-                  onChange={(event) => {
-                    setAttachment(event.target.files?.[0] || null);
-                    setErrors((current) => ({
-                      ...current,
-                      attachment: undefined,
-                    }));
-                  }}
+                  onChange={onAttachmentChange}
                 />
 
-                <span className="break-all text-sm text-[#6b7a88]">
-                  {attachment?.name || "No new file selected"}
+                <span className="break-all text-[13px] text-[#6b7a88]">
+                  {attachment?.name || "PDF or Word, up to 5 MB"}
                 </span>
               </div>
 
@@ -1162,6 +824,7 @@ export default function JobRequirementEdit() {
             <button
               type="button"
               onClick={() => navigate(`/employer/job-requirements/${id}`)}
+              disabled={saving}
               className="h-10 cursor-pointer rounded-[10px] border border-[#dce3eb] bg-white px-5 text-[14px] font-semibold text-[#34445a] hover:bg-slate-50"
             >
               Cancel

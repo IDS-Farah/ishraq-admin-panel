@@ -2,7 +2,7 @@ import axiosInstance from "./axiosInstance";
 
 const API = "/JobRequirement";
 
-/* ======================== GET ALL / PAGINATION ======================== */
+/* ======================== GET ALL / PAGINATION + FILTERS ======================== */
 
 export const getJobRequirements = async (filters = {}) => {
   const response = await axiosInstance.get(API, {
@@ -11,6 +11,31 @@ export const getJobRequirements = async (filters = {}) => {
 
   return response.data;
 };
+
+/* ======================== GET EMPLOYER JOB REQUIREMENTS WITH PAGINATION ======================== */
+
+
+/* ======================== EMPLOYER JOB REQUIREMENTS WITH PAGINATION ======================== */
+
+export const getEmployerJobRequirementsPaginated = async (
+  employerId,
+  { pageNo = 1, pageSize = 10 } = {}
+) => {
+  if (!employerId) {
+    throw new Error("Employer ID is required.");
+  }
+
+  const response = await axiosInstance.get(API, {
+    params: {
+      employerid: employerId,
+      pageNo,
+      pageSize,
+    },
+  });
+
+  return response.data;
+};
+
 
 /* ======================== GET ALL LIST ======================== */
 
@@ -28,12 +53,14 @@ export const getJobRequirementById = async (id) => {
   return response.data;
 };
 
-/* ======================== GET BY EMPLOYER ID ======================== */
+/* ======================== GET BY EMPLOYER ID (UNPAGINATED) ======================== */
 
 export const getJobRequirementsByEmployer = async (employerId) => {
-  const response = await axiosInstance.get(
-    `${API}/employer/${employerId}`
-  );
+  if (!employerId) {
+    throw new Error("Employer ID is required.");
+  }
+
+  const response = await axiosInstance.get(`${API}/employer/${employerId}`);
 
   return response.data;
 };
@@ -53,15 +80,11 @@ export const createJobRequirement = async (formData) => {
 /* ======================== UPDATE ======================== */
 
 export const updateJobRequirement = async (id, formData) => {
-  const response = await axiosInstance.put(
-    `${API}/${id}`,
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    }
-  );
+  const response = await axiosInstance.put(`${API}/${id}`, formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
 
   return response.data;
 };
@@ -69,29 +92,20 @@ export const updateJobRequirement = async (id, formData) => {
 /* ======================== ACTIVATE / DEACTIVATE ======================== */
 
 export const toggleJobRequirementActive = async (id, isActive) => {
-  const response = await axiosInstance.patch(
-    `${API}/${id}/active`,
-    null,
-    {
-      params: { isActive },
-    }
-  );
+  const response = await axiosInstance.patch(`${API}/${id}/active`, null, {
+    params: { isActive },
+  });
 
   return response.data;
 };
 
 /* ======================== UPDATE STATUS AND DEADLINE ======================== */
 
-export const updateJobRequirementStatusAndDeadline = async (
-  id,
-  payload
-) => {
+export const updateJobRequirementStatusAndDeadline = async (id, payload) => {
   const response = await axiosInstance.put(
     `${API}/${id}/status-deadline`,
-    payload
+    payload,
   );
 
   return response.data;
 };
-
-

@@ -1,255 +1,230 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
+  Briefcase,
+  Building2,
+  CalendarDays,
   ChevronsLeft,
-  Pencil,
-  Users,
-  UserPlus,
-  BriefcaseBusiness,
+  ClipboardList,
+  FileText,
   LoaderCircle,
+  MapPin,
+  Pencil,
+  UserRound,
 } from "lucide-react";
+
 import { getJobRequirementById } from "../../../api/jobRequirementApi";
 
-const read = (obj, ...keys) => {
-  for (const key of keys) {
-    if (obj?.[key] !== undefined && obj?.[key] !== null) {
-      return obj[key];
+/* ======================== HELPERS ======================== */
+
+// Keys in the API are inconsistent (jQ_, JQ_, jq_), so every key is lower-cased for lookup.
+const toLowerKeys = (obj) =>
+  Object.fromEntries(
+    Object.entries(obj ?? {}).map(([key, value]) => [key.toLowerCase(), value]),
+  );
+
+// Unwraps { data: {...} } or { Data: {...} } response shapes.
+const unwrap = (response) => {
+  let current = response;
+
+  for (let i = 0; i < 3; i += 1) {
+    if (!current || typeof current !== "object" || Array.isArray(current)) break;
+
+    const next = current.data ?? current.Data;
+    if (next === undefined || next === null) break;
+    current = next;
+  }
+
+  return current;
+};
+
+const hasValue = (value) =>
+  value !== undefined && value !== null && String(value).trim() !== "";
+
+const text = (value) => (hasValue(value) ? String(value).trim() : "-");
+
+const yesNo = (value) => {
+  if (value === true || value === 1) return "Yes";
+  const normalized = String(value ?? "").toLowerCase();
+  if (normalized === "true" || normalized === "1") return "Yes";
+  if (normalized === "false" || normalized === "0") return "No";
+  return "-";
+};
+
+// Trims fractions past milliseconds (e.g. "2026-10-16T15:42:08.2901637")
+// so every browser parses the date.
+const formatDate = (value, withTime = false) => {
+  if (!hasValue(value)) return "-";
+
+  const cleaned = String(value).replace(/(\.\d{3})\d+/, "$1");
+  const date = new Date(cleaned);
+  if (Number.isNaN(date.getTime())) return "-";
+
+  return date.toLocaleString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    ...(withTime ? { hour: "2-digit", minute: "2-digit" } : {}),
+  });
+};
+
+const fileNameFromPath = (path) => (hasValue(path) ? path.split("/").pop() : "");
+
+const normalizeJob = (raw) => {
+  const row = toLowerKeys(raw);
+
+  const get = (...keys) => {
+    for (const key of keys) {
+      const value = row[key.toLowerCase()];
+      if (hasValue(value)) return value;
     }
-  }
-  return undefined;
-};
-
-const unwrapResponse = (response) => {
-  let result = response;
-
-  // Handle common API response wrappers.
-  for (let i = 0; i < 3; i++) {
-    if (!result || typeof result !== "object" || Array.isArray(result)) {
-      break;
-    }
-
-    const nested = read(result, "data", "Data");
-    if (nested === undefined) break;
-
-    result = nested;
-  }
-
-  return result;
-};
-
-const formatDate = (value, includeTime = false) => {
-  if (!value) return "—";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
-
-  return includeTime
-    ? date.toLocaleString()
-    : date.toLocaleDateString("en-GB");
-};
-
-const formatValue = (name, value) => {
-  if (value === undefined || value === null || value === "") return "—";
-
-  if (name === "joiningDate" || name === "deadline") {
-    return formatDate(value);
-  }
-
-  if (name === "mobile") {
-    const number = String(value).replace(/\D/g, "").slice(-10);
-
-    return (
-      <>
-        {value} ·{" "}
-        <a
-          className="text-[#2c6b8a] hover:underline"
-          href={`https://wa.me/91${number}`}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          WhatsApp
-        </a>
-      </>
-    );
-  }
-
-  if (name === "accommodation" || name === "food") {
-    return value === true || value === "true" || value === "Yes"
-      ? "Yes"
-      : value === false || value === "false" || value === "No"
-        ? "No"
-        : value;
-  }
-
-  return value;
-};
-
-const normalizeJob = (item) => {
-  if (!item || typeof item !== "object") return null;
+    return undefined;
+  };
 
   return {
-    id: read(item, "jQ_job_requirement_id", "JQ_job_requirement_id", "id", "Id"),
-    organizationName: read(
-      item,
-      "employerName",
-      "EM_organization_name",
-      "organizationName",
-      "JQ_employer_name"
-    ) ?? read(item, "employer", "Employer")?.name ?? "Job Requirement",
-
-    mobile: read(item, "mobile", "EM_mobile", "employerMobile", "JQ_mobile"),
-    position: read(item, "JQ_position_title", "positionTitle", "position", "PositionTitle"),
-    department: read(
-      item,
-      "JQ_department_speciality",
-      "departmentSpeciality",
-      "department",
-      "speciality"
-    ),
-    vacancies: read(item, "JQ_vacancies", "vacancies", "Vacancies") ?? 0,
-    qualification: read(item, "JQ_qualification", "qualification", "Qualification"),
-    experience: read(item, "JQ_experience", "experience", "Experience"),
-    salary: read(item, "JQ_salary", "salary", "Salary"),
-    location: read(
-      item,
-      "cityName",
-      "CTM_CityName",
-      "JQ_job_location_name",
-      "jobLocationName",
-      "location"
-    ),
-    employmentType: read(
-      item,
-      "employmentTypeName",
-      "ET_name",
-      "eT_name",
-      "employmentType",
-      "JQ_employment_type_name"
-    ),
-    dutyHours: read(item, "JQ_duty_hours", "dutyHours", "duty_hours"),
-    accommodation: read(item, "JQ_accommodation", "accommodation"),
-    food: read(item, "JQ_food", "food"),
-    joiningDate: read(
-      item,
-      "JQ_expected_joining_date",
-      "expectedJoiningDate",
-      "joiningDate"
-    ),
-    deadline: read(item, "JQ_deadline", "deadline"),
-    status: read(
-      item,
-      "jobStatusName",
-      "statusName",
-      "JQ_job_status_name",
-      "status",
-      "Status"
-    ) ?? "New",
-    description: read(
-      item,
-      "JQ_description",
-      "description",
-      "jobDescription"
-    ),
-    applicants: read(item, "applicantsCount", "applicantCount", "applicants") ?? 0,
-    attachment: read(item, "attachmentUrl", "JQ_attachment", "attachment"),
-    createdAt: read(item, "createdAt", "JQ_created_at", "createdDate"),
-    updatedAt: read(item, "updatedAt", "JQ_updated_at", "updatedDate"),
+    id: get("jQ_job_requirement_id"),
+    requirementNumber: get("jQ_job_re_id"),
+    position: get("jQ_position_title"),
+    employerName: get("employerName"),
+    instituteType: get("instituteTypeName"),
+    jobRole: get("jobRoleName"),
+    jobCategory: get("jobCategoryName"),
+    status: get("jobStatusName"),
+    employmentType: get("employmentTypeName"),
+    department: get("jQ_department_speciality"),
+    vacancies: get("jQ_vacancies"),
+    location: get("jobLocationName"),
+    qualification: get("jQ_qualification_required"),
+    experience: get("jQ_experience_required"),
+    salary: get("jQ_salary_range"),
+    dutyHours: get("jQ_duty_hours"),
+    accommodation: row["jq_accommodation"],
+    food: row["jq_food_facility"],
+    joiningDate: get("jQ_expected_joining_date"),
+    deadline: get("jQ_deadline"),
+    createdAt: get("jQ_created_at"),
+    updatedAt: get("jQ_updated_at"),
+    description: get("jQ_description"),
+    attachmentPath: get("jQ_jd_file_path"),
   };
 };
 
-const SummaryCard = ({ icon: Icon, label, value, from, to }) => (
-  <div className="flex items-center gap-3 rounded-xl border border-[#e2e8ee] bg-white p-4 shadow-sm">
-    <span
-      className={`grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br ${from} ${to} text-white shadow`}
-    >
-      <Icon size={20} />
-    </span>
-    <div className="min-w-0">
-      <p className="break-words text-[24px] font-extrabold leading-none text-[#1e2b36]">
-        {value ?? "—"}
-      </p>
-      <p className="mt-1 text-[13px] text-[#6b7a88]">{label}</p>
-    </div>
+const STATUS_STYLES = {
+  open: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  paused: "bg-amber-50 text-amber-700 ring-amber-200",
+  closed: "bg-slate-100 text-slate-600 ring-slate-200",
+};
+
+const getStatusStyle = (status = "") =>
+  STATUS_STYLES[status.trim().toLowerCase()] ?? "bg-slate-50 text-slate-600 ring-slate-200";
+
+/* ======================== SUB-COMPONENTS ======================== */
+
+const Section = ({ title, icon: Icon, children, className = "" }) => (
+  <section
+    className={`rounded-xl border border-[#e2e8ee] bg-white p-5 shadow-sm ${className}`}
+  >
+    <header className="mb-4 flex items-center gap-2.5 border-b border-[#e2e8ee] pb-3">
+      <span className="grid h-8 w-8 place-items-center rounded-lg bg-[#e8f1f6] text-[#2c6b8a]">
+        <Icon size={16} />
+      </span>
+      <h2 className="text-sm font-bold text-[#2c6b8a]">{title}</h2>
+    </header>
+    {children}
+  </section>
+);
+
+const Field = ({ label, children }) => (
+  <div className="min-w-0">
+    <dt className="text-[12px] font-semibold uppercase tracking-wide text-[#6b7a88]">
+      {label}
+    </dt>
+    <dd className="mt-1 break-words text-[15px] text-[#1e2b36]">{children}</dd>
   </div>
 );
+
+/* ======================== PAGE ======================== */
 
 export default function JobRequirementView() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const [job, setJob] = useState(null);
+  const [raw, setRaw] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
 
-    const fetchJob = async () => {
-      if (!id || !Number.isInteger(Number(id)) || Number(id) <= 0) {
-        setError("Invalid job requirement ID.");
-        setLoading(false);
-        return;
-      }
+    const numericId = Number(id);
+    if (!Number.isInteger(numericId) || numericId <= 0) {
+      setError("Invalid job requirement ID.");
+      setLoading(false);
+      return undefined;
+    }
 
+    const load = async () => {
       setLoading(true);
       setError("");
-      setJob(null);
 
       try {
-        const response = await getJobRequirementById(id);
-        const result = unwrapResponse(response);
-        const normalized = normalizeJob(result);
+        const response = await getJobRequirementById(numericId);
 
-        if (!normalized || normalized.id == null) {
+        if (response?.Success === false || response?.success === false) {
+          throw new Error(
+            response?.Message || response?.message || "Job requirement not found.",
+          );
+        }
+
+        const record = unwrap(response);
+
+        if (!record || typeof record !== "object" || !toLowerKeys(record).jq_job_requirement_id) {
           throw new Error("Job requirement not found.");
         }
 
-        if (!cancelled) {
-          setJob(normalized);
-        }
+        if (!cancelled) setRaw(record);
       } catch (err) {
         if (!cancelled) {
+          setRaw(null);
           setError(
-            err?.response?.data?.message ||
-              err?.response?.data?.Message ||
+            err?.response?.data?.Message ||
+              err?.response?.data?.message ||
               err?.message ||
-              "Failed to load job requirement."
+              "Failed to load job requirement.",
           );
         }
       } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+        if (!cancelled) setLoading(false);
       }
     };
 
-    fetchJob();
+    load();
 
     return () => {
       cancelled = true;
     };
   }, [id]);
 
-  const backToList = () => navigate("/employer/job-requirement-list");
+  const job = useMemo(() => (raw ? normalizeJob(raw) : null), [raw]);
 
   if (loading) {
     return (
-      <div className="flex min-h-64 items-center justify-center gap-3 rounded-xl border border-[#e2e8ee] bg-white p-10 text-[#2c6b8a]">
-        <LoaderCircle className="animate-spin" size={22} />
-        <span className="font-medium">Loading job requirement...</span>
+      <div className="flex min-h-64 items-center justify-center gap-3 p-5 text-[#2c6b8a]">
+        <LoaderCircle size={22} className="animate-spin" />
+        Loading job requirement...
       </div>
     );
   }
 
-  if (error || !job) {
+  if (!job) {
     return (
       <div className="rounded-xl border border-[#e2e8ee] bg-white p-10 text-center">
         <p className="text-[16px] font-semibold text-[#1e2b36]">
-          {error || "Job requirement not found"}
+          {error || "Job requirement not found."}
         </p>
         <button
           type="button"
-          onClick={backToList}
+          onClick={() => navigate("/employer/job-requirement-list")}
           className="mt-3 cursor-pointer rounded-lg bg-[#2c6b8a] px-4 py-2 text-white"
         >
           Back to list
@@ -258,150 +233,144 @@ export default function JobRequirementView() {
     );
   }
 
-  const open = ["open", "active"].includes(
-    String(job.status).toLowerCase()
-  );
-
-  const details = [
-    { name: "position", label: "Position Title" },
-    { name: "department", label: "Department / Speciality" },
-    { name: "qualification", label: "Qualification" },
-    { name: "experience", label: "Experience" },
-    { name: "salary", label: "Salary" },
-    { name: "location", label: "Job Location" },
-    { name: "dutyHours", label: "Duty Hours" },
-    { name: "accommodation", label: "Accommodation Provided" },
-    { name: "food", label: "Food Provided" },
-    { name: "joiningDate", label: "Expected Joining Date" },
-    { name: "deadline", label: "Application Deadline" },
-    { name: "mobile", label: "Employer Mobile" },
-  ];
+  const attachmentName = fileNameFromPath(job.attachmentPath);
 
   return (
     <div className="text-[#1e2b36]">
+      {/* HEADER */}
       <header
-        className="ep-hero relative mb-4 overflow-hidden rounded-2xl p-4 text-white shadow-sm sm:px-4 sm:py-2"
+        className="relative mb-4 overflow-hidden rounded-2xl px-4 py-2 text-white shadow-sm "
         style={{
           backgroundImage:
             "linear-gradient(110deg,#17405a 0%,#2f6b8a 40%,#4a9bb3 70%,#2f6b8a 100%)",
         }}
       >
-        <span className="ep-orb ep-orb-a !h-40 !w-40" />
-        <span className="ep-orb ep-orb-b !h-24 !w-24" />
+        <div className="relative flex flex-wrap items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3.5">
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              title="Back"
+              aria-label="Back"
+              className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-xl bg-white/15 text-white hover:bg-white/25"
+            >
+              <ChevronsLeft size={18} />
+            </button>
 
-        <div className="relative flex flex-wrap items-center gap-3.5">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            title="Back"
-            aria-label="Back"
-            className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-xl bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
-          >
-            <ChevronsLeft size={18} />
-          </button>
-
-          <div className="min-w-0 flex-1">
-            <h1 className="m-0 truncate text-[22px] font-extrabold tracking-tight sm:text-[26px]">
-              {job.organizationName}
-            </h1>
-            <p className="mt-1 text-sm text-white/80">
-              Requirement ID: {job.id}
-            </p>
+            <div className="min-w-0">
+              <h1 className="m-0 truncate text-[22px] font-extrabold tracking-tight sm:text-[26px]">
+                {text(job.position)}
+              </h1>
+              
+            </div>
           </div>
 
-          <span
-            className={`inline-flex h-7 items-center rounded-md px-3 text-[14px] font-semibold ring-1 ring-inset ${
-              open
-                ? "bg-emerald-600 ring-emerald-700"
-                : "bg-rose-600 ring-rose-700"
-            }`}
-          >
-            {job.status}
-          </span>
+          <div className="flex items-center gap-2">
+            {job.status && (
+              <span
+                className={`inline-flex items-center rounded-full bg-white px-3 py-1 text-xs font-semibold ring-1 ring-inset ${getStatusStyle(
+                  job.status,
+                )}`}
+              >
+                {job.status}
+              </span>
+            )}
 
-          <button
-            type="button"
-            onClick={() =>
-              navigate(`/employer/job-requirements/${job.id}/edit`)
-            }
-            className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg bg-white px-3.5 text-[14px] font-semibold text-[#2c6b8a] shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-          >
-            <Pencil size={14} /> Edit
-          </button>
+            <button
+              type="button"
+              onClick={() => navigate(`/employer/job-requirements/${id}/edit`)}
+              className="inline-flex h-9 cursor-pointer items-center gap-1.5 rounded-lg bg-white/15 px-3 text-sm font-semibold text-white hover:bg-white/25"
+            >
+              <Pencil size={14} />
+              Edit
+            </button>
+          </div>
         </div>
       </header>
 
-      <main className="mx-auto max-w-[1100px] space-y-4">
-        <div className="grid gap-3 sm:grid-cols-3">
-          <SummaryCard
-            icon={Users}
-            label="Applicants interested"
-            value={Number(job.applicants || 0)}
-            from="from-[#0ea5e9]"
-            to="to-[#2563eb]"
-          />
-          <SummaryCard
-            icon={UserPlus}
-            label="Vacancies"
-            value={job.vacancies}
-            from="from-[#f59e0b]"
-            to="to-[#ef4444]"
-          />
-          <SummaryCard
-            icon={BriefcaseBusiness}
-            label="Employment type"
-            value={job.employmentType || "—"}
-            from="from-[#6366f1]"
-            to="to-[#8b5cf6]"
-          />
-        </div>
-
-        <section className="rounded-xl border border-[#e2e8ee] bg-white p-5 shadow-sm">
-          <h2 className="mb-4 text-[16px] font-bold text-[#2c6b8a]">
-            Job Details
-          </h2>
-
-          <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
-            {details.map((field) => (
-              <div key={field.name} className="min-w-0">
-                <dt className="text-[13px] text-[#6b7a88]">
-                  {field.label}
-                </dt>
-                <dd className="mt-0.5 break-words text-[15px] font-medium">
-                  {formatValue(field.name, job[field.name])}
-                </dd>
-              </div>
-            ))}
+      <main className="mx-auto grid  gap-4 md:grid-cols-2">
+        {/* ORGANIZATION & ROLE */}
+        <Section title="Organization & Role" icon={Building2}>
+          <dl className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
+            <Field label="Employer">{text(job.employerName)}</Field>
+            <Field label="Job Type">{text(job.instituteType)}</Field>
+            <Field label="Job Role">{text(job.jobRole)}</Field>
+            <Field label="Job Category">
+              {job.jobCategory ? (
+                <span className="inline-flex items-center rounded-full bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-700 ring-1 ring-inset ring-violet-200">
+                  {job.jobCategory}
+                </span>
+              ) : (
+                "-"
+              )}
+            </Field>
+            <Field label="Department / Speciality">{text(job.department)}</Field>
+            <Field label="Employment Type">{text(job.employmentType)}</Field>
           </dl>
+        </Section>
 
-          {job.attachment && (
-            <div className="mt-5 border-t border-[#e2e8ee] pt-4">
-              <p className="text-[13px] text-[#6b7a88]">Attachment</p>
-              <a
-                href={job.attachment}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-1 inline-block text-sm font-medium text-[#2c6b8a] hover:underline"
-              >
-                View attachment
-              </a>
-            </div>
-          )}
-        </section>
+        {/* POSITION DETAILS */}
+        <Section title="Position Details" icon={Briefcase}>
+          <dl className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
+            <Field label="Position Title">{text(job.position)}</Field>
+            <Field label="Vacancies">{text(job.vacancies)}</Field>
+            <Field label="Salary Range">{text(job.salary)}</Field>
+            <Field label="Duty Hours">{text(job.dutyHours)}</Field>
+            <Field label="Qualification Required">{text(job.qualification)}</Field>
+            <Field label="Experience Required">{text(job.experience)}</Field>
+            <Field label="Accommodation">{yesNo(job.accommodation)}</Field>
+            <Field label="Food Facility">{yesNo(job.food)}</Field>
+          </dl>
+        </Section>
 
-        <section className="rounded-xl border border-[#e2e8ee] bg-white p-5 shadow-sm">
-          <h2 className="mb-2 text-[16px] font-bold text-[#2c6b8a]">
-            Job Description / Special Requirements
-          </h2>
+        {/* LOCATION */}
+        <Section title="Location" icon={MapPin}>
+          <dl className="grid grid-cols-1 gap-x-6 gap-y-5">
+            <Field label="Job Location">
+              <span className="inline-flex items-center gap-1.5">
+                <MapPin size={14} className="text-[#2c6b8a]" />
+                {text(job.location)}
+              </span>
+            </Field>
+          </dl>
+        </Section>
+
+        {/* TIMELINE */}
+        <Section title="Dates" icon={CalendarDays}>
+          <dl className="grid grid-cols-1 gap-x-6 gap-y-5 sm:grid-cols-2">
+            <Field label="Expected Joining Date">
+              {formatDate(job.joiningDate)}
+            </Field>
+            <Field label="Application Deadline">{formatDate(job.deadline)}</Field>
+            <Field label="Created On">{formatDate(job.createdAt, true)}</Field>
+            <Field label="Last Updated">{formatDate(job.updatedAt, true)}</Field>
+          </dl>
+        </Section>
+
+        {/* DESCRIPTION */}
+        <Section
+          title="Job Description"
+          icon={ClipboardList}
+          className="md:col-span-2"
+        >
           <p className="whitespace-pre-line text-[15px] leading-relaxed text-[#34445a]">
-            {job.description || "No description provided."}
+            {text(job.description)}
           </p>
-        </section>
+        </Section>
 
-        <p className="pb-4 text-[12px] text-[#9aa5b1]">
-          Posted {formatDate(job.createdAt, true)}
-          {job.updatedAt && ` · Last updated ${formatDate(job.updatedAt, true)}`}
-        </p>
+        {/* ATTACHMENT */}
+        <Section title="Attachment" icon={FileText} className="md:col-span-2">
+          {attachmentName ? (
+            <div className="flex items-center gap-3 rounded-lg border border-[#e2e8ee] bg-[#f7f9fb] p-3">
+              <FileText size={18} className="shrink-0 text-[#2c6b8a]" />
+              <span className="break-all text-sm text-[#34445a]">
+                {attachmentName}
+              </span>
+            </div>
+          ) : (
+            <p className="text-sm text-[#6b7a88]">No attachment uploaded.</p>
+          )}
+        </Section>
       </main>
     </div>
   );

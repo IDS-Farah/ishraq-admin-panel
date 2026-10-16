@@ -12,7 +12,6 @@ import {
 import { validate } from "./Jobrequirementdata";
 import { createJobRequirement } from "../../../api/jobRequirementApi";
 
-import instituteTypeApi from "../../../api/Services/instituteTypeApi";
 import jobRoleApi from "../../../api/Services/jobRoleApi";
 import jobCategoryApi from "../../../api/Services/jobCategoryApi";
 import employmentTypeApi from "../../../api/Services/employmentTypeApi";
@@ -20,7 +19,13 @@ import countryMasterApi from "../../../api/Services/countryMasterApi";
 import stateMasterApi from "../../../api/Services/stateMasterApi";
 import cityMasterApi from "../../../api/Services/cityMasterApi";
 
-import { getCurrentUser } from "../../../utils/authUtils";
+import { getCurrentUserId } from "../../../utils/authUtils";
+import {
+  getPayload,
+  extractEmployerRecord,
+  normalizeEmployer,
+  getEmployerRequest,
+} from "../../../utils/employerProfile";
 
 const inputCls =
   "mt-1 w-full rounded-lg border bg-white px-3 text-[15px] text-[#1e2b36] outline-none transition placeholder:text-[#9aa5b1] hover:border-[#2c6b8a] focus:border-[#2c6b8a] focus:ring-2 focus:ring-[#2c6b8a]/30 disabled:bg-slate-50 disabled:text-slate-500";
@@ -42,26 +47,43 @@ const EMPTY = {
   dutyHours: "",
   accommodation: "No",
   food: "No",
+  status: "Open",
   joiningDate: "",
+  deadline: "",
   description: "",
 };
 
+// When a parent selection changes, these child selections must be cleared
+// so that stale values (e.g. a category from the previous role) are not submitted.
+const CASCADE_RESETS = {
+  jobRoleId: ["jobCategoryId"],
+  countryId: ["stateId", "cityId"],
+  stateId: ["cityId"],
+};
+
 const extractList = (response) => {
-  const root = response?.data ?? response;
+  let result = response?.data ?? response;
 
-  const candidates = [
-    root?.data?.data,
-    root?.Data?.Data,
-    root?.data,
-    root?.Data,
-    root,
-  ];
-
-  for (const candidate of candidates) {
-    if (Array.isArray(candidate)) return candidate;
-    if (Array.isArray(candidate?.data)) return candidate.data;
-    if (Array.isArray(candidate?.Data)) return candidate.Data;
+  // Unwrap standard API response: { success, message, data }
+  if (result && !Array.isArray(result) && result.data !== undefined) {
+    result = result.data;
   }
+
+  if (result && !Array.isArray(result) && result.Data !== undefined) {
+    result = result.Data;
+  }
+
+  // API may return a single category object instead of an array.
+  if (result && !Array.isArray(result) && typeof result === "object") {
+    if (result.jC_job_category_id !== undefined) {
+      return [result];
+    }
+  }
+
+  if (Array.isArray(result)) return result;
+
+  if (Array.isArray(result?.data)) return result.data;
+  if (Array.isArray(result?.Data)) return result.Data;
 
   return [];
 };
@@ -73,18 +95,40 @@ const getErrorMessage = (error, fallback) =>
   error?.message ||
   fallback;
 
-const getEmployerId = () => {
-  const user = getCurrentUser();
+// Runs the shared validator and maps its keys onto this form's field names.
+// The shared validator checks organizationName and mobile, which this form
+// does not have, so those are dropped. location and employmentType are
+// renamed to cityId and employmentTypeId so the errors show on the right fields.
+const validateCreateForm = (clean) => {
+  const shared = validate({
+    position: clean.position,
+    vacancies: clean.vacancies,
+    qualification: clean.qualification,
+    experience: clean.experience,
+    salary: clean.salary,
+    location: clean.cityId,
+    employmentType: clean.employmentTypeId,
+    dutyHours: clean.dutyHours,
+    joiningDate: clean.joiningDate,
+    description: clean.description,
+  });
 
-  if (!user?.id) {
-    return null;
-  }
+  const { organizationName, mobile, location, employmentType, ...rest } =
+    shared;
 
-  return Number(user.id);
+  const errors = { ...rest };
+
+  if (location) errors.cityId = location;
+  if (employmentType) errors.employmentTypeId = employmentType;
+
+  return errors;
 };
 
 const JobRequirementCreate = () => {
   const navigate = useNavigate();
+
+  const [employer, setEmployer] = useState(null);
+  const [loadingEmployer, setLoadingEmployer] = useState(true);
 
   const [form, setForm] = useState(EMPTY);
   const [file, setFile] = useState(null);
@@ -92,7 +136,6 @@ const JobRequirementCreate = () => {
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState(null);
 
-  const [instituteTypes, setInstituteTypes] = useState([]);
   const [jobRoles, setJobRoles] = useState([]);
   const [jobCategories, setJobCategories] = useState([]);
   const [employmentTypes, setEmploymentTypes] = useState([]);
@@ -106,14 +149,86 @@ const JobRequirementCreate = () => {
   const [loadingStates, setLoadingStates] = useState(false);
   const [loadingCities, setLoadingCities] = useState(false);
 
+  // The organization's institute type is always used as the job type.
+  const organizationInstituteTypeId =
+    employer?.EM_institute_type_id != null
+      ? String(employer.EM_institute_type_id)
+      : "";
+
+  const buildInitialForm = (instituteTypeId = "") => ({
+    ...EMPTY,
+    instituteTypeId,
+  });
+
   const change = (name, value) => {
-    setForm((previous) => ({ ...previous, [name]: value }));
+    setForm((previous) => {
+      const next = { ...previous, [name]: value };
+
+      (CASCADE_RESETS[name] || []).forEach((childKey) => {
+        next[childKey] = "";
+      });
+
+      return next;
+    });
 
     setErrors((previous) => ({
       ...previous,
       [name]: undefined,
     }));
   };
+
+  // Load the logged-in employer so its organization type can be used as the job type.
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadEmployer = async () => {
+      setLoadingEmployer(true);
+
+      try {
+        const userId = getCurrentUserId();
+        if (!userId) {
+          throw new Error(
+            "Your login session could not be identified. Please sign in again.",
+          );
+        }
+
+        const response = await getEmployerRequest(userId);
+        const record = normalizeEmployer(
+          extractEmployerRecord(getPayload(response)),
+        );
+
+        if (!record || record.EM_employer_id === undefined) {
+          throw new Error("Employer details were not returned by the API.");
+        }
+
+        if (cancelled) return;
+
+        setEmployer(record);
+        setForm(
+          buildInitialForm(
+            record.EM_institute_type_id != null
+              ? String(record.EM_institute_type_id)
+              : "",
+          ),
+        );
+      } catch (error) {
+        if (!cancelled) {
+          setToast({
+            tone: "bad",
+            msg: getErrorMessage(error, "Failed to load employer details."),
+          });
+        }
+      } finally {
+        if (!cancelled) setLoadingEmployer(false);
+      }
+    };
+
+    loadEmployer();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Load the master dropdown lists.
   useEffect(() => {
@@ -123,18 +238,15 @@ const JobRequirementCreate = () => {
       setLoadingMasters(true);
 
       try {
-        const [instituteResponse, countryResponse, employmentResponse] =
-          await Promise.all([
-            instituteTypeApi.getAllList(),
-            countryMasterApi.getAllList(),
-            employmentTypeApi.getAllList(),
-          ]);
+        const [employmentResponse, countryResponse] = await Promise.all([
+          employmentTypeApi.getAllList(),
+          countryMasterApi.getAllList(),
+        ]);
 
         if (cancelled) return;
 
-        setInstituteTypes(extractList(instituteResponse));
-        setCountries(extractList(countryResponse));
         setEmploymentTypes(extractList(employmentResponse));
+        setCountries(extractList(countryResponse));
       } catch (error) {
         if (!cancelled) {
           setToast({
@@ -154,7 +266,7 @@ const JobRequirementCreate = () => {
     };
   }, []);
 
-  // Institute Type -> Job Role.
+  // Organization institute type -> Job Role.
   useEffect(() => {
     let cancelled = false;
 
@@ -191,7 +303,7 @@ const JobRequirementCreate = () => {
     };
   }, [form.instituteTypeId]);
 
-  // Job Role -> Job Category.
+  // Job Role -> Job Category (loaded by role, not from the full list).
   useEffect(() => {
     let cancelled = false;
 
@@ -203,19 +315,11 @@ const JobRequirementCreate = () => {
       setLoadingCategories(true);
 
       try {
-        // JobCategory master supports /all.
-        const response = await jobCategoryApi.getAllList();
-        const allCategories = extractList(response);
+        const response = await jobCategoryApi.getByJobRole(
+          Number(form.jobRoleId),
+        );
 
-        if (!cancelled) {
-          setJobCategories(
-            allCategories.filter(
-              (item) =>
-                String(item.jC_job_role_id ?? item.JC_job_role_id) ===
-                String(form.jobRoleId),
-            ),
-          );
-        }
+        if (!cancelled) setJobCategories(extractList(response));
       } catch (error) {
         if (!cancelled) {
           setToast({
@@ -352,7 +456,7 @@ const JobRequirementCreate = () => {
   };
 
   const resetForm = () => {
-    setForm(EMPTY);
+    setForm(buildInitialForm(organizationInstituteTypeId));
     setFile(null);
     setErrors({});
     setToast(null);
@@ -368,22 +472,7 @@ const JobRequirementCreate = () => {
       ]),
     );
 
-    const validationErrors = validate({
-      position: clean.position,
-      vacancies: clean.vacancies,
-      qualification: clean.qualification,
-      experience: clean.experience,
-      salary: clean.salary,
-      location: clean.cityId,
-      employmentType: clean.employmentTypeId,
-      dutyHours: clean.dutyHours,
-      joiningDate: clean.joiningDate,
-      description: clean.description,
-    });
-
-    if (!clean.instituteTypeId) {
-      validationErrors.instituteTypeId = "Select an institute type.";
-    }
+    const validationErrors = validateCreateForm(clean);
 
     if (!clean.jobRoleId) {
       validationErrors.jobRoleId = "Select a job role.";
@@ -419,19 +508,31 @@ const JobRequirementCreate = () => {
       return;
     }
 
-    const employerId = getEmployerId();
+    const employerId = Number(employer?.EM_employer_id);
 
-    if (!employerId || !Number.isInteger(employerId) || employerId <= 0) {
-      toast.error(
-        "Unable to identify the logged-in employer. Please log in again.",
-      );
+    if (!Number.isInteger(employerId) || employerId <= 0) {
+      setToast({
+        tone: "bad",
+        msg: "Unable to identify the logged-in employer. Please log in again.",
+      });
+      return;
+    }
+
+    // Job type is always the organization's institute type.
+    const instituteTypeId = Number(organizationInstituteTypeId);
+
+    if (!Number.isInteger(instituteTypeId) || instituteTypeId <= 0) {
+      setToast({
+        tone: "bad",
+        msg: "Your organization's type is missing. Please update your profile first.",
+      });
       return;
     }
 
     const payload = new FormData();
 
     payload.append("JQ_employer_id", String(employerId));
-    payload.append("JQ_institute_type_id", clean.instituteTypeId);
+    payload.append("JQ_institute_type_id", String(instituteTypeId));
     payload.append("JQ_job_role_id", clean.jobRoleId);
     payload.append("JQ_job_category_id", clean.jobCategoryId);
     payload.append("JQ_position_title", clean.position);
@@ -462,6 +563,10 @@ const JobRequirementCreate = () => {
 
     if (clean.dutyHours) {
       payload.append("JQ_duty_hours", clean.dutyHours);
+    }
+
+    if (clean.deadline) {
+      payload.append("JQ_deadline", `${clean.deadline}T00:00:00`);
     }
 
     if (clean.joiningDate) {
@@ -636,11 +741,14 @@ const JobRequirementCreate = () => {
         <form
           onSubmit={submit}
           noValidate
+          autoComplete="off"
           className="rounded-xl border border-[#e2e8ee] bg-white p-5 shadow-sm"
         >
-          {loadingMasters && (
+          {(loadingMasters || loadingEmployer) && (
             <p className="mb-4 text-sm text-slate-500">
-              Loading master data...
+              {loadingEmployer
+                ? "Loading organization details..."
+                : "Loading master data..."}
             </p>
           )}
 
@@ -649,16 +757,21 @@ const JobRequirementCreate = () => {
           </h2>
 
           <div className="grid gap-x-5 gap-y-4 md:grid-cols-2">
-            {renderSelect(
-              "instituteTypeId",
-              "Institute Type",
-              form.instituteTypeId,
-              instituteTypes,
-              "iT_institute_type_id",
-              "iT_name",
-              "Select Institute Type",
-              loadingMasters,
-            )}
+            <div>
+              <label className="block text-[13px] font-semibold text-[#34445a]">
+                Job Type <span className="text-rose-600">*</span>
+              </label>
+              <input
+                type="text"
+                readOnly
+                disabled
+                value={
+                  employer?.InstituteTypeName ||
+                  (loadingEmployer ? "Loading..." : "-")
+                }
+                className={`${inputCls} h-10 border border-[#c9d5dd] bg-slate-50`}
+              />
+            </div>
 
             {renderSelect(
               "jobRoleId",
@@ -734,6 +847,7 @@ const JobRequirementCreate = () => {
               </select>
             </div>
 
+            {renderInput("deadline", "Application Deadline", "date")}
             {renderInput("joiningDate", "Expected Joining Date", "date")}
 
             <h2 className="mt-3 border-b pb-2 text-sm font-bold text-[#2f6b8a] md:col-span-2">
@@ -848,7 +962,7 @@ const JobRequirementCreate = () => {
 
             <button
               type="submit"
-              disabled={saving}
+              disabled={saving || loadingEmployer}
               className="inline-flex h-10 items-center gap-1.5 rounded-[10px] bg-gradient-to-r from-[#16834f] to-[#2fb877] px-5 text-[14px] font-semibold text-white shadow-md hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Plus size={16} />

@@ -60,12 +60,20 @@ export const FIELDS = [
     options: YES_NO,
   },
   { name: "food", label: "Food Facility", type: "select", options: YES_NO },
-  { name: "joiningDate", label: "Expected Joining Date", type: "date" },
+  {
+    name: "deadline",
+    label: "Application Deadline",
+    type: "date",
+  },
+  {
+    name: "joiningDate",
+    label: "Expected Joining Date",
+    type: "date",
+  },
   {
     name: "status",
     label: "Status",
     type: "select",
-    required: true,
     options: JOB_STATUSES,
   },
   {

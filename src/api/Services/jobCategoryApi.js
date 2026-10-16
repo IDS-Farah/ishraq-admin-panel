@@ -1,4 +1,17 @@
-/* jobCategoryApi.js */
 import { createMasterApi } from "./createMasterApi";
+import axiosInstance from "../axiosInstance";
 
-export default createMasterApi("JobCategory");
+const masterApi = createMasterApi("JobCategory");
+
+const getByJobRole = async (jobRoleId) => {
+  const response = await axiosInstance.get(
+    `/JobCategory/${jobRoleId}`
+  );
+
+  return response;
+};
+
+export default {
+  ...masterApi,
+  getByJobRole,
+};
