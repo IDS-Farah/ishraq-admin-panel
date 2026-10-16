@@ -231,11 +231,10 @@ const EmployerList = () => {
 
   /* ------------------------- TOGGLE STATUS ------------------------- */
 
-  const handleToggle = async (row) => {
+  const handleToggle = async (row, isActive) => {
     try {
-      // POST /api/Employer/{id}/toggle-active  (via overridden adminemployeelistApi)
-      const currentUser = localStorage.getItem("userId");
-      await employerApi.toggleActive(row.id, currentUser || undefined);
+      // PATCH /api/Employer/{id}/active-status?isActive=true  (via adminemployeelistApi)
+      await employerApi.toggleActive(row.id, isActive);
 
       const response = await employerApi.getAll({ pageNo: page, pageSize });
       const { list, totalRecords: total, totalPages: pages } =
@@ -250,14 +249,19 @@ const EmployerList = () => {
       setTotalPages(pages);
     } catch (err) {
       // Helpful for debugging 405/404 etc.
-      if (err?.response?.status === 405) {
+      // NOTE: axiosInstance's interceptor rejects with a plain object
+      // ({ message, status, ... }) instead of the original axios error,
+      // so the status lives on `err.status` (fall back to err.response).
+      const status = err?.status ?? err?.response?.status;
+      if (status === 405) {
         console.error(
-          "[EmployerList] 405 Method Not Allowed — the endpoint /api/Employer/{id}/toggle-active did not accept the HTTP verb.",
+          "[EmployerList] 405 Method Not Allowed — the endpoint /api/Employer/{id}/active-status did not accept the HTTP verb.",
           "Response Allow header:",
-          err.response.headers?.allow
+          err?.response?.headers?.allow,
         );
       }
       setError(getApiErrorMessage(err) || "Unable to update status.");
+      throw err; // propagate so confirmToggle shows the error toast
     }
   };
 
@@ -322,7 +326,7 @@ const EmployerList = () => {
     const { row, next } = confirm;
     setBusy(true);
     try {
-      await handleToggle(row);
+      await handleToggle(row, next === "Active");
       setToast({
         id: Date.now(),
         tone: next === "Active" ? "ok" : "warn",
@@ -355,7 +359,7 @@ const EmployerList = () => {
   const stickyActionsCol =
     "sticky right-0 z-20 bg-white shadow-[-6px_0_8px_-6px_rgba(30,43,54,0.15)] group-even:bg-[#f9fbfc] group-hover:bg-[#e8f1f6]";
   const stickyActionsHead =
-    "sticky top-0 right-0 z-30 bg-gradient-to-r from-[#2c6b8a] to-[#3b86a6] shadow-[-6px_0_8px_-6px_rgba(30,43,54,0.25)]";
+    "sticky top-0 right-0 z-30 text-white bg-gradient-to-r from-[#2c6b8a] to-[#3b86a6] shadow-[-6px_0_8px_-6px_rgba(30,43,54,0.25)]";
 
   /* ---------------------------- RENDER ---------------------------- */
 
@@ -406,7 +410,7 @@ const EmployerList = () => {
             <button
               type="button"
               title="Add"
-              onClick={() => navigate("/admin/settings/master/employee/add")}
+              onClick={() => navigate("/admin/settings/master/employer/add")}
               className={btnPrimary}
             >
               <Plus

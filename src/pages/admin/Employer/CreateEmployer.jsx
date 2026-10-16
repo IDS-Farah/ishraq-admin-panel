@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { ChevronDown, ChevronsLeft } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-
-import employeeApi from "../../../api/Services/adminemployeelistApi";
+import employerApi from "../../../api/Services/adminemployeelistApi";
+// import employerApi from "../../../api/Services/employerApi";
 import instituteTypeApi from "../../../api/Services/instituteTypeApi";
 import countryMasterApi from "../../../api/Services/countryMasterApi";
 import stateMasterApi from "../../../api/Services/stateMasterApi";
@@ -17,15 +17,15 @@ const inputClass =
 /* ----------------------------- CONFIG ----------------------------- */
 
 const config = {
-  singular: "Employee",
-  api: employeeApi,
-  idField: "eM_id",
-  // Identity (camelCase)
+  singular: "Employer",
+  api: employerApi,
+  idField: "eM_employer_id",
+
   emailField: "email",
   passwordField: "password",
   mobileField: "mobile",
   fullNameField: "fullName",
-  // Employee / org fields (eM_ prefix)
+
   organizationField: "eM_organization_name",
   instituteTypeField: "eM_institute_type_id",
   contactPersonField: "eM_contact_person",
@@ -35,41 +35,11 @@ const config = {
   cityField: "eM_city_id",
   websiteField: "eM_website",
   consentField: "eM_consent_given",
-  // Audit
-  createdByField: "eM_created_by",
-  updatedByField: "eM_updated_by",
-  createdByNameField: "eM_created_by_name",
-  updatedByNameField: "eM_updated_by_name",
-  createdAtField: "eM_created_at",
-  updatedAtField: "eM_updated_at",
 };
 
-const listPath = "/admin/settings/master/employee";
+const listPath = "/admin/settings/master/employer";
 
-/* --------------------------- DATE HELPERS ------------------------- */
-
-const formatDate = (value) => {
-  if (value === null || value === undefined || value === "") return "";
-
-  const s = String(value).trim();
-  if (s.startsWith("0001-01-01")) return "";
-
-  let d;
-  const plain = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
-  if (plain) {
-    d = new Date(Number(plain[1]), Number(plain[2]) - 1, Number(plain[3]));
-  } else {
-    d = value instanceof Date ? value : new Date(s);
-  }
-
-  if (Number.isNaN(d.getTime())) return "";
-
-  const dd = String(d.getDate()).padStart(2, "0");
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const yyyy = d.getFullYear();
-
-  return `${dd}-${mm}-${yyyy}`;
-};
+/* --------------------------- HELPERS ------------------------- */
 
 const extractRecord = (response) => {
   let result = response?.data ?? response;
@@ -115,28 +85,6 @@ const getErrorMessage = (error, fallback) =>
   error?.message ||
   fallback;
 
-const pickUserDisplay = (item, nameKey, idKey) => {
-  const name = item?.[nameKey];
-  if (name !== undefined && name !== null && String(name).trim() !== "") {
-    return String(name);
-  }
-
-  const id = item?.[idKey];
-  if (id === undefined || id === null || id === "") return "";
-
-  return String(id);
-};
-
-const getCurrentUserId = () => {
-  const raw =
-    localStorage.getItem("userId") ??
-    localStorage.getItem("user_id") ??
-    localStorage.getItem("id");
-
-  const parsed = Number(raw);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
-};
-
 /* --------------------------- VALIDATION --------------------------- */
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -144,7 +92,7 @@ const MOBILE_RE = /^\d{10}$/;
 
 /* ----------------------------- COMPONENT ----------------------------- */
 
-const CreateEmployee = ({ mode }) => {
+const CreateEmployer = ({ mode }) => {
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -153,13 +101,11 @@ const CreateEmployee = ({ mode }) => {
   const [isView, setIsView] = useState(mode === "view");
   const [isEdit, setIsEdit] = useState(mode === "edit");
 
-  // Identity fields
+  // The 13 fields, exactly as the API expects
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mobile, setMobile] = useState("");
   const [fullName, setFullName] = useState("");
-
-  // Org fields
   const [organizationName, setOrganizationName] = useState("");
   const [instituteTypeId, setInstituteTypeId] = useState("");
   const [contactPerson, setContactPerson] = useState("");
@@ -181,13 +127,6 @@ const CreateEmployee = ({ mode }) => {
   const [loadingStates, setLoadingStates] = useState(false);
   const [loadingCities, setLoadingCities] = useState(false);
 
-  const [audit, setAudit] = useState({
-    createdAt: "",
-    createdBy: "",
-    updatedAt: "",
-    updatedBy: "",
-  });
-
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -196,7 +135,6 @@ const CreateEmployee = ({ mode }) => {
 
   useEffect(() => {
     let cancelled = false;
-
     const load = async () => {
       setLoadingInstituteTypes(true);
       try {
@@ -208,14 +146,12 @@ const CreateEmployee = ({ mode }) => {
         if (!cancelled) setLoadingInstituteTypes(false);
       }
     };
-
     load();
     return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
     let cancelled = false;
-
     const load = async () => {
       setLoadingCountries(true);
       try {
@@ -227,14 +163,12 @@ const CreateEmployee = ({ mode }) => {
         if (!cancelled) setLoadingCountries(false);
       }
     };
-
     load();
     return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
     let cancelled = false;
-
     const load = async () => {
       setLoadingStates(true);
       try {
@@ -246,14 +180,12 @@ const CreateEmployee = ({ mode }) => {
         if (!cancelled) setLoadingStates(false);
       }
     };
-
     load();
     return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {
     let cancelled = false;
-
     const load = async () => {
       setLoadingCities(true);
       try {
@@ -265,7 +197,6 @@ const CreateEmployee = ({ mode }) => {
         if (!cancelled) setLoadingCities(false);
       }
     };
-
     load();
     return () => { cancelled = true; };
   }, []);
@@ -290,7 +221,6 @@ const CreateEmployee = ({ mode }) => {
       setWebsite("");
       setConsentGiven(false);
 
-      setAudit({ createdAt: "", createdBy: "", updatedAt: "", updatedBy: "" });
       setError("");
       setLoading(false);
       return;
@@ -316,9 +246,9 @@ const CreateEmployee = ({ mode }) => {
         }
 
         setEmail(item.email ?? "");
+        setPassword("");
         setMobile(item.mobile ?? "");
         setFullName(item.fullName ?? "");
-
         setOrganizationName(item[config.organizationField] ?? "");
         setInstituteTypeId(String(item[config.instituteTypeField] ?? ""));
         setContactPerson(item[config.contactPersonField] ?? "");
@@ -328,21 +258,6 @@ const CreateEmployee = ({ mode }) => {
         setCityId(String(item[config.cityField] ?? ""));
         setWebsite(item[config.websiteField] ?? "");
         setConsentGiven(Boolean(item[config.consentField]));
-
-        setAudit({
-          createdAt: formatDate(item[config.createdAtField]),
-          createdBy: pickUserDisplay(
-            item,
-            config.createdByNameField,
-            config.createdByField,
-          ),
-          updatedAt: formatDate(item[config.updatedAtField]),
-          updatedBy: pickUserDisplay(
-            item,
-            config.updatedByNameField,
-            config.updatedByField,
-          ),
-        });
       } catch (err) {
         if (!cancelled) {
           setError(getErrorMessage(err, "Failed to load record."));
@@ -366,8 +281,7 @@ const CreateEmployee = ({ mode }) => {
 
     if (saving) return;
 
-    // Client-side validation
-    if (!fullName.trim()) return setError("Full Name is required.");
+    
     if (!EMAIL_RE.test(email.trim()))
       return setError("Enter a valid email address.");
     if (!MOBILE_RE.test(mobile.trim()))
@@ -392,6 +306,7 @@ const CreateEmployee = ({ mode }) => {
 
     try {
       if (isCreate) {
+        // POST /api/Employer — exactly the 13 fields.
         const payload = {
           email: email.trim(),
           password,
@@ -410,6 +325,7 @@ const CreateEmployee = ({ mode }) => {
 
         await config.api.create(payload);
       } else {
+        // PUT /api/Employer — same shape minus password, id in the body.
         const payload = {
           [config.idField]: Number(id),
           email: email.trim(),
@@ -424,7 +340,6 @@ const CreateEmployee = ({ mode }) => {
           [config.cityField]: Number(cityId),
           [config.websiteField]: website.trim(),
           [config.consentField]: Boolean(consentGiven),
-          [config.updatedByField]: getCurrentUserId(),
         };
 
         await config.api.update(payload);
@@ -435,7 +350,7 @@ const CreateEmployee = ({ mode }) => {
       setError(
         getErrorMessage(
           err,
-          `Failed to ${isCreate ? "create" : "update"} employee.`,
+          `Failed to ${isCreate ? "create" : "update"} employer.`,
         ),
       );
     } finally {
@@ -473,7 +388,7 @@ const CreateEmployee = ({ mode }) => {
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => navigate(listPath)}
+                onClick={() => navigate("/admin/employer")}
                 title="Back"
                 aria-label="Back"
                 className="grid h-8 w-8 shrink-0 cursor-pointer place-items-center rounded-xl bg-[#2f6b8a] text-white transition hover:bg-[#25566f]"
@@ -493,8 +408,23 @@ const CreateEmployee = ({ mode }) => {
 
           <form onSubmit={handleSubmit} className="p-4">
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
- {/* Organization */}
-              <div>
+
+              {/* Full Name */}
+              {/* <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Full Name
+                  {!isView && <span className="ml-1 text-red-500">*</span>}
+                </label>
+                <input
+                  type="text"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  disabled={disabled}
+                  required={!isView}
+                  className={inputClass}
+                />
+              </div> */}
+               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">
                   Organization Name
                   {!isView && <span className="ml-1 text-red-500">*</span>}
@@ -508,7 +438,41 @@ const CreateEmployee = ({ mode }) => {
                   className={inputClass}
                 />
               </div>
-               {/* Contact Person */}
+              {/* Institute Type */}
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Institute Type
+                  {!isView && <span className="ml-1 text-red-500">*</span>}
+                </label>
+                <div className="relative">
+                  <select
+                    value={instituteTypeId}
+                    onChange={(e) => setInstituteTypeId(e.target.value)}
+                    disabled={disabled || loadingInstituteTypes}
+                    required={!isView}
+                    className={selectClass}
+                  >
+                    <option value="">
+                      {loadingInstituteTypes
+                        ? "Loading..."
+                        : "Select Institute Type"}
+                    </option>
+                    {instituteTypes.map((t) => (
+                      <option
+                        key={t.iT_institute_type_id}
+                        value={String(t.iT_institute_type_id)}
+                      >
+                        {t.iT_name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    size={17}
+                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
+                  />
+                </div>
+              </div>
+                 {/* Contact Person — single instance */}
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-700">
                   Contact Person
@@ -520,6 +484,20 @@ const CreateEmployee = ({ mode }) => {
                   onChange={(e) => setContactPerson(e.target.value)}
                   disabled={disabled}
                   required={!isView}
+                  className={inputClass}
+                />
+              </div>
+
+              {/* Designation */}
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-700">
+                  Designation
+                </label>
+                <input
+                  type="text"
+                  value={designation}
+                  onChange={(e) => setDesignation(e.target.value)}
+                  disabled={disabled}
                   className={inputClass}
                 />
               </div>
@@ -564,7 +542,7 @@ const CreateEmployee = ({ mode }) => {
                 <div>
                   <label className="mb-1.5 block text-sm font-medium text-slate-700">
                     Password
-                    {!isView && <span className="ml-1 text-red-500">*</span>}
+                    <span className="ml-1 text-red-500">*</span>
                   </label>
                   <input
                     type="password"
@@ -578,71 +556,12 @@ const CreateEmployee = ({ mode }) => {
                 </div>
               )}
 
+              {/* Organization Name */}
              
-              {/* Institute Type */}
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                  Institute Type
-                  {!isView && <span className="ml-1 text-red-500">*</span>}
-                </label>
-                <div className="relative">
-                  <select
-                    value={instituteTypeId}
-                    onChange={(e) => setInstituteTypeId(e.target.value)}
-                    disabled={disabled || loadingInstituteTypes}
-                    required={!isView}
-                    className={selectClass}
-                  >
-                    <option value="">
-                      {loadingInstituteTypes
-                        ? "Loading..."
-                        : "Select Institute Type"}
-                    </option>
-                    {instituteTypes.map((t) => (
-                      <option
-                        key={t.iT_institute_type_id}
-                        value={String(t.iT_institute_type_id)}
-                      >
-                        {t.iT_name}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown
-                    size={17}
-                    className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-500"
-                  />
-                </div>
-              </div>
 
-              {/* Contact Person */}
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                  Contact Person
-                  {!isView && <span className="ml-1 text-red-500">*</span>}
-                </label>
-                <input
-                  type="text"
-                  value={contactPerson}
-                  onChange={(e) => setContactPerson(e.target.value)}
-                  disabled={disabled}
-                  required={!isView}
-                  className={inputClass}
-                />
-              </div>
+              
 
-              {/* Designation */}
-              <div>
-                <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                  Designation
-                </label>
-                <input
-                  type="text"
-                  value={designation}
-                  onChange={(e) => setDesignation(e.target.value)}
-                  disabled={disabled}
-                  className={inputClass}
-                />
-              </div>
+           
 
               {/* Country */}
               <div>
@@ -755,11 +674,11 @@ const CreateEmployee = ({ mode }) => {
                   Website
                 </label>
                 <input
-                  type="url"
+                  type="text"
                   value={website}
                   onChange={(e) => setWebsite(e.target.value)}
                   disabled={disabled}
-                  placeholder="https://example.com"
+                  placeholder="example.com"
                   className={inputClass}
                 />
               </div>
@@ -778,66 +697,10 @@ const CreateEmployee = ({ mode }) => {
                   <span className="text-sm text-slate-700">
                     I confirm that the above information is accurate and I
                     consent to it being stored.
-                    {!isView && (
-                      <span className="ml-1 text-red-500">*</span>
-                    )}
+                    {!isView && <span className="ml-1 text-red-500">*</span>}
                   </span>
                 </label>
               </div>
-
-              {/* Audit — read only */}
-              {!isCreate && (
-                <>
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                      Created At
-                    </label>
-                    <input
-                      type="text"
-                      value={audit.createdAt || "—"}
-                      readOnly
-                      disabled
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                      Created By
-                    </label>
-                    <input
-                      type="text"
-                      value={audit.createdBy || "—"}
-                      readOnly
-                      disabled
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                      Updated At
-                    </label>
-                    <input
-                      type="text"
-                      value={audit.updatedAt || "—"}
-                      readOnly
-                      disabled
-                      className={inputClass}
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-700">
-                      Updated By
-                    </label>
-                    <input
-                      type="text"
-                      value={audit.updatedBy || "—"}
-                      readOnly
-                      disabled
-                      className={inputClass}
-                    />
-                  </div>
-                </>
-              )}
             </div>
 
             <div className="mt-4 flex justify-between gap-3 border-t border-slate-100 pt-4">
@@ -876,4 +739,4 @@ const CreateEmployee = ({ mode }) => {
   );
 };
 
-export default CreateEmployee;
+export default CreateEmployer;
