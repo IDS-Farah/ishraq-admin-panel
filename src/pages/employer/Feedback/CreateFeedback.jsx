@@ -1,23 +1,15 @@
 import React, { useState } from "react";
-import { ChevronsLeft } from "lucide-react"
+import { ChevronsLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-const CATEGORIES = [
-  "Product",
-  "Service",
-  "Website or app",
-  "Pricing",
-  "Support",
-  "Other",
-];
+import { submitFeedback } from "../../../api/feedbackApi";
+import { getCurrentUserId } from "../../../utils/authUtils";
 
 const initialForm = {
-  name: "",
-  email: "",
-  category: "",
   rating: 0,
-  subject: "",
-  message: "",
-  recommend: true,
+  overallExperience: "",
+  usefulText: "",
+  improveText: "",
+  suggestions: "",
 };
 
 const Field = ({ id, label, error, optional, children }) => (
@@ -41,46 +33,92 @@ const Field = ({ id, label, error, optional, children }) => (
 );
 
 const CreateFeedback = ({ onSubmit }) => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const [form, setForm] = useState(initialForm);
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [organizationName] = useState(
+    () => localStorage.getItem("organizationName") || "",
+  );
+
+  const [email] = useState(() => localStorage.getItem("employerEmail") || "");
 
   const update = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
-  const validate = () => {
-    const next = {};
-    if (!form.name.trim()) next.name = "Enter your name.";
-    if (!form.email.trim()) next.email = "Enter your email address.";
-    else if (!/^\S+@\S+\.\S+$/.test(form.email))
-      next.email = "Enter a valid email, like name@example.com.";
-    if (!form.category) next.category = "Choose a category.";
-    if (form.rating === 0) next.rating = "Select a rating.";
-    if (!form.subject.trim()) next.subject = "Add a short subject.";
-    if (form.message.trim().length < 10)
-      next.message = "Write at least 10 characters.";
-    return next;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const found = validate();
+
+    console.log("Feedback form submitted");
+
+    const found = {};
+
+    if (!form.rating) {
+      found.rating = "Select a rating.";
+    }
+
+    if (!form.overallExperience.trim()) {
+      found.overallExperience = "Enter your overall experience.";
+    }
+
     setErrors(found);
-    if (Object.keys(found).length > 0) return;
+
+    if (Object.keys(found).length > 0) {
+      console.log("Validation errors:", found);
+      return;
+    }
+
+    const rawUserId = getCurrentUserId();
+    const userId = Number(rawUserId);
+
+    if (!rawUserId || !Number.isInteger(userId) || userId <= 0) {
+      setErrors({
+        form: "Unable to identify the logged-in user. Please log in again.",
+      });
+      console.error("Invalid current user ID:", rawUserId);
+      return;
+    }
 
     setSubmitting(true);
+
     try {
-      // Replace with your API call, e.g. await axios.post('/api/feedback', form)
-      if (onSubmit) await onSubmit(form);
-      else await new Promise((r) => setTimeout(r, 800));
-      setSubmitted(true);
+      const payload = {
+        fB_name: organizationName,
+        fB_contact: email,
+        fB_user_type_id: 2,
+        fB_rating: Number(form.rating),
+        fb_requester_id: userId,
+        fB_overall_experience: form.overallExperience.trim(),
+        fB_useful_text: form.usefulText.trim(),
+        fB_improve_text: form.improveText.trim(),
+        fB_suggestions: form.suggestions.trim(),
+      };
+
+      console.log("Feedback payload:", payload);
+
+      const result = await submitFeedback(payload);
+
+      console.log("Feedback API response:", result);
+
+      if (result?.success === false || result?.Success === false) {
+        throw new Error(
+          result.message || result.Message || "Failed to submit feedback.",
+        );
+      }
+
+      navigate("/employer/feedback-list", { replace: true });
     } catch (err) {
+      console.error("Feedback submission failed:", err);
+
       setErrors({
-        form: "We could not send your feedback. Check your connection and try again.",
+        form:
+          err.response?.data?.message ||
+          err.response?.data?.Message ||
+          err.message ||
+          "Unable to submit feedback. Please try again.",
       });
     } finally {
       setSubmitting(false);
@@ -170,54 +208,28 @@ const CreateFeedback = ({ onSubmit }) => {
         className="space-y-5 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
       >
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-          <Field id="name" label="Name" error={errors.name}>
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              Organization Name
+            </label>
             <input
-              id="name"
-              type="text"
-              value={form.name}
-              onChange={(e) => update("name", e.target.value)}
-              placeholder="Your full name"
-              className={inputClass("name")}
+              value={organizationName}
+              readOnly
+              className={inputClass("organizationName")}
             />
-          </Field>
-          <Field id="email" label="Email" error={errors.email}>
-            <input
-              id="email"
-              type="email"
-              value={form.email}
-              onChange={(e) => update("email", e.target.value)}
-              placeholder="name@example.com"
-              className={inputClass("email")}
-            />
-          </Field>
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-700">
+              Email Address
+            </label>
+            <input value={email} readOnly className={inputClass("email")} />
+          </div>
         </div>
 
-        <Field
-          id="category"
-          label="What is your feedback about?"
-          error={errors.category}
-        >
-          <select
-            id="category"
-            value={form.category}
-            onChange={(e) => update("category", e.target.value)}
-            className={inputClass("category")}
-          >
-            <option value="">Select a category</option>
-            {CATEGORIES.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
-        </Field>
-
-        <div>
-          <span className="mb-1.5 block text-sm font-medium text-slate-700">
-            Overall rating
-          </span>
+        <Field id="rating" label="Overall Rating" error={errors.rating}>
           <div
-            className="flex gap-1"
+            className="flex gap-2"
             role="radiogroup"
             aria-label="Overall rating"
           >
@@ -227,58 +239,80 @@ const CreateFeedback = ({ onSubmit }) => {
                 type="button"
                 role="radio"
                 aria-checked={form.rating === n}
-                aria-label={`${n} out of 5`}
+                aria-label={`${n} out of 5 stars`}
                 onClick={() => update("rating", n)}
-                className="rounded p-0.5 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                className={`rounded px-2 py-1 text-2xl ${
+                  n <= form.rating ? "text-amber-400" : "text-gray-300"
+                }`}
               >
-                <svg
-                  className={`h-8 w-8 transition ${n <= form.rating ? "text-amber-400" : "text-slate-300 hover:text-amber-200"}`}
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path d="M9.05 2.93c.3-.92 1.6-.92 1.9 0l1.07 3.29a1 1 0 00.95.69h3.46c.97 0 1.37 1.24.59 1.81l-2.8 2.03a1 1 0 00-.36 1.12l1.07 3.29c.3.92-.76 1.69-1.54 1.12l-2.8-2.03a1 1 0 00-1.18 0l-2.8 2.03c-.78.57-1.84-.2-1.54-1.12l1.07-3.29a1 1 0 00-.36-1.12L2.98 8.72c-.78-.57-.38-1.81.59-1.81h3.46a1 1 0 00.95-.69l1.07-3.29z" />
-                </svg>
+                ★
               </button>
             ))}
           </div>
-          {errors.rating && (
-            <p className="mt-1.5 text-sm text-red-600" role="alert">
-              {errors.rating}
-            </p>
-          )}
-        </div>
-
-        <Field id="subject" label="Subject" error={errors.subject}>
-          <input
-            id="subject"
-            type="text"
-            value={form.subject}
-            onChange={(e) => update("subject", e.target.value)}
-            placeholder="Summarize your feedback"
-            className={inputClass("subject")}
-          />
         </Field>
 
-        <Field id="message" label="Your feedback" error={errors.message}>
+        <Field
+          id="overallExperience"
+          label="Overall Experience"
+          error={errors.overallExperience}
+        >
           <textarea
-            id="message"
-            rows={5}
-            value={form.message}
-            onChange={(e) => update("message", e.target.value)}
-            placeholder="What did you like, and what could we improve?"
-            className={`${inputClass("message")} resize-y`}
+            id="overallExperience"
+            rows={3}
+            value={form.overallExperience}
+            onChange={(e) => update("overallExperience", e.target.value)}
+            className={inputClass("overallExperience")}
+            placeholder="Describe your overall experience"
           />
         </Field>
 
-        <label className="flex items-start gap-2.5 text-sm text-slate-700">
-          <input
-            type="checkbox"
-            checked={form.recommend}
-            onChange={(e) => update("recommend", e.target.checked)}
-            className="mt-0.5 h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-300"
+        <Field
+          id="usefulText"
+          label="What did you find useful?"
+          error={errors.usefulText}
+          optional
+        >
+          <textarea
+            id="usefulText"
+            rows={3}
+            value={form.usefulText}
+            onChange={(e) => update("usefulText", e.target.value)}
+            className={inputClass("usefulText")}
+            placeholder="What worked well?"
           />
-          <span>I would recommend this to others</span>
-        </label>
+        </Field>
+
+        <Field
+          id="improveText"
+          label="What can we improve?"
+          error={errors.improveText}
+          optional
+        >
+          <textarea
+            id="improveText"
+            rows={3}
+            value={form.improveText}
+            onChange={(e) => update("improveText", e.target.value)}
+            className={inputClass("improveText")}
+            placeholder="Share your suggestions for improvement"
+          />
+        </Field>
+
+        <Field
+          id="suggestions"
+          label="Additional Suggestions"
+          error={errors.suggestions}
+          optional
+        >
+          <textarea
+            id="suggestions"
+            rows={3}
+            value={form.suggestions}
+            onChange={(e) => update("suggestions", e.target.value)}
+            className={inputClass("suggestions")}
+            placeholder="Any other suggestions?"
+          />
+        </Field>
 
         {errors.form && (
           <div

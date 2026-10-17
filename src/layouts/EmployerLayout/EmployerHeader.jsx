@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Bell, ChevronDown, ChevronUp, Settings, LogOut, UserRound } from "lucide-react";
+import {
+  Bell,
+  ChevronDown,
+  ChevronUp,
+  Settings,
+  LogOut,
+  UserRound,
+} from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -19,6 +26,18 @@ const EmployeeHeader = () => {
 
   // Fallback values from local storage, used until the API responds or if it fails.
   const user = getCurrentUser();
+  useEffect(() => {
+    if (user?.email) {
+      localStorage.setItem("employerEmail", user.email);
+    }
+
+    if (user?.name) {
+      localStorage.setItem("organizationName", user.name);
+    }
+    if (user?.no) {
+      localStorage.setItem("organizationNo", user.no);
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -29,10 +48,30 @@ const EmployeeHeader = () => {
         if (!userId) return;
 
         const response = await getEmployerRequest(userId);
-        const record = normalizeEmployer(extractEmployerRecord(getPayload(response)));
+        const record = normalizeEmployer(
+          extractEmployerRecord(getPayload(response)),
+        );
 
         if (!cancelled && record?.EM_employer_id !== undefined) {
           setEmployer(record);
+
+          const organizationName = record.EM_organization_name?.trim() || "";
+          const organizationNo = record.mobile;
+
+          const email =
+            record.Email?.trim() || user?.email || user?.username || "";
+
+          // Save employer details for use in other pages
+          if (organizationNo) {
+            localStorage.setItem("organizationNo", organizationNo);
+          }
+          if (organizationName) {
+            localStorage.setItem("organizationName", organizationName);
+          }
+
+          if (email) {
+            localStorage.setItem("employerEmail", email);
+          }
         }
       } catch {
         // Keep the local storage fallback if the request fails.
